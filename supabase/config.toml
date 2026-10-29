@@ -1,0 +1,14 @@
+# Minimal Supabase CLI config. Link with: supabase link --project-ref <ref>
+# Apply migrations with: supabase db push
+
+[project]
+id = "stenotipisi-app"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
+
+[storage]
+enabled = true

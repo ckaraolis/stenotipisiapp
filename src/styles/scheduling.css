@@ -1,0 +1,198 @@
+.scheduling-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.scheduling-header {
+  align-items: flex-start;
+}
+
+.scheduling-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-text-on-dark);
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.22);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.scheduling-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.scheduling-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.scheduling-table thead {
+  background: #f8fafc;
+}
+
+.scheduling-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.scheduling-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.scheduling-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-confirmed,
+.status-allocated,
+.status-available {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+
+.status-pending {
+  background: rgba(249, 115, 22, 0.12);
+  color: #c2410c;
+}
+
+.status-cancelled,
+.status-unavailable {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.empty-row {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 32px !important;
+}
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--color-border);
+  background: #fafbfc;
+}
+
+.pagination-btn {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.scheduling-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scheduling-inline-actions button {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.scheduling-inline-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stenotypist-assignment-list {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.stenotypist-assignment-list li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.stenotypist-assignment-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  background: var(--color-surface);
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.stenotypist-assignment-item:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+}
+
+.stenotypist-assignment-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stenotypist-assignment-name {
+  font-weight: 600;
+}
+
+.stenotypist-assignment-status {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}

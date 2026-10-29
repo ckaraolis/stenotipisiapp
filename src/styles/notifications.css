@@ -1,0 +1,139 @@
+.notifications-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.notifications-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.notifications-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.notifications-channels {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 8px;
+  background: var(--surface-muted, #f7f9fb);
+}
+
+.notifications-channel-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.notifications-channel-list li {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.notifications-channel-list span {
+  color: var(--text-muted, #5b6775);
+  font-size: 0.92rem;
+}
+
+.notifications-inbox-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.notifications-unread {
+  font-size: 0.92rem;
+  color: var(--text-muted, #5b6775);
+}
+
+.notifications-empty {
+  margin: 0;
+  color: var(--text-muted, #5b6775);
+}
+
+.notifications-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.notifications-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-color, #d7dde5);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.notifications-item.is-unread {
+  border-color: #7aa2d4;
+  background: #f3f8ff;
+}
+
+.notifications-item-message {
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+}
+
+.notifications-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  color: var(--text-muted, #5b6775);
+  font-size: 0.88rem;
+}
+
+.notifications-item-channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.notifications-channel-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid #c9d3df;
+  background: #eef2f6;
+  font-size: 0.78rem;
+}
+
+.notifications-channel-tag.channel-sms {
+  border-color: #c9b07a;
+  background: #fff7e8;
+}
+
+.notifications-channel-tag.channel-email {
+  border-color: #8fb39a;
+  background: #eef8f1;
+}
+
+.notifications-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+@media (max-width: 720px) {
+  .notifications-item {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,213 @@
+.workflow-wizard {
+  margin-bottom: 20px;
+}
+
+.workflow-wizard-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.workflow-wizard-header {
+  padding: 24px 32px 0;
+}
+
+.workflow-wizard-header h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.workflow-wizard-job-header {
+  margin: 0 32px 20px;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.workflow-wizard-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 32px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.workflow-wizard-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workflow-wizard-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  font-size: 11px;
+}
+
+.workflow-wizard-step-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.workflow-wizard-step-active .workflow-wizard-step-index {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.workflow-wizard-step-complete {
+  border-color: #86efac;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.workflow-wizard-step-complete .workflow-wizard-step-index {
+  background: #10b981;
+  color: #fff;
+}
+
+.workflow-wizard-body {
+  padding: 24px 32px;
+}
+
+.workflow-wizard-step-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.workflow-wizard-step-description {
+  margin: 0 0 20px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.workflow-wizard-file-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.workflow-wizard-file-list th,
+.workflow-wizard-file-list td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  font-size: 13px;
+}
+
+.workflow-wizard-file-list th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.workflow-wizard-file-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.workflow-wizard-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.workflow-wizard-summary-card {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+}
+
+.workflow-wizard-summary-card h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.workflow-wizard-summary-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.workflow-wizard-summary-detail-list {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.workflow-wizard-summary-detail-list > div {
+  display: grid;
+  gap: 4px;
+}
+
+.workflow-wizard-summary-detail-list dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.workflow-wizard-summary-detail-list dd {
+  margin: 0;
+}
+
+.workflow-wizard-summary-value {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}
+
+.workflow-wizard-summary-meta {
+  margin-top: 12px !important;
+  font-size: 12px;
+}
+
+.workflow-wizard-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 32px 24px;
+}
+
+.workflow-wizard-footer-actions {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .workflow-wizard-header,
+  .workflow-wizard-steps,
+  .workflow-wizard-body,
+  .workflow-wizard-footer,
+  .workflow-wizard-job-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .workflow-wizard-job-header {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .workflow-wizard-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,718 @@
+/**
+ * Job Matrix per Stenotypist (§4.9)
+ * Fixed layout — not responsive. Target viewport: 950 × 600 px.
+ */
+
+.allocation-page.job-matrix-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.allocation-header {
+  margin-bottom: 0;
+}
+
+.job-matrix-workspace {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 950px;
+  height: 600px;
+  min-width: 950px;
+  max-width: 950px;
+  min-height: 600px;
+  max-height: 600px;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.job-matrix-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 52px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: #f8fafc;
+}
+
+.job-matrix-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.job-matrix-actions .btn-primary {
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+.job-matrix-actions .btn-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #e11d48;
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+}
+
+.job-matrix-actions .btn-confirm:hover:not(:disabled) {
+  background: #be123c;
+}
+
+.job-matrix-actions .btn-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.job-matrix-date-selection {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.date-nav-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.date-nav-btn:hover {
+  background: #e2e8f0;
+  color: var(--color-text);
+}
+
+.allocation-calendar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  cursor: pointer;
+}
+
+.allocation-calendar-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.allocation-date-picker {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 0;
+  width: 118px;
+}
+
+.allocation-date-picker::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.job-matrix-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.job-matrix-grid-region {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+}
+
+.stenotypist-list-panel {
+  flex-shrink: 0;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 2px solid #cbd5e1;
+  background: var(--color-surface);
+}
+
+.schedule-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fafbfc;
+}
+
+.stenotypist-list-scroll,
+.schedule-panel-scroll {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.allocation-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11px;
+  white-space: nowrap;
+  table-layout: fixed;
+}
+
+.stenotypist-list-table {
+  width: 100%;
+  min-width: 420px;
+}
+
+.schedule-panel-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.schedule-panel-table .day-col {
+  width: var(--schedule-weekday-width, 100px);
+  min-width: var(--schedule-weekday-width, 100px);
+}
+
+.schedule-panel-table .day-col-weekend {
+  width: var(--schedule-weekend-width, 60px);
+  min-width: var(--schedule-weekend-width, 60px);
+}
+
+.schedule-panel-table tbody td {
+  height: auto;
+  min-height: 72px;
+}
+
+.allocation-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f1f5f9;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid #e8edf3;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-align: center;
+  height: 36px;
+}
+
+.allocation-table tbody td {
+  padding: 6px;
+  border-bottom: 1px solid #eef2f7;
+  border-right: 1px solid #f1f5f9;
+  vertical-align: top;
+  text-align: center;
+  height: 72px;
+}
+
+.col-st {
+  width: 44px;
+  text-align: left;
+  font-weight: 700;
+}
+
+.col-info {
+  width: 36px;
+}
+
+.col-metric-boundary {
+  border-right: 2px solid #cbd5e1 !important;
+}
+
+.staff-code {
+  color: var(--color-primary-dark);
+  padding-left: 8px !important;
+}
+
+.metric-col {
+  width: 36px;
+  min-width: 36px;
+  font-size: 9px;
+  color: var(--color-text-muted);
+}
+
+.metric-code {
+  font-weight: 700;
+  color: #047857;
+}
+
+.metric-late {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.stenotypist-info-panel {
+  max-width: 420px;
+}
+
+.stenotypist-info-overlay {
+  position: fixed;
+  z-index: 1200;
+  max-width: min(460px, calc(100vw - 24px));
+  pointer-events: auto;
+}
+
+.stenotypist-info-panel-card {
+  display: flex;
+  flex-direction: column;
+  max-height: min(80vh, 720px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.stenotypist-info-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: #f8fafc;
+  cursor: move;
+  user-select: none;
+}
+
+.stenotypist-info-panel-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.stenotypist-info-close-btn {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0 4px;
+}
+
+.stenotypist-info-close-btn:hover {
+  color: var(--color-text);
+}
+
+.stenotypist-info-panel-body {
+  overflow: auto;
+  padding: 12px 14px 16px;
+}
+
+.stenotypist-info-section {
+  margin-top: 16px;
+}
+
+.stenotypist-info-section h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stenotypist-info-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stenotypist-info-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  font-size: 11px;
+}
+
+.stenotypist-info-metric-label {
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.stenotypist-info-metric-value {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stenotypist-info-period-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.period-btn {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.period-btn-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.stenotypist-info-table,
+.stenotypist-info-delay-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.stenotypist-info-table th,
+.stenotypist-info-table td,
+.stenotypist-info-delay-table th,
+.stenotypist-info-delay-table td {
+  border: 1px solid #e2e8f0;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.stenotypist-info-table th,
+.stenotypist-info-delay-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+}
+
+.stenotypist-info-delay-table-wrap {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.stenotypist-info-loading,
+.stenotypist-info-empty,
+.stenotypist-info-error {
+  margin: 0;
+  font-size: 12px;
+}
+
+.stenotypist-info-error {
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+
+.stenotypist-info-empty {
+  color: var(--color-text-muted);
+}
+
+.stenotypist-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.stenotypist-info-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.stenotypist-info-label {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.stenotypist-info-value {
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.day-col {
+  background: #fafbfc;
+}
+
+.day-col-weekend {
+  background: #e2e8f0;
+}
+
+.day-col-holiday {
+  background: #dbeafe;
+}
+
+.day-col-focal {
+  box-shadow: inset 0 0 0 2px #2563eb;
+  background: #eff6ff;
+}
+
+thead .day-col {
+  cursor: pointer;
+}
+
+thead .day-col:hover {
+  background: #e8edf3;
+}
+
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: #f8fafc;
+  color: var(--color-primary);
+  padding: 0;
+}
+
+.info-btn:hover {
+  background: var(--color-primary-soft);
+}
+
+.day-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 56px;
+}
+
+.day-cell-drop-target {
+  box-shadow: inset 0 0 0 2px #2563eb;
+  background: #eff6ff !important;
+}
+
+.allocation-job {
+  display: block;
+  width: 100%;
+  border: 1px solid #93c5fd;
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  text-align: left;
+  background: #dbeafe;
+  cursor: pointer;
+  font: inherit;
+}
+
+.allocation-job-draggable {
+  cursor: grab;
+}
+
+.allocation-job-draggable:active {
+  cursor: grabbing;
+}
+
+.allocation-job-locked {
+  cursor: pointer;
+  opacity: 0.95;
+}
+
+button.allocation-job:hover,
+button.matrix-leave:hover {
+  filter: brightness(0.97);
+}
+
+/* Pending — awaiting manager confirmation */
+.allocation-job-pending {
+  border-color: #ea580c;
+  background: #ffedd5;
+}
+
+/* Assigned — confirmed assignment */
+.allocation-job-assigned,
+.allocation-job-draft {
+  border-color: #2563eb;
+  background: #dbeafe;
+}
+
+/* In progress — finished through reviewed */
+.allocation-job-in-progress {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+/* Completed — published through invoiced */
+.allocation-job-completed {
+  border-color: #6b7280;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.allocation-job-completed .allocation-job-time,
+.allocation-job-completed .allocation-job-field {
+  color: #4b5563;
+}
+
+.allocation-job-title {
+  font-size: 9px;
+  line-height: 1.3;
+  color: var(--color-text);
+  white-space: normal;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.allocation-job-field {
+  font-size: 8px;
+  line-height: 1.25;
+  color: var(--color-text);
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.allocation-job-time {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.matrix-leave {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+}
+
+.matrix-leave-request {
+  background: #d97706;
+}
+
+.matrix-leave-approved {
+  background: #7c3aed;
+}
+
+.unassigned-jobs-panel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  gap: 8px;
+  padding: 10px;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.unassigned-jobs-panel-drop-target {
+  box-shadow: inset 0 0 0 2px #2563eb;
+  background: #eff6ff;
+}
+
+.unassigned-jobs-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.unassigned-jobs-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.unassigned-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.unassigned-filter-field select,
+.unassigned-filter-field input {
+  padding: 5px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  font-size: 10px;
+  color: var(--color-text);
+  width: 100%;
+}
+
+.unassigned-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 2px;
+}
+
+.unassigned-jobs-empty {
+  margin: 0;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 16px 4px;
+}
+
+.unassigned-job-card {
+  display: block;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  background: #fff;
+  cursor: grab;
+  flex-shrink: 0;
+  text-align: left;
+  font: inherit;
+}
+
+.unassigned-job-card:hover {
+  border-color: #93c5fd;
+  background: #f8fafc;
+}
+
+.unassigned-job-card:active {
+  cursor: grabbing;
+}
+
+.empty-row {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 24px 8px !important;
+}
