@@ -127,19 +127,12 @@ export default function SignInPage() {
     <div className="signin-page">
       <aside className="signin-brand-panel">
         <div className="signin-brand-content">
-          <div className="signin-brand-badge">{t('appName')}</div>
-          <h1 className="signin-brand-title">{t('signInTagline')}</h1>
-          <p className="signin-brand-text">{t('signInDescription')}</p>
-          <div className="signin-brand-stats">
-            <div className="signin-stat">
-              <strong>24/7</strong>
-              <span>{t('signInStatAccess')}</span>
-            </div>
-            <div className="signin-stat">
-              <strong>2FA</strong>
-              <span>{t('signInStatSecure')}</span>
-            </div>
-          </div>
+          <p className="signin-brand-welcome">{t('signInBrandWelcome')}</p>
+          <img
+            className="signin-brand-logo"
+            src="/galatariotis-logo.png"
+            alt="Galatariotis"
+          />
         </div>
       </aside>
 

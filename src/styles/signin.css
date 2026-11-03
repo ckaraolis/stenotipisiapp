@@ -9,10 +9,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 48px;
   background:
-    radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.35), transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.2), transparent 40%),
+    radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.28), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(15, 23, 42, 0.35), transparent 42%),
     linear-gradient(145deg, #0f172a 0%, #134e4a 55%, #0f766e 100%);
   color: var(--color-text-on-dark);
   overflow: hidden;
@@ -32,60 +33,32 @@
 .signin-brand-content {
   position: relative;
   z-index: 1;
-  max-width: 420px;
-}
-
-.signin-brand-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 24px;
-}
-
-.signin-brand-title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 700;
-  line-height: 1.1;
-  margin-bottom: 16px;
-}
-
-.signin-brand-text {
-  font-size: 16px;
-  line-height: 1.7;
-  color: rgba(248, 250, 252, 0.78);
-  max-width: 360px;
-}
-
-.signin-brand-stats {
-  display: flex;
-  gap: 24px;
-  margin-top: 40px;
-}
-
-.signin-stat {
+  width: min(100%, 420px);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  text-align: center;
+  gap: 28px;
 }
 
-.signin-stat strong {
+.signin-brand-welcome {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
   font-weight: 700;
+  line-height: 1.2;
+  color: #f8fafc;
 }
 
-.signin-stat span {
-  font-size: 13px;
-  color: rgba(248, 250, 252, 0.65);
+.signin-brand-logo {
+  display: block;
+  width: min(100%, 360px);
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 18px 22px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
 }
 
 .signin-form-panel {

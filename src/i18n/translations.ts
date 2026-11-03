@@ -9,6 +9,7 @@ export const translations = {
     signInTagline: 'Manage transcripts with clarity.',
     signInDescription:
       'A modern workspace for stenotypists, editors, and reviewers to collaborate on jobs in one place.',
+    signInBrandWelcome: 'Welcome to Stenotipisi',
     signInStatAccess: 'Cloud access',
     signInStatSecure: 'Secure login',
     email: 'Email',
@@ -1478,6 +1479,7 @@ export const translations = {
     signInTagline: 'Διαχειριστείτε απομαγνητοφωνήσεις με σαφήνεια.',
     signInDescription:
       'Ένας σύγχρονος χώρος για στενογράφους, επιμελητές και ελεγκτές να συνεργάζονται σε μία πλατφόρμα.',
+    signInBrandWelcome: 'Καλώς ήρθατε στο Stenotipisi',
     signInStatAccess: 'Πρόσβαση cloud',
     signInStatSecure: 'Ασφαλής σύνδεση',
     email: 'Email',

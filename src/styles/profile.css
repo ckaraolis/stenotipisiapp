@@ -274,12 +274,31 @@
 
 .change-password-page {
   min-height: 100vh;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  grid-template-columns: none;
+  padding: 32px 16px;
+  box-sizing: border-box;
 }
 
 .change-password-panel {
   width: min(100%, 520px);
   margin: 0 auto;
+  padding: 0;
+  background: transparent;
+}
+
+.change-password-page .account-password-form .profile-label {
+  text-align: left;
+}
+
+.change-password-page .signin-card .account-password-form {
+  padding: 24px 32px 8px;
+}
+
+.change-password-page .signin-card .signin-footer {
+  padding: 0 32px 28px;
 }
 
 .account-management-page {
