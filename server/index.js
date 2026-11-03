@@ -47,6 +47,7 @@ import { deliverEmailNotification } from './emailDelivery.js';
 import { loadEmailEnvFile } from './emailConfig.js';
 import { buildAppActionUrl } from './notificationChannels.js';
 import { sendAccountEmailChangeNotifications } from './accountEmails.js';
+import { sendUserEnrollmentEmail } from './mfaEnrollmentEmail.js';
 import { createMfaSession, consumeMfaSession } from './mfaSessions.js';
 import { generateTotp, verifyTotp } from './totp.js';
 import {
@@ -3846,7 +3847,7 @@ app.get('/api/users/:id', (req, res) => {
   res.json(toPublicUser(user));
 });
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const actor = requireAdminUsers(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
@@ -3878,6 +3879,17 @@ app.post('/api/users', (req, res) => {
     beforeUser: null,
     afterUser: result.user,
   });
+
+  // Welcome + MFA QR / setup key email (secrets stay off the HTTP response).
+  try {
+    await sendUserEnrollmentEmail({
+      user: result.user,
+      totpSecret: result.enrollment?.totpSecret,
+      temporaryPassword: result.enrollment?.temporaryPassword,
+    });
+  } catch (error) {
+    console.error('[user_created] Enrollment email failed:', error);
+  }
 
   res.status(201).json(result.user);
 });

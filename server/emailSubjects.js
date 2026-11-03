@@ -37,6 +37,8 @@ export const EMAIL_SUBJECTS_BY_TYPE = Object.freeze({
   account_email_changed: 'Account Email Changed',
   account_email_changed_old: 'Account Email Changed',
   account_email_changed_new: 'Account Email Changed',
+  user_created: 'Your Stenotipisi Account',
+  user_mfa_setup: 'Set Up Two-Factor Authentication',
 });
 
 const DEFAULT_EMAIL_SUBJECT = 'Stenotipisi Notification';

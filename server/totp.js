@@ -49,6 +49,26 @@ export function generateTotpSecret() {
   return base32Encode(crypto.randomBytes(20));
 }
 
+/** otpauth URL for authenticator apps (Google / Microsoft Authenticator, etc.). */
+export function buildTotpOtpAuthUrl({
+  email = '',
+  secret = '',
+  issuer = 'Stenotipisi',
+} = {}) {
+  const account = typeof email === 'string' ? email.trim() : '';
+  const totpSecret = typeof secret === 'string' ? secret.trim() : '';
+  if (!account || !totpSecret) return '';
+  const label = encodeURIComponent(`${issuer}:${account}`);
+  const params = new URLSearchParams({
+    secret: totpSecret,
+    issuer,
+    algorithm: 'SHA1',
+    digits: '6',
+    period: '30',
+  });
+  return `otpauth://totp/${label}?${params.toString()}`;
+}
+
 function generateTotpForCounter(secret, counter, digits = 6) {
   const buffer = Buffer.alloc(8);
   buffer.writeBigUInt64BE(BigInt(counter));

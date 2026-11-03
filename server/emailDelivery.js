@@ -4,7 +4,7 @@ import { getEmailConfig, resolveEmailReplyToHeader, resolveEmailSender } from '.
 import { buildNotificationEmailContent } from './emailDesign.js';
 import { resolveEmailSubject } from './emailSubjects.js';
 
-async function sendViaPostageApp({ to, subject, text, html, config, fromHeader, replyTo }) {
+async function sendViaPostageApp({ to, subject, text, html, config, fromHeader, replyTo, attachments = [] }) {
   if (!config.postageapp.apiKey) {
     return { sent: false, skipped: true, reason: 'postageappApiKeyMissing' };
   }
@@ -32,6 +32,21 @@ async function sendViaPostageApp({ to, subject, text, html, config, fromHeader, 
   }
   if (config.postageapp.recipientOverride) {
     argumentsPayload.recipient_override = config.postageapp.recipientOverride;
+  }
+  if (Array.isArray(attachments) && attachments.length > 0) {
+    // PostageApp accepts base64 attachments keyed by filename.
+    const files = {};
+    for (const file of attachments) {
+      if (!file?.filename || !file?.content) continue;
+      const buffer = Buffer.isBuffer(file.content) ? file.content : Buffer.from(file.content);
+      files[file.filename] = {
+        content_type: file.contentType || 'application/octet-stream',
+        content: buffer.toString('base64'),
+      };
+    }
+    if (Object.keys(files).length > 0) {
+      argumentsPayload.attachments = files;
+    }
   }
 
   const response = await fetch(config.postageapp.apiUrl, {
@@ -84,7 +99,7 @@ async function sendViaPostageApp({ to, subject, text, html, config, fromHeader, 
   };
 }
 
-async function sendViaSmtp({ to, subject, text, html, config, fromHeader, replyTo }) {
+async function sendViaSmtp({ to, subject, text, html, config, fromHeader, replyTo, attachments = [] }) {
   if (!config.smtp.host) {
     return { sent: false, skipped: true, reason: 'smtpHostMissing' };
   }
@@ -102,6 +117,15 @@ async function sendViaSmtp({ to, subject, text, html, config, fromHeader, replyT
         : undefined,
   });
 
+  const mailAttachments = (Array.isArray(attachments) ? attachments : [])
+    .filter((file) => file?.filename && file?.content)
+    .map((file) => ({
+      filename: file.filename,
+      content: file.content,
+      contentType: file.contentType || undefined,
+      cid: file.cid || undefined,
+    }));
+
   const info = await transporter.sendMail({
     from: fromHeader,
     to,
@@ -109,6 +133,7 @@ async function sendViaSmtp({ to, subject, text, html, config, fromHeader, replyT
     text,
     html,
     ...(replyTo ? { replyTo } : {}),
+    ...(mailAttachments.length > 0 ? { attachments: mailAttachments } : {}),
   });
 
   console.log(
@@ -159,6 +184,7 @@ export async function deliverEmailNotification({
   primaryActionLabel = '',
   html = '',
   text = '',
+  attachments = [],
 } = {}) {
   const recipient = typeof to === 'string' ? to.trim() : '';
   if (!recipient) {
@@ -202,6 +228,7 @@ export async function deliverEmailNotification({
     config,
     fromHeader,
     replyTo,
+    attachments: Array.isArray(attachments) ? attachments : [],
   };
 
   try {

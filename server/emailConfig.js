@@ -118,8 +118,10 @@ export function resolveSenderKeyForMessageType(messageType = '') {
   if (
     type.startsWith('password_') ||
     type.startsWith('account_') ||
+    type.startsWith('user_') ||
     type === 'user_created' ||
-    type === 'user_updated'
+    type === 'user_updated' ||
+    type === 'user_mfa_setup'
   ) {
     return 'account';
   }

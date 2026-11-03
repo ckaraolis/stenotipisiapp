@@ -493,7 +493,14 @@ export function createUser(input) {
 
   data.users.push(user);
   writeUsersFile(data);
-  return { user: toPublicUser(user) };
+  return {
+    user: toPublicUser(user),
+    // Server-only enrollment payload (never send totpSecret to the browser).
+    enrollment: {
+      totpSecret: user.totpSecret,
+      temporaryPassword: value.password,
+    },
+  };
 }
 
 export function updateUser(userId, input) {
