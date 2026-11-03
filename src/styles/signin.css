@@ -52,12 +52,12 @@
 
 .signin-brand-logo {
   display: block;
-  width: min(100%, 360px);
+  width: min(100%, 420px);
   height: auto;
   object-fit: contain;
   border-radius: 12px;
   background: #ffffff;
-  padding: 18px 22px;
+  padding: 20px 24px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
 }
 

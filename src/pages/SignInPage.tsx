@@ -130,8 +130,8 @@ export default function SignInPage() {
           <p className="signin-brand-welcome">{t('signInBrandWelcome')}</p>
           <img
             className="signin-brand-logo"
-            src="/galatariotis-logo.png"
-            alt="Galatariotis"
+            src="/stenotyping-logo.jpg"
+            alt="Stenotyping by Galatariotis"
           />
         </div>
       </aside>
