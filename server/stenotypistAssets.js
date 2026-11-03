@@ -11,7 +11,8 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { findUserById } from './db.js';
 import { normalizeRoles } from './roles.js';
-
+
+
 const ASSETS_PATH = path.join(__dirname, '..', 'database', 'stenotypistAssets.json');
 
 function readAssetsFile() {
