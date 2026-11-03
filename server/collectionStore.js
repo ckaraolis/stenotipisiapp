@@ -30,9 +30,11 @@ export async function hydrateFromSupabase({ force = false } = {}) {
     return;
   }
   if (hydrated && !force) return;
+
+  // Serialize hydrates so a force refresh never races an in-flight load.
   if (hydratePromise) {
     await hydratePromise;
-    return;
+    if (hydrated && !force) return;
   }
 
   hydratePromise = (async () => {

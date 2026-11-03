@@ -285,20 +285,35 @@ const PORT = 3001;
 
 loadEmailEnvFile();
 
-let appReadyPromise = null;
+let localBootPromise = null;
+let remoteBootstrapped = false;
 
 async function ensureAppReady() {
-  if (!appReadyPromise) {
-    appReadyPromise = (async () => {
-      if (isVercelRuntime() && !isSupabaseConfigured()) {
-        throw new Error(
-          'Supabase env vars missing on Vercel. Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY.',
-        );
-      }
-      if (useRemoteStore()) {
-        await hydrateFromSupabase();
-        await hydrateAuthSessions();
-      }
+  if (isVercelRuntime() && !isSupabaseConfigured()) {
+    throw new Error(
+      'Supabase env vars missing on Vercel. Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY.',
+    );
+  }
+
+  // On Supabase/Vercel, re-read collections every request so deletes/creates are
+  // visible across warm serverless instances (in-memory cache would otherwise go stale).
+  if (useRemoteStore()) {
+    await flushPendingWrites();
+    await hydrateFromSupabase({ force: true });
+    if (!remoteBootstrapped) {
+      await hydrateAuthSessions();
+      ensureDatabase();
+      ensureAssetsFile();
+      ensureTranscriptFileStorageRoot();
+      ensureTravellingChargesDatabase();
+      ensureAuditTrailDatabase();
+      remoteBootstrapped = true;
+    }
+    return;
+  }
+
+  if (!localBootPromise) {
+    localBootPromise = (async () => {
       ensureDatabase();
       ensureAssetsFile();
       ensureTranscriptFileStorageRoot();
@@ -306,7 +321,7 @@ async function ensureAppReady() {
       ensureAuditTrailDatabase();
     })();
   }
-  await appReadyPromise;
+  await localBootPromise;
 }
 
 // Never eagerly boot local JSON on Vercel (read-only FS / cold start crashes).
