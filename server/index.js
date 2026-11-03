@@ -43,8 +43,8 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from './notifications.js';
-import { deliverEmailNotification } from './emailDelivery.js';
-import { loadEmailEnvFile } from './emailConfig.js';
+import { deliverEmailNotification, getActiveEmailProvider } from './emailDelivery.js';
+import { getEmailConfig, loadEmailEnvFile } from './emailConfig.js';
 import { buildAppActionUrl } from './notificationChannels.js';
 import { sendAccountEmailChangeNotifications } from './accountEmails.js';
 import { sendUserEnrollmentEmail } from './mfaEnrollmentEmail.js';
@@ -705,9 +705,17 @@ function rejectIfPasswordChangeRequired(user, res) {
 }
 
 app.get('/api/health', (_req, res) => {
+  const emailConfig = getEmailConfig();
   res.json({
     ok: true,
     store: useRemoteStore() ? 'supabase' : 'local-json',
+    email: {
+      provider: getActiveEmailProvider(),
+      smtpHostConfigured: Boolean(emailConfig.smtp.host),
+      postageAppConfigured: Boolean(emailConfig.postageapp.apiKey),
+      fromEmail: emailConfig.fromEmail || '',
+      appPublicUrl: process.env.APP_PUBLIC_URL?.trim() || '',
+    },
     timestamp: new Date().toISOString(),
   });
 });
@@ -841,7 +849,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   const result = await requestPasswordResetForEmail(email);
   if (result.token) {
     const resetLink = buildAppActionUrl(`/reset-password?token=${result.token}`);
-    await deliverEmailNotification({
+    const delivery = await deliverEmailNotification({
       to: result.email,
       message: 'A password reset was requested for your Stenotipisi account.',
       actionUrl: resetLink,
@@ -853,6 +861,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         'Use the secure link below to choose a new password. The link is valid for about one hour. If you did not request this reset, you can ignore this email.',
       primaryActionLabel: 'Reset password',
     });
+    if (!delivery?.sent) {
+      console.error(
+        '[forgot-password] Email was not delivered:',
+        delivery?.error || delivery?.reason || delivery?.provider || 'unknown',
+      );
+    }
     await dispatchNotification({
       type: 'password_reset',
       message: 'A password reset link was sent to your email address.',
@@ -862,6 +876,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     });
   }
 
+  // Always return success to avoid account enumeration.
   res.json({ success: true });
 });
 
