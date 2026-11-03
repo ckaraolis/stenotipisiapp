@@ -278,6 +278,7 @@ import {
   hydrateAuthSessions,
   revokeAuthSession,
 } from './authSessions.js';
+import { isSupabaseConfigured, isVercelRuntime } from './supabase.js';
 
 const PORT = 3001;
 
@@ -288,6 +289,11 @@ let appReadyPromise = null;
 async function ensureAppReady() {
   if (!appReadyPromise) {
     appReadyPromise = (async () => {
+      if (isVercelRuntime() && !isSupabaseConfigured()) {
+        throw new Error(
+          'Supabase env vars missing on Vercel. Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY.',
+        );
+      }
       if (useRemoteStore()) {
         await hydrateFromSupabase();
         await hydrateAuthSessions();
@@ -302,7 +308,8 @@ async function ensureAppReady() {
   await appReadyPromise;
 }
 
-if (!useRemoteStore()) {
+// Never eagerly boot local JSON on Vercel (read-only FS / cold start crashes).
+if (!useRemoteStore() && !isVercelRuntime()) {
   void ensureAppReady();
 }
 

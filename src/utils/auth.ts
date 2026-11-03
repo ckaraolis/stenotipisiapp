@@ -142,6 +142,12 @@ export async function signIn(email: string, password: string): Promise<MfaChalle
   };
 
   if (!response.ok) {
+    if (response.status >= 500) {
+      throw new AuthError(
+        body.errorCode ?? 'invalidCredentials',
+        body.error ?? 'Server error during sign-in. Check API / Supabase configuration.',
+      );
+    }
     throw new AuthError(
       body.errorCode ?? 'invalidCredentials',
       body.error ?? 'Invalid email or password.',

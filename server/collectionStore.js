@@ -1,10 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getSupabaseAdmin, isSupabaseConfigured } from './supabase.js';
+import { getSupabaseAdmin, isSupabaseConfigured, isVercelRuntime } from './supabase.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DB_DIR = path.join(__dirname, '..', 'database');
+// On Vercel the deploy filesystem is read-only; use /tmp only as a last-resort local cache.
+export const DB_DIR = isVercelRuntime()
+  ? path.join('/tmp', 'stenotipisi-database')
+  : path.join(__dirname, '..', 'database');
 
 /** @type {Map<string, unknown>} */
 const cache = new Map();
@@ -36,7 +39,9 @@ export async function hydrateFromSupabase({ force = false } = {}) {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase.from('app_collections').select('name, payload');
     if (error) {
-      throw new Error(`Failed to hydrate app_collections: ${error.message}`);
+      throw new Error(
+        `Failed to hydrate app_collections: ${error.message}. Run supabase/migrations/20261027120000_init.sql in the Supabase SQL editor.`,
+      );
     }
     cache.clear();
     for (const row of data ?? []) {
