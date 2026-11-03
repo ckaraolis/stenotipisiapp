@@ -6,13 +6,9 @@ import {
   DB_DIR,
 } from './collectionStore.js';
 import crypto from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { findUserById, listUsers } from './db.js';
 import { hasPermission } from './permissions.js';
 
-const AUDIT_TRAIL_PATH = path.join(__dirname, '..', 'database', 'auditTrail.json');
 
 export const AUDIT_MODULES = [
   'scheduling',

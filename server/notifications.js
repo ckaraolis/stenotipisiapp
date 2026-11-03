@@ -5,10 +5,7 @@ import {
   collectionExists,
   DB_DIR,
 } from './collectionStore.js';
-import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
 import { findUserById } from './db.js';
 import { deliverEmailNotification } from './emailDelivery.js';
 import { deliverSmsNotification } from './smsDelivery.js';
@@ -18,7 +15,6 @@ import {
 } from './notificationChannels.js';
 import { resolveEmailSubject } from './emailSubjects.js';
 
-const NOTIFICATIONS_PATH = path.join(__dirname, '..', 'database', 'notifications.json');
 
 function readNotificationsFile() {
   ensureCollectionFile('notifications', { notifications: [] });

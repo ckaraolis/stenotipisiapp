@@ -5,15 +5,11 @@ import {
   collectionExists,
   DB_DIR,
 } from './collectionStore.js';
-import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
 import { findUserById } from './db.js';
 import { normalizeRoles } from './roles.js';
 
 
-const ASSETS_PATH = path.join(__dirname, '..', 'database', 'stenotypistAssets.json');
 
 function readAssetsFile() {
   ensureCollectionFile('stenotypistAssets', { assets: [] });
