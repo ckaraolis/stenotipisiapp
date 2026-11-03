@@ -81,7 +81,7 @@ export function normalizeRoles(
   if (Array.isArray(value)) {
     return [...new Set(value.map((role) => normalizeRole(role)))];
   }
-  if (value) {
+  if (typeof value === 'string' && value) {
     return [normalizeRole(value)];
   }
   return ['stenotypist'];

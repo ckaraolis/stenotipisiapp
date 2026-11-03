@@ -1,4 +1,3 @@
-import { deleteTravellingCharge } from '../../api/travellingCharges';
 import {
   formatTravellingChargeCustomerLabel,
   formatTravellingChargeDistrictLabel,

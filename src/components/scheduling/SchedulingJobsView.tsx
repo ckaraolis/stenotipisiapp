@@ -120,7 +120,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
     () =>
       filterJobsForJobListView(jobs, {
         userId: authUser?.id,
-        customerId: authUser?.customerId,
+        customerId: authUser?.customerId ?? undefined,
         roleOrRoles: userRoles,
       }),
     [jobs, authUser?.id, authUser?.customerId, userRoles],
@@ -216,7 +216,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
     setConfirmingAll(true);
     setError('');
     try {
-      const result = await confirmAllPendingJobs();
+      await confirmAllPendingJobs();
       setSuccess(t('jobConfirmAllSuccess'));
       await loadJobs();
     } catch (err) {
@@ -549,7 +549,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
                     const assignmentRoles = getJobAssignmentRoles(row, authUser?.id);
                     const inlineActions = getJobListInlineActions(row, {
                       userId: authUser?.id,
-                      customerId: authUser?.customerId,
+                      customerId: authUser?.customerId ?? undefined,
                       roleOrRoles: userRoles,
                       assignmentRoles,
                     });

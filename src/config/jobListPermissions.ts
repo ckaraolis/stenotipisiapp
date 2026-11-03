@@ -1,5 +1,6 @@
 import { getPhaseForJobStatus } from './job';
 import { normalizeRoles } from './roles';
+import type { UserRole } from './roles';
 import type { JobAssignmentRole } from '../types/job';
 import type { JobRecord } from '../types/jobRecord';
 import {
@@ -26,7 +27,12 @@ export interface JobListActorContext {
 const REQUESTED_OR_SCHEDULED_PHASES = new Set(['requested', 'scheduled']);
 
 /** §4.11 — Roles with access to Job List and Details Form. */
-const JOB_LIST_ACCESS_ROLES = ['district_admin', 'coordinator', 'stenotypist', 'manager'] as const;
+const JOB_LIST_ACCESS_ROLES: readonly UserRole[] = [
+  'district_admin',
+  'coordinator',
+  'stenotypist',
+  'manager',
+];
 
 /** §4.11.1 — District Admin job list view (not manager/coordinator/super admin). */
 export function isDistrictAdminJobListView(
@@ -162,12 +168,17 @@ export function getJobListCapabilities(
   };
 }
 
-function jobMatchesCustomer(job: JobRecord, customerId?: string): boolean {
+type JobPermissionFields = Pick<
+  JobRecord,
+  'ownerUserId' | 'status' | 'customerId' | 'stenotypistUserId'
+>;
+
+function jobMatchesCustomer(job: JobPermissionFields, customerId?: string): boolean {
   if (!customerId) return false;
   return job.customerId === customerId;
 }
 
-export function canDistrictAdminEditJob(job: JobRecord, userId?: string): boolean {
+export function canDistrictAdminEditJob(job: JobPermissionFields, userId?: string): boolean {
   if (!userId || job.ownerUserId !== userId) return false;
   const phase = getPhaseForJobStatus(job.status);
   return phase ? REQUESTED_OR_SCHEDULED_PHASES.has(phase) : false;
@@ -178,17 +189,17 @@ export function canDistrictAdminDeleteJob(job: JobRecord, userId?: string): bool
   return job.status === 'new';
 }
 
-export function canCoordinatorEditJob(job: JobRecord, customerId?: string): boolean {
+export function canCoordinatorEditJob(job: JobPermissionFields, customerId?: string): boolean {
   if (!jobMatchesCustomer(job, customerId)) return false;
   const phase = getPhaseForJobStatus(job.status);
   return phase ? REQUESTED_OR_SCHEDULED_PHASES.has(phase) : false;
 }
 
-export function canCoordinatorRejectJob(job: JobRecord, customerId?: string): boolean {
+export function canCoordinatorRejectJob(job: JobPermissionFields, customerId?: string): boolean {
   return canCoordinatorEditJob(job, customerId);
 }
 
-export function canCoordinatorDeleteJob(job: JobRecord, customerId?: string): boolean {
+export function canCoordinatorDeleteJob(job: JobPermissionFields, customerId?: string): boolean {
   if (!jobMatchesCustomer(job, customerId)) return false;
   return getPhaseForJobStatus(job.status) === 'requested';
 }
@@ -203,12 +214,12 @@ export function canManagerDeleteJob(job: JobRecord, userId?: string): boolean {
   return !job.stenotypistUserId.trim();
 }
 
-function isStenotypistCreatorOrAssignee(job: JobRecord, userId?: string): boolean {
+function isStenotypistCreatorOrAssignee(job: JobPermissionFields, userId?: string): boolean {
   if (!userId) return false;
   return job.ownerUserId === userId || job.stenotypistUserId === userId;
 }
 
-export function canStenotypistEditJob(job: JobRecord, userId?: string): boolean {
+export function canStenotypistEditJob(job: JobPermissionFields, userId?: string): boolean {
   if (!isStenotypistCreatorOrAssignee(job, userId)) return false;
   return job.status === 'assigned';
 }

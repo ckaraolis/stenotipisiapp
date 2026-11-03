@@ -310,7 +310,7 @@ export function isStenotypistLeaveSelfServiceOnly(
 }
 
 /** §4.6 — Bonus configuration is available to Manager only (Super Admin bypass). */
-export const BONUS_CONFIGURATION_MODULE_ROLES = ['manager'] as const;
+export const BONUS_CONFIGURATION_MODULE_ROLES: readonly UserRole[] = ['manager'];
 
 export function canAccessBonusConfigurationModule(
   roleOrRoles: string | readonly string[] | null | undefined,
@@ -324,7 +324,7 @@ export function canAccessBonusConfigurationModule(
 }
 
 /** §4.6 — Bonuses list is available to Manager and Stenotypist (Super Admin bypass). */
-export const STENOTYPIST_BONUSES_MODULE_ROLES = ['manager', 'stenotypist'] as const;
+export const STENOTYPIST_BONUSES_MODULE_ROLES: readonly UserRole[] = ['manager', 'stenotypist'];
 
 export function canAccessStenotypistBonusesModule(
   roleOrRoles: string | readonly string[] | null | undefined,
@@ -348,7 +348,7 @@ export function isStenotypistBonusesSelfServiceOnly(
 }
 
 /** §5.6 — Penalty configuration is available to Manager only (Super Admin bypass). */
-export const PENALTY_CONFIGURATION_MODULE_ROLES = ['manager'] as const;
+export const PENALTY_CONFIGURATION_MODULE_ROLES: readonly UserRole[] = ['manager'];
 
 export function canAccessPenaltyConfigurationModule(
   roleOrRoles: string | readonly string[] | null | undefined,
@@ -362,7 +362,7 @@ export function canAccessPenaltyConfigurationModule(
 }
 
 /** §5.6 — Penalties list is available to Manager and Stenotypist (Super Admin bypass). */
-export const STENOTYPIST_PENALTIES_MODULE_ROLES = ['manager', 'stenotypist'] as const;
+export const STENOTYPIST_PENALTIES_MODULE_ROLES: readonly UserRole[] = ['manager', 'stenotypist'];
 
 export function canAccessStenotypistPenaltiesModule(
   roleOrRoles: string | readonly string[] | null | undefined,
@@ -386,7 +386,7 @@ export function isStenotypistPenaltiesSelfServiceOnly(
 }
 
 /** §6.7 — Travel expense configuration is available to Manager only (Super Admin bypass). */
-export const TRAVEL_EXPENSE_CONFIGURATION_MODULE_ROLES = ['manager'] as const;
+export const TRAVEL_EXPENSE_CONFIGURATION_MODULE_ROLES: readonly UserRole[] = ['manager'];
 
 export function canAccessTravelExpenseConfigurationModule(
   roleOrRoles: string | readonly string[] | null | undefined,
@@ -400,7 +400,7 @@ export function canAccessTravelExpenseConfigurationModule(
 }
 
 /** §6.7 — Travel expense list is available to Manager and Stenotypist (Super Admin bypass). */
-export const TRAVEL_EXPENSE_LIST_MODULE_ROLES = ['manager', 'stenotypist'] as const;
+export const TRAVEL_EXPENSE_LIST_MODULE_ROLES: readonly UserRole[] = ['manager', 'stenotypist'];
 
 export function canAccessTravelExpenseListModule(
   roleOrRoles: string | readonly string[] | null | undefined,
@@ -424,7 +424,10 @@ export function isStenotypistTravelExpenseSelfServiceOnly(
 }
 
 /** §7.2 — Stenotypist Financials Report is available to Manager and Stenotypist (Super Admin bypass). */
-export const STENOTYPIST_FINANCIALS_REPORT_MODULE_ROLES = ['manager', 'stenotypist'] as const;
+export const STENOTYPIST_FINANCIALS_REPORT_MODULE_ROLES: readonly UserRole[] = [
+  'manager',
+  'stenotypist',
+];
 
 export function canAccessStenotypistFinancialsReportModule(
   roleOrRoles: string | readonly string[] | null | undefined,

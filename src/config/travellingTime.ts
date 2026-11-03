@@ -1,12 +1,16 @@
 /** §3.2 — Travelling time between districts (minutes, validity-dated). */
 export function formatDistrictLabel(record: {
-  districtName: string;
-  districtAlias: string;
+  districtName?: string;
+  districtAlias?: string;
+  name?: string;
+  alias?: string;
 }): string {
-  if (record.districtAlias && record.districtName) {
-    return `${record.districtAlias} – ${record.districtName}`;
+  const districtName = record.districtName ?? record.name ?? '';
+  const districtAlias = record.districtAlias ?? record.alias ?? '';
+  if (districtAlias && districtName) {
+    return `${districtAlias} – ${districtName}`;
   }
-  return record.districtName || record.districtAlias || '—';
+  return districtName || districtAlias || '—';
 }
 
 export function formatTravellingTimeRoute(record: {

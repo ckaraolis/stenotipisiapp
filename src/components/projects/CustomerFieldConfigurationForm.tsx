@@ -3,7 +3,7 @@ import {
   createCustomerFieldValue,
   updateCustomerFieldValue,
 } from '../../api/customers';
-import type { CustomerFieldValue, CustomerRecord } from '../../types/customer';
+import type { CustomerRecord } from '../../types/customer';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';

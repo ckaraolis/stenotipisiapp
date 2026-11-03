@@ -4,6 +4,8 @@ import type {
 } from '../types/stenotypistAsset';
 import { getAuthToken } from '../utils/auth';
 
+export type { StenotypistAsset, StenotypistAssetPayload };
+
 function authHeaders(): HeadersInit {
   const token = getAuthToken();
   return {

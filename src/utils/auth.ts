@@ -48,11 +48,6 @@ interface LoginResponse {
   email: string;
 }
 
-interface VerifyMfaResponse {
-  user: AuthUser;
-  token: string;
-}
-
 export interface MfaChallenge {
   mfaToken: string;
   email: string;
