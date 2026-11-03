@@ -163,8 +163,7 @@ export default function UserDetailsForm({
     if (!fullName.trim()) return t('fullNameRequired');
     if (!username.trim()) return t('usernameRequired');
     if (!email.trim()) return t('emailRequired');
-    if (mode === 'create' && !password.trim()) return t('passwordRequired');
-    if (password.trim()) {
+    if (mode === 'edit' && password.trim()) {
       const policyErrors = validatePasswordPolicy(password.trim());
       if (policyErrors.length > 0) {
         return policyErrors.map((key) => t(key)).join(' ');
@@ -194,14 +193,14 @@ export default function UserDetailsForm({
       customerId: customerValue,
       language,
       roles: assignedRoles,
-      ...(password.trim() ? { password: password.trim() } : {}),
+      ...(mode === 'edit' && password.trim() ? { password: password.trim() } : {}),
     };
 
     setSaving(true);
     try {
       if (mode === 'create') {
         await createUser(payload);
-        onSaved(t('userCreatedSuccess'));
+        onSaved(t('userCreatedWithTempPasswordSuccess'));
       } else if (userId) {
         await updateUser(userId, payload);
         onSaved(t('userUpdatedSuccess'));
@@ -263,19 +262,29 @@ export default function UserDetailsForm({
               required
             />
 
-            <label className="profile-label" htmlFor="userPassword">
-              {t('password')} {mode === 'create' ? '*' : `(${t('optional')})`}
-            </label>
-            <input
-              id="userPassword"
-              type="password"
-              className="profile-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === 'edit' ? t('passwordKeepBlank') : ''}
-              required={mode === 'create'}
-            />
-            <p className="profile-field-hint">{t('passwordPolicyRequirements')}</p>
+            {mode === 'create' ? (
+              <>
+                <label className="profile-label">{t('password')}</label>
+                <p className="profile-field-hint profile-field-hint-inline">
+                  {t('temporaryPasswordAutoHint')}
+                </p>
+              </>
+            ) : (
+              <>
+                <label className="profile-label" htmlFor="userPassword">
+                  {t('password')} ({t('optional')})
+                </label>
+                <input
+                  id="userPassword"
+                  type="password"
+                  className="profile-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('passwordKeepBlank')}
+                />
+                <p className="profile-field-hint">{t('passwordPolicyRequirements')}</p>
+              </>
+            )}
 
             <label className="profile-label" htmlFor="userContactPhone">
               {t('contactPhone')}

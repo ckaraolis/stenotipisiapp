@@ -16,6 +16,7 @@ import {
 import {
   buildPasswordUpdate,
   ensurePasswordExpiryEnforced,
+  generateTemporaryPassword,
   SEED_PASSWORD,
   validatePasswordPolicy,
 } from './passwordPolicy.js';
@@ -454,7 +455,15 @@ export async function validatePasswordResetToken(token) {
 }
 
 export function createUser(input) {
-  const { errors, value } = validateUserInput(input, { requirePassword: true });
+  const temporaryPassword =
+    typeof input.password === 'string' && input.password.trim()
+      ? input.password.trim()
+      : generateTemporaryPassword();
+
+  const { errors, value } = validateUserInput(
+    { ...input, password: temporaryPassword },
+    { requirePassword: true },
+  );
   if (errors.length > 0) {
     return { errors };
   }
@@ -462,7 +471,7 @@ export function createUser(input) {
   const data = readUsersFile();
   const pwdResult = buildPasswordUpdate(
     { passwordHash: null, passwordHistory: [], passwordChangedAt: null },
-    value.password,
+    temporaryPassword,
     hashPassword,
     () => false,
   );
@@ -498,7 +507,7 @@ export function createUser(input) {
     // Server-only enrollment payload (never send totpSecret to the browser).
     enrollment: {
       totpSecret: user.totpSecret,
-      temporaryPassword: value.password,
+      temporaryPassword,
     },
   };
 }

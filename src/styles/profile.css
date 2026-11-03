@@ -93,6 +93,16 @@
   color: var(--color-text-muted);
 }
 
+/* Keep hints under the input column so label/field pairing stays intact. */
+.profile-grid > .profile-field-hint {
+  grid-column: 2;
+}
+
+.profile-field-hint-inline {
+  margin: 0;
+  line-height: 1.45;
+}
+
 .user-details-form {
   margin-bottom: 20px;
 }

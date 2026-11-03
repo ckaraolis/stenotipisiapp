@@ -1367,9 +1367,13 @@ export const translations = {
       'Customer assignment changed. Previous role assignments were cleared.',
     userStatusReadOnlyHint: 'Status is changed from the Users list.',
     passwordKeepBlank: 'Leave blank to keep current password',
+    temporaryPasswordAutoHint:
+      'A temporary password will be generated automatically and emailed with the authenticator QR code. The user must change it on first login.',
     cancel: 'Cancel',
     save: 'Save',
     userCreatedSuccess: 'User created successfully.',
+    userCreatedWithTempPasswordSuccess:
+      'User created. A temporary password and authenticator QR code were emailed. They must change the password on first login.',
     userUpdatedSuccess: 'User saved successfully.',
     userSaveError: 'Could not save user.',
     userActivatedSuccess: 'User activated successfully.',
@@ -2850,9 +2854,13 @@ export const translations = {
       'Η ανάθεση πελάτη άλλαξε. Οι προηγούμενοι ρόλοι διαγράφηκαν.',
     userStatusReadOnlyHint: 'Η κατάσταση αλλάζει από τη λίστα χρηστών.',
     passwordKeepBlank: 'Αφήστε κενό για να διατηρηθεί ο τρέχων κωδικός',
+    temporaryPasswordAutoHint:
+      'Θα δημιουργηθεί αυτόματα προσωρινός κωδικός και θα σταλεί με email μαζί με το QR του authenticator. Ο χρήστης πρέπει να τον αλλάξει στην πρώτη σύνδεση.',
     cancel: 'Ακύρωση',
     save: 'Αποθήκευση',
     userCreatedSuccess: 'Ο χρήστης δημιουργήθηκε επιτυχώς.',
+    userCreatedWithTempPasswordSuccess:
+      'Ο χρήστης δημιουργήθηκε. Στάλθηκαν με email ο προσωρινός κωδικός και το QR του authenticator. Πρέπει να αλλάξει τον κωδικό στην πρώτη σύνδεση.',
     userUpdatedSuccess: 'Ο χρήστης αποθηκεύτηκε επιτυχώς.',
     userSaveError: 'Δεν ήταν δυνατή η αποθήκευση του χρήστη.',
     userActivatedSuccess: 'Ο χρήστης ενεργοποιήθηκε επιτυχώς.',

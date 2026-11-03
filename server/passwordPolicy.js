@@ -14,6 +14,30 @@ export const PASSWORD_POLICY = {
 /** Default password for the development seed user (meets policy). */
 export const SEED_PASSWORD = 'Xka123!';
 
+/**
+ * Generate a one-time password that meets PASSWORD_POLICY.
+ * Used when admins create users without choosing a password.
+ */
+export function generateTemporaryPassword(length = 12) {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const digits = '23456789';
+  const special = '!@#$%&*';
+  const all = upper + lower + digits + special;
+
+  const pick = (alphabet) => alphabet[Math.floor(Math.random() * alphabet.length)];
+  const chars = [pick(upper), pick(lower), pick(digits), pick(special)];
+  while (chars.length < Math.max(length, PASSWORD_POLICY.minLength)) {
+    chars.push(pick(all));
+  }
+  // Shuffle
+  for (let i = chars.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
 const SPECIAL_CHAR_PATTERN = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
