@@ -126,18 +126,31 @@ async function sendViaSmtp({ to, subject, text, html, config, fromHeader, replyT
       cid: file.cid || undefined,
     }));
 
+  // Prefer the authenticated SMTP mailbox as the envelope sender so providers
+  // do not treat the message as spoofed when From/Reply-To differ.
+  const envelopeFrom = config.smtp.user || fromHeader;
+  // Reply-To equal to the recipient is a common spam/quarantine signal.
+  const safeReplyTo =
+    replyTo && replyTo.trim().toLowerCase() !== to.trim().toLowerCase()
+      ? replyTo.trim()
+      : '';
+
   const info = await transporter.sendMail({
     from: fromHeader,
     to,
     subject,
     text,
     html,
-    ...(replyTo ? { replyTo } : {}),
+    envelope: {
+      from: envelopeFrom,
+      to,
+    },
+    ...(safeReplyTo ? { replyTo: safeReplyTo } : {}),
     ...(mailAttachments.length > 0 ? { attachments: mailAttachments } : {}),
   });
 
   console.log(
-    `[Email SMTP] From ${fromHeader}${replyTo ? ` (Reply-To ${replyTo})` : ''} → ${to} — ${subject} (${info.messageId || 'ok'})`,
+    `[Email SMTP] From ${fromHeader}${safeReplyTo ? ` (Reply-To ${safeReplyTo})` : ''} → ${to} — ${subject} (${info.messageId || 'ok'})`,
   );
   return {
     sent: true,
@@ -146,7 +159,7 @@ async function sendViaSmtp({ to, subject, text, html, config, fromHeader, replyT
     to,
     subject,
     from: fromHeader,
-    replyTo: replyTo || '',
+    replyTo: safeReplyTo || '',
     messageId: info.messageId || '',
   };
 }

@@ -1334,7 +1334,7 @@ export const translations = {
     forgotPasswordTitle: 'Forgot your password?',
     forgotPasswordSubtitle: 'Enter your email address and we will send you a reset link.',
     forgotPasswordSuccess:
-      'If an account exists for that email, a password reset link has been sent.',
+      'If an account exists for that email, a password reset link has been sent. Check Inbox and Spam/Junk, and allow a few minutes for delivery.',
     forgotPasswordError: 'Could not send the reset link. Please try again.',
     sendResetLink: 'Send reset link',
     resetPasswordTitle: 'Set a new password',
@@ -2822,7 +2822,7 @@ export const translations = {
     forgotPasswordTitle: 'Ξεχάσατε τον κωδικό σας;',
     forgotPasswordSubtitle: 'Εισάγετε το email σας και θα σας στείλουμε σύνδεσμο επαναφοράς.',
     forgotPasswordSuccess:
-      'Αν υπάρχει λογαριασμός με αυτό το email, στάλθηκε σύνδεσμος επαναφοράς.',
+      'Αν υπάρχει λογαριασμός με αυτό το email, στάλθηκε σύνδεσμος επαναφοράς. Ελέγξτε Inbox και Spam/Junk, και περιμένετε λίγα λεπτά.',
     forgotPasswordError: 'Δεν ήταν δυνατή η αποστολή συνδέσμου. Δοκιμάστε ξανά.',
     sendResetLink: 'Αποστολή συνδέσμου',
     resetPasswordTitle: 'Ορισμός νέου κωδικού',
