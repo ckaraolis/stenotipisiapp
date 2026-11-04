@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchCustomers, type CustomerOption } from '../../api/profile';
 import { deleteStenoRate, fetchStenoRateRecords } from '../../api/stenoRates';
+import { downloadStenoRatesImportTemplate } from '../../config/stenoRatesImport';
 import type { StenoRateImportResult, StenoRateRecord } from '../../types/stenoRates';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
@@ -163,6 +164,13 @@ export default function StenoRatesTable() {
           <p className="page-subtitle">{t('stenoRatesSubtitle')}</p>
         </div>
         <div className="customers-header-actions">
+          <button
+            type="button"
+            className="profile-cancel-btn"
+            onClick={downloadStenoRatesImportTemplate}
+          >
+            {t('downloadImportTemplate')}
+          </button>
           <button type="button" className="profile-cancel-btn" onClick={() => setShowImport(true)}>
             {t('importFromExcel')}
           </button>

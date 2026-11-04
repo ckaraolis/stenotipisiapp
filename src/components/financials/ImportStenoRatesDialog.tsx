@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { importStenoRateRows } from '../../api/stenoRates';
+import { downloadStenoRatesImportTemplate } from '../../config/stenoRatesImport';
 import type { StenoRateImportResult, StenoRateImportRow } from '../../types/stenoRates';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
@@ -11,24 +12,6 @@ interface ImportStenoRatesDialogProps {
   onClose: () => void;
   onImported: (summary: StenoRateImportResult) => void;
 }
-
-const TEMPLATE_HEADERS = [
-  'Customer',
-  'Hourly Rate',
-  'Hourly Rate (Expedited)',
-  'Hourly Rate (Outside Working Hrs)',
-  'Hourly Rate (Outside Working Hrs & Expedited)',
-  '1st Discount Percentage',
-  'Nr Of Exempted Stenotypists',
-  '2nd Discount Percentage',
-  '2nd Stenotypist Discount Threshold',
-  'Travel by Km Amount',
-  'SLA',
-  'SLA (Expedited)',
-  'Working Hours Start',
-  'Working Hours End',
-  'Validity From',
-];
 
 function parseImportError(message: string, t: (key: TranslationKey) => string): string {
   try {
@@ -49,32 +32,6 @@ export default function ImportStenoRatesDialog({ onClose, onImported }: ImportSt
   const [rows, setRows] = useState<StenoRateImportRow[]>([]);
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
-
-  const handleDownloadTemplate = () => {
-    const worksheet = XLSX.utils.aoa_to_sheet([
-      TEMPLATE_HEADERS,
-      [
-        'GCP AUDITORS LTD',
-        '100',
-        '100',
-        '0',
-        '0',
-        '0',
-        '0',
-        '0',
-        '0',
-        '0',
-        '1 day',
-        '',
-        '08:00',
-        '17:00',
-        '01/01/2024',
-      ],
-    ]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Steno Rates');
-    XLSX.writeFile(workbook, 'steno-rates-import-template.xlsx');
-  };
 
   const handleFileChange = async (file: File | null) => {
     setError('');
@@ -138,7 +95,11 @@ export default function ImportStenoRatesDialog({ onClose, onImported }: ImportSt
         {error && <div className="profile-alert profile-alert-error">{error}</div>}
 
         <div className="customer-import-actions">
-          <button type="button" className="profile-cancel-btn" onClick={handleDownloadTemplate}>
+          <button
+            type="button"
+            className="profile-cancel-btn"
+            onClick={downloadStenoRatesImportTemplate}
+          >
             {t('downloadImportTemplate')}
           </button>
           <button type="button" className="btn-primary" onClick={() => inputRef.current?.click()}>
