@@ -52,5 +52,5 @@ export interface StenoRateImportResult {
   created: number;
   updated: number;
   skipped: number;
-  errors: Array<{ row: number; message: string }>;
+  errors: Array<{ row: number; message: string; detail?: string }>;
 }

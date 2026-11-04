@@ -971,6 +971,9 @@ export const translations = {
     stenoRateImportRowsRequired: 'Import rows are required.',
     stenoRateImportSuccess:
       'Import finished. Created: {created}, updated: {updated}, skipped: {skipped}.',
+    stenoRateImportSkipReasons: 'Skip reasons: {reasons}.',
+    stenoRateImportRowEmpty: 'Row is missing Customer and Validity From.',
+    importRowLabel: 'Row',
     audioRatesSubtitle: 'Configure audio service rates per customer.',
     captionRatesSubtitle: 'Configure caption service rates per customer.',
     audioRemunerationSubtitle: 'Manage audio remuneration rules per customer.',
@@ -2520,6 +2523,9 @@ export const translations = {
     stenoRateImportRowsRequired: 'Απαιτούνται γραμμές εισαγωγής.',
     stenoRateImportSuccess:
       'Η εισαγωγή ολοκληρώθηκε. Δημιουργήθηκαν: {created}, ενημερώθηκαν: {updated}, παραλείφθηκαν: {skipped}.',
+    stenoRateImportSkipReasons: 'Λόγοι παράλειψης: {reasons}.',
+    stenoRateImportRowEmpty: 'Η γραμμή δεν έχει Πελάτη και Ημερομηνία Ισχύος Από.',
+    importRowLabel: 'Γραμμή',
     audioRatesSubtitle: 'Ρύθμιση τιμών υπηρεσιών audio ανά πελάτη.',
     captionRatesSubtitle: 'Ρύθμιση τιμών υπηρεσιών caption ανά πελάτη.',
     audioRemunerationSubtitle: 'Διαχείριση κανόνων αμοιβής audio ανά πελάτη.',

@@ -51,13 +51,25 @@ export default function ImportStenoRatesDialog({ onClose, onImported }: ImportSt
       const parsed = XLSX.utils.sheet_to_json<StenoRateImportRow>(sheet, {
         defval: '',
         raw: false,
+        // Keep Excel date serials as numbers when the cell is not date-formatted,
+        // so the server can convert them reliably.
+        cellDates: false,
       });
       if (parsed.length === 0) {
         setError(t('stenoRateImportEmptyFile'));
         return;
       }
+      // Strip UTF-8 BOM / odd whitespace from header keys (common in Excel exports).
+      const normalizedRows = parsed.map((row) => {
+        const next: StenoRateImportRow = {};
+        for (const [key, value] of Object.entries(row)) {
+          const cleanKey = key.replace(/^\uFEFF/, '').trim();
+          next[cleanKey] = value;
+        }
+        return next;
+      });
       setFileName(file.name);
-      setRows(parsed);
+      setRows(normalizedRows);
     } catch {
       setError(t('stenoRateImportParseError'));
     }

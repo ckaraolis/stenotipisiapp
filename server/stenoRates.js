@@ -20,7 +20,20 @@ function generateStenoRateId() {
 }
 
 function normalizeText(value) {
-  return typeof value === 'string' ? value.trim() : '';
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'string') return value.replace(/^\uFEFF/, '').trim();
+  return String(value).replace(/^\uFEFF/, '').trim();
+}
+
+function normalizeMatchKey(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function normalizeNumber(value, fallback = 0) {
@@ -37,21 +50,55 @@ function normalizeInteger(value, fallback = 0) {
   return numeric;
 }
 
+function excelSerialToIso(serial) {
+  const numeric = Number(serial);
+  if (!Number.isFinite(numeric) || numeric < 20000 || numeric > 80000) return '';
+  // Excel's day 0 is 1899-12-30 (accounts for the 1900 leap-year bug).
+  const utcDays = Math.floor(numeric);
+  const date = new Date(Date.UTC(1899, 11, 30) + utcDays * 86400000);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+function expandTwoDigitYear(yearText) {
+  const year = Number.parseInt(yearText, 10);
+  if (!Number.isFinite(year)) return '';
+  if (yearText.length === 4) return String(year);
+  // Pivot: 00-69 → 2000-2069, 70-99 → 1970-1999
+  return String(year >= 70 ? 1900 + year : 2000 + year);
+}
+
 function normalizeValidityFrom(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const fromSerial = excelSerialToIso(value);
+    if (fromSerial) return fromSerial;
+  }
+
   const text = normalizeText(value);
   if (!text) return '';
-  // Support DD/MM/YYYY and YYYY-MM-DD
-  const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text);
+
+  // Excel serial stored as plain number/text
+  if (/^\d{5}(?:\.\d+)?$/.test(text)) {
+    const fromSerial = excelSerialToIso(text);
+    if (fromSerial) return fromSerial;
+  }
+
+  // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss...
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+  if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+
+  // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY (+ optional time), prefer EU day-first
+  const dmy = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})(?:\s|$|T)/.exec(`${text} `);
   if (dmy) {
     const day = dmy[1].padStart(2, '0');
     const month = dmy[2].padStart(2, '0');
-    return `${dmy[3]}-${month}-${day}`;
+    const year = expandTwoDigitYear(dmy[3]);
+    if (year && Number(month) >= 1 && Number(month) <= 12 && Number(day) >= 1 && Number(day) <= 31) {
+      return `${year}-${month}-${day}`;
+    }
   }
-  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
-  if (ymd) return text;
-  const parsed = new Date(text);
-  if (Number.isNaN(parsed.getTime())) return '';
-  return parsed.toISOString().slice(0, 10);
+
+  return '';
 }
 
 function normalizeTime(value) {
@@ -63,14 +110,24 @@ function normalizeTime(value) {
 }
 
 function findCustomerByNameOrAlias(value) {
-  const needle = normalizeText(value).toLowerCase();
+  const needle = normalizeMatchKey(value);
   if (!needle) return null;
   const customers = listCustomerRecords();
+  const exact =
+    customers.find((customer) => {
+      const alias = normalizeMatchKey(customer.alias);
+      const name = normalizeMatchKey(customer.name);
+      return alias === needle || name === needle;
+    }) ?? null;
+  if (exact) return exact;
+
+  // Fallback: Excel name contains alias (or vice versa) for short aliases (3+ chars)
   return (
-    customers.find(
-      (customer) =>
-        customer.alias.toLowerCase() === needle || customer.name.toLowerCase() === needle,
-    ) ?? null
+    customers.find((customer) => {
+      const alias = normalizeMatchKey(customer.alias);
+      if (alias.length < 3) return false;
+      return needle === alias || needle.includes(alias) || alias.includes(needle);
+    }) ?? null
   );
 }
 
@@ -306,6 +363,14 @@ export function deleteStenoRate(id) {
   return { rate: toPublicStenoRate(removed) };
 }
 
+function normalizeHeaderKey(header) {
+  return String(header ?? '')
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_/&()-]+/g, '');
+}
+
 function getImportField(raw, ...keys) {
   for (const key of keys) {
     if (raw[key] !== undefined && raw[key] !== null && String(raw[key]).trim() !== '') {
@@ -314,10 +379,8 @@ function getImportField(raw, ...keys) {
   }
   const entries = Object.entries(raw ?? {});
   for (const key of keys) {
-    const needle = String(key).trim().toLowerCase().replace(/[\s_/&()-]+/g, '');
-    const match = entries.find(
-      ([header]) => String(header).trim().toLowerCase().replace(/[\s_/&()-]+/g, '') === needle,
-    );
+    const needle = normalizeHeaderKey(key);
+    const match = entries.find(([header]) => normalizeHeaderKey(header) === needle);
     if (match && match[1] !== undefined && match[1] !== null && String(match[1]).trim() !== '') {
       return match[1];
     }
@@ -342,7 +405,16 @@ function normalizeImportRow(raw = {}) {
   }
 
   return {
-    customer: getImportField(raw, 'Customer', 'Customer Name', 'Name', 'Alias', 'customer'),
+    customer: getImportField(
+      raw,
+      'Customer',
+      'Customer Name',
+      'CustomerName',
+      'Name',
+      'Alias',
+      'customer',
+      'Πελάτης',
+    ),
     customerId: getImportField(raw, 'customerId', 'Customer Id'),
     hourlyRate: getImportField(raw, 'Hourly Rate', 'hourlyRate'),
     hourlyRateExpedited: getImportField(
@@ -392,7 +464,16 @@ function normalizeImportRow(raw = {}) {
     slaExpedited: getImportField(raw, 'SLA (Expedited)', 'SLA Expedited', 'slaExpedited'),
     workingHoursStart,
     workingHoursEnd,
-    validityFrom: getImportField(raw, 'Validity From', 'Valid From', 'validityFrom'),
+    validityFrom: getImportField(
+      raw,
+      'Validity From',
+      'Valid From',
+      'ValidityFrom',
+      'ValidFrom',
+      'validityFrom',
+      'Ισχύς Από',
+      'Ισχύει Από',
+    ),
   };
 }
 
@@ -410,6 +491,7 @@ export function importStenoRates(rows) {
     const row = normalizeImportRow(raw);
     if (!row.customer && !row.customerId && !row.validityFrom) {
       summary.skipped += 1;
+      summary.errors.push({ row: rowNumber, message: 'stenoRateImportRowEmpty' });
       return;
     }
 
@@ -417,7 +499,22 @@ export function importStenoRates(rows) {
       (row.customerId && findCustomerById(row.customerId)) ||
       findCustomerByNameOrAlias(row.customer);
     if (!matchedCustomer) {
-      summary.errors.push({ row: rowNumber, message: 'stenoRateCustomerInvalid' });
+      summary.errors.push({
+        row: rowNumber,
+        message: 'stenoRateCustomerInvalid',
+        detail: normalizeText(row.customer) || normalizeText(row.customerId),
+      });
+      summary.skipped += 1;
+      return;
+    }
+
+    const validityFrom = normalizeValidityFrom(row.validityFrom);
+    if (!validityFrom) {
+      summary.errors.push({
+        row: rowNumber,
+        message: 'stenoRateValidityFromRequired',
+        detail: normalizeText(row.validityFrom),
+      });
       summary.skipped += 1;
       return;
     }
@@ -425,10 +522,10 @@ export function importStenoRates(rows) {
     const payload = {
       ...row,
       customerId: matchedCustomer.id,
+      validityFrom,
     };
 
     const data = readStenoRatesFile();
-    const validityFrom = normalizeValidityFrom(row.validityFrom);
     const existing = (data.rates ?? []).find(
       (rate) => rate.customerId === matchedCustomer.id && rate.validityFrom === validityFrom,
     );

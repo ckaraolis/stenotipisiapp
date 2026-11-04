@@ -118,12 +118,35 @@ export default function StenoRatesTable() {
 
   const handleImported = (summary: StenoRateImportResult) => {
     setShowImport(false);
-    setSuccess(
-      t('stenoRateImportSuccess')
-        .replace('{created}', String(summary.created))
-        .replace('{updated}', String(summary.updated))
-        .replace('{skipped}', String(summary.skipped)),
-    );
+    let message = t('stenoRateImportSuccess')
+      .replace('{created}', String(summary.created))
+      .replace('{updated}', String(summary.updated))
+      .replace('{skipped}', String(summary.skipped));
+
+    if (summary.skipped > 0 && summary.errors.length > 0) {
+      const reasonCounts = new Map<string, number>();
+      for (const entry of summary.errors) {
+        reasonCounts.set(entry.message, (reasonCounts.get(entry.message) ?? 0) + 1);
+      }
+      const reasonText = [...reasonCounts.entries()]
+        .map(([key, count]) => `${t(key as TranslationKey)} (${count})`)
+        .join('; ');
+      const samples = summary.errors
+        .slice(0, 5)
+        .map((entry) => {
+          const label = t(entry.message as TranslationKey);
+          return entry.detail
+            ? `${t('importRowLabel')} ${entry.row}: ${label} — ${entry.detail}`
+            : `${t('importRowLabel')} ${entry.row}: ${label}`;
+        })
+        .join(' | ');
+      message = `${message} ${t('stenoRateImportSkipReasons').replace('{reasons}', reasonText)} ${samples}`;
+      setError(message);
+      setSuccess('');
+    } else {
+      setSuccess(message);
+      setError('');
+    }
     void loadRates();
   };
 
