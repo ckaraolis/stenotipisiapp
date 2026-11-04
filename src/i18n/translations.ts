@@ -961,6 +961,15 @@ export const translations = {
     deleteStenoRateTitle: 'Delete Steno Rate',
     deleteStenoRateMessage:
       'Are you sure you want to delete the steno rate for {customer} (valid from {validityFrom})? This action cannot be undone.',
+    deleteSelected: 'Delete Selected',
+    selectAll: 'Select all',
+    select: 'Select',
+    deleteStenoRatesBulkTitle: 'Delete Selected Steno Rates',
+    deleteStenoRatesBulkMessage:
+      'Are you sure you want to delete {count} selected steno rate(s)? This action cannot be undone.',
+    stenoRatesBulkDeletedSuccess: 'Deleted {count} steno rate(s) successfully.',
+    stenoRatesBulkDeletePartial:
+      'Deleted {deleted} steno rate(s), but {failed} could not be deleted.',
     importStenoRatesTitle: 'Import Steno Rates from Excel',
     importStenoRatesHint:
       'Upload an Excel export from the old system. Matching is done by Customer name or alias plus Validity From — existing rows are updated, new combinations are created.',
@@ -2514,6 +2523,15 @@ export const translations = {
     deleteStenoRateTitle: 'Διαγραφή Τιμολογίου Steno',
     deleteStenoRateMessage:
       'Είστε βέβαιοι ότι θέλετε να διαγράψετε το τιμολόγιο steno για {customer} (ισχύει από {validityFrom}); Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.',
+    deleteSelected: 'Διαγραφή Επιλεγμένων',
+    selectAll: 'Επιλογή όλων',
+    select: 'Επιλογή',
+    deleteStenoRatesBulkTitle: 'Διαγραφή Επιλεγμένων Τιμολογίων Steno',
+    deleteStenoRatesBulkMessage:
+      'Είστε βέβαιοι ότι θέλετε να διαγράψετε {count} επιλεγμένα τιμολόγια steno; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.',
+    stenoRatesBulkDeletedSuccess: 'Διαγράφηκαν {count} τιμολόγια steno επιτυχώς.',
+    stenoRatesBulkDeletePartial:
+      'Διαγράφηκαν {deleted} τιμολόγια steno, αλλά {failed} δεν ήταν δυνατό να διαγραφούν.',
     importStenoRatesTitle: 'Εισαγωγή Τιμολογίων Steno από Excel',
     importStenoRatesHint:
       'Ανεβάστε εξαγωγή Excel από το παλιό σύστημα. Η αντιστοίχιση γίνεται με όνομα/alias πελάτη και Ημερομηνία Ισχύος Από — υπάρχουσες γραμμές ενημερώνονται, νέοι συνδυασμοί δημιουργούνται.',

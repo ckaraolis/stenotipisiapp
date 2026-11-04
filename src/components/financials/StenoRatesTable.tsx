@@ -49,6 +49,8 @@ export default function StenoRatesTable() {
   const [selectedRateId, setSelectedRateId] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StenoRateRecord | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
 
@@ -63,6 +65,7 @@ export default function StenoRatesTable() {
         search,
       });
       setRates(rows);
+      setSelectedIds((current) => current.filter((id) => rows.some((row) => row.id === id)));
     } catch {
       setError(t('stenoRatesLoadError'));
     } finally {
@@ -97,8 +100,29 @@ export default function StenoRatesTable() {
     () => rates.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
     [rates, currentPage],
   );
+  const pageIds = useMemo(() => pageRows.map((row) => row.id), [pageRows]);
+  const selectedOnPageCount = pageIds.filter((id) => selectedIds.includes(id)).length;
+  const allPageSelected = pageIds.length > 0 && selectedOnPageCount === pageIds.length;
+  const somePageSelected = selectedOnPageCount > 0 && !allPageSelected;
 
-  const resetPage = () => setPage(1);
+  const resetPage = () => {
+    setPage(1);
+    setSelectedIds([]);
+  };
+
+  const toggleSelectAllPage = () => {
+    if (allPageSelected) {
+      setSelectedIds((current) => current.filter((id) => !pageIds.includes(id)));
+      return;
+    }
+    setSelectedIds((current) => [...new Set([...current, ...pageIds])]);
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
+    );
+  };
 
   const handleSaved = (message: string) => {
     setFormMode('closed');
@@ -154,10 +178,44 @@ export default function StenoRatesTable() {
     try {
       await deleteStenoRate(deleteTarget.id);
       setDeleteTarget(null);
+      setSelectedIds((current) => current.filter((id) => id !== deleteTarget.id));
       setSuccess(t('stenoRateDeletedSuccess'));
       await loadRates();
     } catch (err) {
       setDeleteError(parseDeleteError((err as Error).message, t));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    if (selectedIds.length === 0) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const failures: string[] = [];
+      for (const id of selectedIds) {
+        try {
+          await deleteStenoRate(id);
+        } catch (err) {
+          failures.push(parseDeleteError((err as Error).message, t));
+        }
+      }
+      const deletedCount = selectedIds.length - failures.length;
+      setShowBulkDelete(false);
+      setSelectedIds([]);
+      if (failures.length > 0) {
+        setError(
+          t('stenoRatesBulkDeletePartial')
+            .replace('{deleted}', String(deletedCount))
+            .replace('{failed}', String(failures.length)),
+        );
+        setSuccess('');
+      } else {
+        setSuccess(t('stenoRatesBulkDeletedSuccess').replace('{count}', String(deletedCount)));
+        setError('');
+      }
+      await loadRates();
     } finally {
       setDeleting(false);
     }
@@ -185,6 +243,18 @@ export default function StenoRatesTable() {
           <p className="page-subtitle">{t('stenoRatesSubtitle')}</p>
         </div>
         <div className="customers-header-actions">
+          {selectedIds.length > 0 ? (
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={() => {
+                setDeleteError('');
+                setShowBulkDelete(true);
+              }}
+            >
+              {t('deleteSelected')} ({selectedIds.length})
+            </button>
+          ) : null}
           <button
             type="button"
             className="profile-cancel-btn"
@@ -284,6 +354,18 @@ export default function StenoRatesTable() {
             <table className="financials-table">
               <thead>
                 <tr>
+                  <th className="select-col">
+                    <input
+                      type="checkbox"
+                      checked={allPageSelected}
+                      ref={(element) => {
+                        if (element) element.indeterminate = somePageSelected;
+                      }}
+                      onChange={toggleSelectAllPage}
+                      aria-label={t('selectAll')}
+                      disabled={pageIds.length === 0}
+                    />
+                  </th>
                   <th className="sorted-col">
                     {t('customer')}
                     <SortIcon />
@@ -308,13 +390,21 @@ export default function StenoRatesTable() {
               <tbody>
                 {pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="empty-row">
+                    <td colSpan={17} className="empty-row">
                       {t('noRecordsFound')}
                     </td>
                   </tr>
                 ) : (
                   pageRows.map((row) => (
-                    <tr key={row.id}>
+                    <tr key={row.id} className={selectedIds.includes(row.id) ? 'row-selected' : undefined}>
+                      <td className="select-col">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(row.id)}
+                          onChange={() => toggleSelectRow(row.id)}
+                          aria-label={`${t('select')} ${row.customerName || row.customerAlias}`}
+                        />
+                      </td>
                       <td>{row.customerName || row.customerAlias}</td>
                       <td>{formatAmount(row.hourlyRate)}</td>
                       <td>{formatAmount(row.hourlyRateExpedited)}</td>
@@ -405,7 +495,13 @@ export default function StenoRatesTable() {
       ) : null}
 
       {deleteTarget ? (
-        <div className="dialog-overlay" role="presentation" onClick={() => setDeleteTarget(null)}>
+        <div
+          className="dialog-overlay"
+          role="presentation"
+          onClick={() => {
+            if (!deleting) setDeleteTarget(null);
+          }}
+        >
           <div
             className="dialog-card"
             role="dialog"
@@ -438,6 +534,48 @@ export default function StenoRatesTable() {
                 disabled={deleting}
               >
                 {deleting ? t('saving') : t('delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showBulkDelete ? (
+        <div
+          className="dialog-overlay"
+          role="presentation"
+          onClick={() => {
+            if (!deleting) setShowBulkDelete(false);
+          }}
+        >
+          <div
+            className="dialog-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-steno-rates-bulk-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="delete-steno-rates-bulk-title">{t('deleteStenoRatesBulkTitle')}</h2>
+            <p>{t('deleteStenoRatesBulkMessage').replace('{count}', String(selectedIds.length))}</p>
+            {deleteError ? (
+              <div className="profile-alert profile-alert-error">{deleteError}</div>
+            ) : null}
+            <div className="dialog-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowBulkDelete(false)}
+                disabled={deleting}
+              >
+                {t('cancel')}
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => void handleBulkDeleteConfirm()}
+                disabled={deleting}
+              >
+                {deleting ? t('saving') : t('deleteSelected')}
               </button>
             </div>
           </div>

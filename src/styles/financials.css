@@ -210,6 +210,22 @@
   margin-top: 8px;
 }
 
+.financials-table .select-col {
+  width: 42px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.financials-table .select-col input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.financials-table tr.row-selected td {
+  background: rgba(15, 76, 129, 0.06);
+}
+
 .proforma-process-groups {
   display: flex;
   flex-direction: column;
