@@ -8,7 +8,7 @@ import {
 import crypto from 'node:crypto';
 import { findUserById, listUsers } from './db.js';
 import { hasPermission } from './permissions.js';
-
+
 
 export const AUDIT_MODULES = [
   'scheduling',
@@ -293,15 +293,11 @@ export function getCustomerAuditFieldMap(customer) {
     'Contact Person': customer.contactPerson ?? '',
     'Contact Phone': customer.contactPhone ?? '',
     'Contact Email': customer.contactEmail ?? '',
-    'Payment Terms': customer.paymentTerms ?? '',
     'Priority ERP Number': customer.priorityErpNumber ?? '',
     'Hourly Rate': customer.hourlyRate ?? '',
     SLA: customer.sla ?? '',
     'Travelling Charges': customer.travellingCharges ?? '',
     Remarks: customer.remarks ?? '',
-    'Steno Customer': customer.isStenoCustomer === true,
-    'Audio Customer': customer.isAudioCustomer === true,
-    'Captions Customer': customer.isCaptionsCustomer === true,
     'Field 1 Status': customer.field1Status ?? '',
     'Field 1 Name': customer.field1Name ?? '',
     'Field 2 Status': customer.field2Status ?? '',
