@@ -4,7 +4,7 @@ import {
   readCollection,
   writeCollection,
 } from './collectionStore.js';
-import { findCustomerById, listCustomerRecords } from './customers.js';
+import { createCustomer, findCustomerById, listCustomerRecords } from './customers.js';
 
 function readStenoRatesFile() {
   ensureCollectionFile('stenoRates', { rates: [] });
@@ -29,9 +29,11 @@ function normalizeText(value) {
 
 function normalizeMatchKey(value) {
   return normalizeText(value)
-    .toLowerCase()
+    .toLocaleLowerCase('el-GR')
+    .normalize('NFC')
     .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
+    // Keep all letters/numbers (Latin + Greek); strip punctuation only.
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -110,25 +112,99 @@ function normalizeTime(value) {
 }
 
 function findCustomerByNameOrAlias(value) {
-  const needle = normalizeMatchKey(value);
+  const raw = normalizeText(value);
+  if (!raw) return null;
+  const needle = normalizeMatchKey(raw);
   if (!needle) return null;
   const customers = listCustomerRecords();
+
+  // 1) Exact case-insensitive name/alias (preserves punctuation differences only via trim)
+  const direct =
+    customers.find((customer) => {
+      const name = normalizeText(customer.name);
+      const alias = normalizeText(customer.alias);
+      return (
+        name.localeCompare(raw, undefined, { sensitivity: 'accent' }) === 0 ||
+        alias.localeCompare(raw, undefined, { sensitivity: 'accent' }) === 0 ||
+        name.toLocaleLowerCase('el-GR') === raw.toLocaleLowerCase('el-GR') ||
+        alias.toLocaleLowerCase('el-GR') === raw.toLocaleLowerCase('el-GR')
+      );
+    }) ?? null;
+  if (direct) return direct;
+
+  // 2) Normalized key match (punctuation / & / spacing)
   const exact =
     customers.find((customer) => {
       const alias = normalizeMatchKey(customer.alias);
       const name = normalizeMatchKey(customer.name);
-      return alias === needle || name === needle;
+      return (alias && alias === needle) || (name && name === needle);
     }) ?? null;
   if (exact) return exact;
 
-  // Fallback: Excel name contains alias (or vice versa) for short aliases (3+ chars)
+  // 3) Fallback: Excel name contains a distinctive alias (4+ chars) — avoid short false matches
   return (
     customers.find((customer) => {
       const alias = normalizeMatchKey(customer.alias);
-      if (alias.length < 3) return false;
-      return needle === alias || needle.includes(alias) || alias.includes(needle);
+      if (alias.length < 4) return false;
+      return (
+        needle.includes(` ${alias} `) ||
+        needle.startsWith(`${alias} `) ||
+        needle.endsWith(` ${alias}`) ||
+        needle === alias
+      );
     }) ?? null
   );
+}
+
+function buildAliasFromCustomerName(name) {
+  const cleaned = normalizeText(name);
+  const stop = new Set(['ltd', 'limited', 'plc', 'the', 'of', 'and', 'v', 'vs', 'δεπε', 'δεπe']);
+  const tokens = cleaned
+    .split(/[\s&/–—-]+/)
+    .map((token) => token.replace(/[^\p{L}\p{N}]/gu, ''))
+    .filter(Boolean)
+    .filter((token) => !stop.has(token.toLocaleLowerCase('el-GR')));
+
+  let base = '';
+  if (tokens.length === 0) base = 'CUST';
+  else if (tokens.length === 1) base = tokens[0].slice(0, 12);
+  else if (tokens.length === 2) base = `${tokens[0].slice(0, 6)}${tokens[1].slice(0, 6)}`;
+  else base = tokens.map((token) => token[0]).join('').slice(0, 12);
+
+  base = base.toLocaleUpperCase('el-GR') || 'CUST';
+  const used = new Set(
+    listCustomerRecords().map((customer) => normalizeText(customer.alias).toLocaleLowerCase('el-GR')),
+  );
+  let alias = base;
+  let index = 2;
+  while (used.has(alias.toLocaleLowerCase('el-GR'))) {
+    const suffix = String(index++);
+    alias = `${base.slice(0, Math.max(1, 12 - suffix.length))}${suffix}`;
+  }
+  return alias;
+}
+
+function ensureCustomerForImport(customerName, rateRow = {}) {
+  const existing = findCustomerByNameOrAlias(customerName);
+  if (existing) return { customer: existing, created: false };
+
+  const name = normalizeText(customerName);
+  if (!name) return { customer: null, created: false, error: 'stenoRateCustomerInvalid' };
+
+  const result = createCustomer({
+    name,
+    alias: buildAliasFromCustomerName(name),
+    hourlyRate: rateRow.hourlyRate ?? 0,
+    sla: rateRow.sla || '1 day',
+    isStenoCustomer: true,
+    status: 'Enabled',
+    __importRelaxed: true,
+  });
+
+  if (result.errors) {
+    return { customer: null, created: false, error: result.errors[0] };
+  }
+  return { customer: result.customer, created: true };
 }
 
 function migrateStenoRateRecord(rate) {
@@ -484,7 +560,13 @@ function normalizeImportRow(raw = {}) {
 export function importStenoRates(rows) {
   ensureStenoRatesDatabase();
   const list = Array.isArray(rows) ? rows : [];
-  const summary = { created: 0, updated: 0, skipped: 0, errors: [] };
+  const summary = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    customersCreated: 0,
+    errors: [],
+  };
 
   list.forEach((raw, index) => {
     const rowNumber = index + 2;
@@ -495,9 +577,21 @@ export function importStenoRates(rows) {
       return;
     }
 
-    const matchedCustomer =
-      (row.customerId && findCustomerById(row.customerId)) ||
-      findCustomerByNameOrAlias(row.customer);
+    let matchedCustomer = row.customerId ? findCustomerById(row.customerId) : null;
+    if (!matchedCustomer && row.customer) {
+      const ensured = ensureCustomerForImport(row.customer, row);
+      if (!ensured.customer) {
+        summary.errors.push({
+          row: rowNumber,
+          message: ensured.error || 'stenoRateCustomerInvalid',
+          detail: normalizeText(row.customer),
+        });
+        summary.skipped += 1;
+        return;
+      }
+      matchedCustomer = ensured.customer;
+      if (ensured.created) summary.customersCreated += 1;
+    }
     if (!matchedCustomer) {
       summary.errors.push({
         row: rowNumber,

@@ -16,14 +16,6 @@ const PAGE_SIZE = 20;
 
 type FormMode = 'closed' | 'create' | 'edit';
 
-function getTodayDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function formatAmount(value: number): string {
   return Number(value ?? 0).toFixed(2);
 }
@@ -42,16 +34,15 @@ function parseDeleteError(message: string, t: (key: TranslationKey) => string): 
 
 export default function StenoRatesTable() {
   const { t } = useLanguage();
-  const today = getTodayDate();
-
   const [rates, setRates] = useState<StenoRateRecord[]>([]);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [customerId, setCustomerId] = useState('');
-  const [dateFrom, setDateFrom] = useState(today);
-  const [dateTo, setDateTo] = useState(today);
+  // Empty by default so freshly imported historical rates are all visible.
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [formMode, setFormMode] = useState<FormMode>('closed');
@@ -122,6 +113,12 @@ export default function StenoRatesTable() {
       .replace('{created}', String(summary.created))
       .replace('{updated}', String(summary.updated))
       .replace('{skipped}', String(summary.skipped));
+    if (summary.customersCreated) {
+      message = `${message} ${t('stenoRateImportCustomersCreated').replace(
+        '{count}',
+        String(summary.customersCreated),
+      )}`;
+    }
 
     if (summary.skipped > 0 && summary.errors.length > 0) {
       const reasonCounts = new Map<string, number>();
