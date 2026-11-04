@@ -3,13 +3,11 @@ import { createCustomer, fetchCustomerById, updateCustomer } from '../../api/cus
 import {
   FIELD_STATUS_OPTIONS,
   SLA_OPTIONS,
-  TRAVELLING_CHARGES_OPTIONS,
   type CustomerFieldStatus,
   type CustomerPayload,
   type CustomerSla,
-  type TravellingCharges,
 } from '../../types/customer';
-import { fieldStatusLabelKey, travellingChargesLabelKey } from '../../config/customer';
+import { fieldStatusLabelKey } from '../../config/customer';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
@@ -35,7 +33,6 @@ type CustomerFormState = {
   priorityErpNumber: string;
   hourlyRate: string;
   sla: CustomerSla | '';
-  travellingCharges: TravellingCharges;
   remarks: string;
   isStenoCustomer: boolean;
   isAudioCustomer: boolean;
@@ -64,7 +61,6 @@ const EMPTY_FORM: CustomerFormState = {
   priorityErpNumber: '',
   hourlyRate: '0.00',
   sla: '1 day',
-  travellingCharges: 'non_billable',
   remarks: '',
   isStenoCustomer: false,
   isAudioCustomer: false,
@@ -130,7 +126,6 @@ export default function CustomerDetailsForm({
           priorityErpNumber: customer.priorityErpNumber ?? '',
           hourlyRate: customer.hourlyRate.toFixed(2),
           sla: customer.sla,
-          travellingCharges: customer.travellingCharges,
           remarks: customer.remarks,
           isStenoCustomer: customer.isStenoCustomer === true,
           isAudioCustomer: customer.isAudioCustomer === true,
@@ -184,7 +179,7 @@ export default function CustomerDetailsForm({
     priorityErpNumber: form.priorityErpNumber.trim(),
     hourlyRate: Number.parseFloat(form.hourlyRate || '0'),
     sla: form.sla || '1 day',
-    travellingCharges: form.travellingCharges,
+    travellingCharges: 'non_billable',
     remarks: form.remarks.trim(),
     isStenoCustomer: form.isStenoCustomer,
     isAudioCustomer: form.isAudioCustomer,
@@ -477,23 +472,6 @@ export default function CustomerDetailsForm({
                       ))}
                     </select>
 
-                    <label className="profile-label" htmlFor="customer-travelling-charges">
-                      {t('travellingCharges')}
-                    </label>
-                    <select
-                      id="customer-travelling-charges"
-                      className="profile-input"
-                      value={form.travellingCharges}
-                      onChange={(e) =>
-                        updateField('travellingCharges', e.target.value as TravellingCharges)
-                      }
-                    >
-                      {TRAVELLING_CHARGES_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {t(travellingChargesLabelKey(option))}
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
                   <div className="customer-custom-fields">

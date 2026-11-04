@@ -5,15 +5,12 @@ import {
   updateCustomerStatus,
 } from '../../api/customers';
 import { truncateRemarks } from '../../config/customer';
-import { canAccessTravellingChargesModule } from '../../config/permissions';
 import type { CustomerImportResult, CustomerRecord } from '../../types/customer';
 import CustomerDetailsForm from './CustomerDetailsForm';
 import CustomerFieldsConfigurationPanel from './CustomerFieldsConfigurationPanel';
-import CustomerTravellingChargesPanel from './CustomerTravellingChargesPanel';
 import DeleteCustomerDialog, { parseCustomerDeleteError } from './DeleteCustomerDialog';
 import ImportCustomersDialog from './ImportCustomersDialog';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { getAuthUser } from '../../utils/auth';
 import '../../styles/projects.css';
 import '../../styles/profile.css';
 import '../../styles/dashboard.css';
@@ -22,15 +19,13 @@ import '../../styles/financials.css';
 const PAGE_SIZE = 20;
 
 type FormMode = 'closed' | 'create' | 'edit';
-type ViewMode = 'list' | 'fields-config' | 'travelling-charges';
+type ViewMode = 'list' | 'fields-config';
 type SortDirection = 'asc' | 'desc';
 type StatusFilter = 'all' | 'enabled' | 'disabled';
 type ServiceTypeFilter = 'all' | 'steno' | 'audio' | 'captions';
 
 export default function CustomersTable() {
   const { t } = useLanguage();
-  const user = getAuthUser();
-  const canManageTravellingCharges = canAccessTravellingChargesModule(user?.roles ?? user?.role);
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,7 +33,6 @@ export default function CustomersTable() {
   const [formMode, setFormMode] = useState<FormMode>('closed');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [selectedCustomerName, setSelectedCustomerName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<CustomerRecord | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -142,16 +136,6 @@ export default function CustomersTable() {
   const handleOpenFieldsConfig = (customer: CustomerRecord) => {
     setViewMode('fields-config');
     setSelectedCustomerId(customer.id);
-    setSelectedCustomerName(customer.name);
-    setSuccess('');
-    setError('');
-  };
-
-  const handleOpenTravellingCharges = (customer: CustomerRecord) => {
-    if (!canManageTravellingCharges) return;
-    setViewMode('travelling-charges');
-    setSelectedCustomerId(customer.id);
-    setSelectedCustomerName(customer.name);
     setSuccess('');
     setError('');
   };
@@ -159,7 +143,6 @@ export default function CustomersTable() {
   const handleBackToList = () => {
     setViewMode('list');
     setSelectedCustomerId(null);
-    setSelectedCustomerName('');
   };
 
   const handleDeleteRequest = (customer: CustomerRecord) => {
@@ -251,15 +234,6 @@ export default function CustomersTable() {
       {viewMode === 'fields-config' && selectedCustomerId && (
         <CustomerFieldsConfigurationPanel
           customerId={selectedCustomerId}
-          onBack={handleBackToList}
-          onSaved={(message) => setSuccess(message)}
-        />
-      )}
-
-      {viewMode === 'travelling-charges' && selectedCustomerId && canManageTravellingCharges && (
-        <CustomerTravellingChargesPanel
-          customerId={selectedCustomerId}
-          customerName={selectedCustomerName}
           onBack={handleBackToList}
           onSaved={(message) => setSuccess(message)}
         />
@@ -419,14 +393,6 @@ export default function CustomersTable() {
                               <button type="button" onClick={() => handleOpenFieldsConfig(row)}>
                                 {t('fields')}
                               </button>
-                              {canManageTravellingCharges ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenTravellingCharges(row)}
-                                >
-                                  {t('travellingCharges')}
-                                </button>
-                              ) : null}
                             </div>
                           </td>
                         </tr>
