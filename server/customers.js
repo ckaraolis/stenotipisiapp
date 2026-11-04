@@ -154,11 +154,15 @@ function migrateCustomerRecord(customer, index, allCustomers) {
     contactPerson: customer.contactPerson ?? '',
     contactPhone: customer.contactPhone ?? '',
     contactEmail: customer.contactEmail ?? '',
+    paymentTerms: customer.paymentTerms ?? '',
     priorityErpNumber: customer.priorityErpNumber ?? '',
     hourlyRate: normalizeHourlyRate(customer.hourlyRate ?? 0),
     sla: normalizeSla(customer.sla ?? SLA_OPTIONS[0]),
     travellingCharges: normalizeTravellingCharges(customer.travellingCharges ?? 'non_billable'),
     remarks: (customer.remarks ?? '').slice(0, REMARKS_MAX_LENGTH),
+    isStenoCustomer: customer.isStenoCustomer === true,
+    isAudioCustomer: customer.isAudioCustomer === true,
+    isCaptionsCustomer: customer.isCaptionsCustomer === true,
     field1Status: normalizeFieldStatus(customer.field1Status ?? DEFAULT_CUSTOM_FIELDS.field1Status),
     field1Name: customer.field1Name ?? '',
     field2Status: normalizeFieldStatus(customer.field2Status ?? DEFAULT_CUSTOM_FIELDS.field2Status),
@@ -189,11 +193,15 @@ function seedCustomersIfEmpty() {
         contactPerson: '',
         contactPhone: '',
         contactEmail: '',
+        paymentTerms: '',
         priorityErpNumber: '',
         hourlyRate: 0,
         sla: '1 day',
         travellingCharges: 'non_billable',
         remarks: '',
+        isStenoCustomer: true,
+        isAudioCustomer: false,
+        isCaptionsCustomer: false,
         ...DEFAULT_CUSTOM_FIELDS,
         enabled: true,
         createdAt: now,
@@ -207,11 +215,15 @@ function seedCustomersIfEmpty() {
         contactPerson: '',
         contactPhone: '',
         contactEmail: '',
+        paymentTerms: '',
         priorityErpNumber: '',
         hourlyRate: 0,
         sla: '1 day',
         travellingCharges: 'non_billable',
         remarks: '',
+        isStenoCustomer: true,
+        isAudioCustomer: false,
+        isCaptionsCustomer: false,
         ...DEFAULT_CUSTOM_FIELDS,
         enabled: true,
         createdAt: now,
@@ -265,11 +277,15 @@ export function toPublicCustomer(customer, includeFieldValues = false) {
     contactPerson: customer.contactPerson,
     contactPhone: customer.contactPhone,
     contactEmail: customer.contactEmail,
+    paymentTerms: customer.paymentTerms ?? '',
     priorityErpNumber: customer.priorityErpNumber,
     hourlyRate: customer.hourlyRate,
     sla: customer.sla,
     travellingCharges: customer.travellingCharges,
     remarks: customer.remarks,
+    isStenoCustomer: customer.isStenoCustomer === true,
+    isAudioCustomer: customer.isAudioCustomer === true,
+    isCaptionsCustomer: customer.isCaptionsCustomer === true,
     field1Status: customer.field1Status,
     field1Name: customer.field1Name,
     field2Status: customer.field2Status,
@@ -334,6 +350,8 @@ function validateCustomerInput(input, { existingId = null } = {}) {
     typeof input.contactPerson === 'string' ? input.contactPerson.trim() : '';
   const contactPhone = typeof input.contactPhone === 'string' ? input.contactPhone.trim() : '';
   const contactEmail = typeof input.contactEmail === 'string' ? input.contactEmail.trim() : '';
+  const paymentTerms =
+    typeof input.paymentTerms === 'string' ? input.paymentTerms.trim() : '';
   const priorityErpNumber =
     typeof input.priorityErpNumber === 'string' ? input.priorityErpNumber.trim() : '';
   const remarks = typeof input.remarks === 'string' ? input.remarks.trim() : '';
@@ -344,16 +362,17 @@ function validateCustomerInput(input, { existingId = null } = {}) {
 
   if (!name) errors.push('customerNameRequired');
   if (!alias) errors.push('customerAliasRequired');
-  if (
+  const hourlyRateMissing =
     input.hourlyRate === '' ||
     input.hourlyRate === null ||
     input.hourlyRate === undefined ||
-    (typeof input.hourlyRate === 'string' && !input.hourlyRate.trim())
-  ) {
-    errors.push('customerHourlyRateRequired');
-  }
-  if (!input.sla || (typeof input.sla === 'string' && !input.sla.trim())) {
-    errors.push('customerSlaRequired');
+    (typeof input.hourlyRate === 'string' && !input.hourlyRate.trim());
+  // Import rows may omit hourly rate / SLA; default them instead of failing the whole file.
+  if (!input.__importRelaxed) {
+    if (hourlyRateMissing) errors.push('customerHourlyRateRequired');
+    if (!input.sla || (typeof input.sla === 'string' && !input.sla.trim())) {
+      errors.push('customerSlaRequired');
+    }
   }
   if (contactEmail && !EMAIL_PATTERN.test(contactEmail)) errors.push('emailInvalid');
   if (remarks.length > REMARKS_MAX_LENGTH) errors.push('customerRemarksTooLong');
@@ -370,11 +389,15 @@ function validateCustomerInput(input, { existingId = null } = {}) {
     contactPerson,
     contactPhone,
     contactEmail,
+    paymentTerms,
     priorityErpNumber,
-    hourlyRate: normalizeHourlyRate(input.hourlyRate),
-    sla: normalizeSla(input.sla),
+    hourlyRate: hourlyRateMissing ? 0 : normalizeHourlyRate(input.hourlyRate),
+    sla: normalizeSla(input.sla || SLA_OPTIONS[0]),
     travellingCharges: normalizeTravellingCharges(input.travellingCharges),
     remarks: remarks.slice(0, REMARKS_MAX_LENGTH),
+    isStenoCustomer: normalizeBooleanFlag(input.isStenoCustomer, true),
+    isAudioCustomer: normalizeBooleanFlag(input.isAudioCustomer, false),
+    isCaptionsCustomer: normalizeBooleanFlag(input.isCaptionsCustomer, false),
     field1Status: normalizeFieldStatus(input.field1Status),
     field1Name,
     field2Status: normalizeFieldStatus(input.field2Status),
@@ -383,10 +406,36 @@ function validateCustomerInput(input, { existingId = null } = {}) {
     field3Name,
     field4Status: normalizeFieldStatus(input.field4Status),
     field4Name,
-    enabled: input.enabled !== false,
+    enabled: normalizeEnabledFlag(input),
   };
 
   return { errors, value };
+}
+
+function normalizeBooleanFlag(value, defaultValue = false) {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'y', 'x', '✓', '✔', 'enabled', 'active'].includes(normalized)) {
+    return true;
+  }
+  if (['0', 'false', 'no', 'n', 'disabled', 'inactive'].includes(normalized)) {
+    return false;
+  }
+  return defaultValue;
+}
+
+function normalizeEnabledFlag(input) {
+  if (input.enabled !== undefined && input.enabled !== null && input.enabled !== '') {
+    return normalizeBooleanFlag(input.enabled, true);
+  }
+  if (typeof input.status === 'string' && input.status.trim()) {
+    const status = input.status.trim().toLowerCase();
+    if (['disabled', 'inactive', 'off', 'no'].includes(status)) return false;
+    if (['enabled', 'active', 'on', 'yes'].includes(status)) return true;
+  }
+  return input.enabled !== false;
 }
 
 function validateFieldValueInput(input, customerId) {
@@ -615,4 +664,150 @@ export function deleteCustomer(customerId) {
   writeCustomersFile(data);
   removeFieldValuesForCustomer(customerId);
   return { customer: toPublicCustomer(removed) };
+}
+
+export function updateCustomerStatus(customerId, enabled) {
+  const data = readCustomersFile();
+  const index = data.customers.findIndex((row) => row.id === customerId);
+  if (index === -1) {
+    return { errors: ['customerNotFound'] };
+  }
+
+  data.customers[index] = {
+    ...data.customers[index],
+    enabled: Boolean(enabled),
+    updatedAt: new Date().toISOString(),
+  };
+  writeCustomersFile(data);
+  return { customer: toPublicCustomer(data.customers[index]) };
+}
+
+/**
+ * Import customers from parsed Excel/CSV rows (usually from the old ASTRAEA export).
+ * Matching key: alias (case-insensitive). Creates new rows or updates existing ones.
+ */
+export function importCustomers(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  const summary = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: [],
+  };
+
+  list.forEach((rawRow, index) => {
+    const rowNumber = index + 2; // header is row 1 in Excel
+    const row = normalizeImportRow(rawRow);
+    if (!row.name && !row.alias) {
+      summary.skipped += 1;
+      return;
+    }
+    if (!row.name || !row.alias) {
+      summary.errors.push({
+        row: rowNumber,
+        message: !row.name ? 'customerNameRequired' : 'customerAliasRequired',
+      });
+      summary.skipped += 1;
+      return;
+    }
+
+    const data = readCustomersFile();
+    const existing = data.customers.find(
+      (customer) => customer.alias.toLowerCase() === row.alias.toLowerCase(),
+    );
+
+    if (existing) {
+      const result = updateCustomer(existing.id, {
+        ...row,
+        __importRelaxed: true,
+        // Preserve fields not present in the import row.
+        field1Status: existing.field1Status,
+        field1Name: existing.field1Name,
+        field2Status: existing.field2Status,
+        field2Name: existing.field2Name,
+        field3Status: existing.field3Status,
+        field3Name: existing.field3Name,
+        field4Status: existing.field4Status,
+        field4Name: existing.field4Name,
+        hourlyRate: row.hourlyRate ?? existing.hourlyRate,
+        sla: row.sla || existing.sla,
+        travellingCharges: row.travellingCharges || existing.travellingCharges,
+      });
+      if (result.errors) {
+        summary.errors.push({ row: rowNumber, message: result.errors[0] });
+        summary.skipped += 1;
+        return;
+      }
+      summary.updated += 1;
+      return;
+    }
+
+    const result = createCustomer({
+      ...row,
+      __importRelaxed: true,
+    });
+    if (result.errors) {
+      summary.errors.push({ row: rowNumber, message: result.errors[0] });
+      summary.skipped += 1;
+      return;
+    }
+    summary.created += 1;
+  });
+
+  return summary;
+}
+
+function normalizeImportRow(raw = {}) {
+  const get = (...keys) => {
+    for (const key of keys) {
+      if (raw[key] !== undefined && raw[key] !== null && String(raw[key]).trim() !== '') {
+        return raw[key];
+      }
+    }
+    // Case-insensitive / spaced header fallback
+    const entries = Object.entries(raw);
+    for (const key of keys) {
+      const needle = String(key).trim().toLowerCase().replace(/[\s_]+/g, '');
+      const match = entries.find(
+        ([header]) => String(header).trim().toLowerCase().replace(/[\s_]+/g, '') === needle,
+      );
+      if (match && match[1] !== undefined && match[1] !== null && String(match[1]).trim() !== '') {
+        return match[1];
+      }
+    }
+    return undefined;
+  };
+
+  const text = (...keys) => String(get(...keys) ?? '').trim();
+
+  return {
+    name: text('name', 'Name', 'Customer Name', 'CustomerName'),
+    alias: text('alias', 'Alias'),
+    contactPerson: text('contactPerson', 'Contact Person', 'ContactPerson'),
+    contactPhone: text('contactPhone', 'Contact Phone', 'ContactPhone'),
+    contactEmail: text('contactEmail', 'Contact Email', 'ContactEmail', 'Email'),
+    paymentTerms: text('paymentTerms', 'Payment Terms', 'PaymentTerms'),
+    priorityErpNumber: text(
+      'priorityErpNumber',
+      'Number In Priority ERP',
+      'Number in Priority ERP',
+      'Priority ERP',
+      'PriorityERP',
+    ),
+    hourlyRate: get('hourlyRate', 'Hourly Rate', 'HourlyRate'),
+    sla: get('sla', 'SLA', 'Service Level Agreement'),
+    travellingCharges: get('travellingCharges', 'Travelling Charges'),
+    remarks: text('remarks', 'Remarks'),
+    isStenoCustomer: get('isStenoCustomer', 'Steno Customer', 'StenoCustomer', 'Steno'),
+    isAudioCustomer: get('isAudioCustomer', 'Audio Customer', 'AudioCustomer', 'Audio'),
+    isCaptionsCustomer: get(
+      'isCaptionsCustomer',
+      'Captions Customer',
+      'CaptionsCustomer',
+      'Caption Customer',
+      'Captions',
+    ),
+    enabled: get('enabled', 'Enabled'),
+    status: get('status', 'Status'),
+  };
 }

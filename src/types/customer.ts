@@ -45,11 +45,15 @@ export interface CustomerRecord {
   contactPerson: string;
   contactPhone: string;
   contactEmail: string;
+  paymentTerms: string;
   priorityErpNumber: string;
   hourlyRate: number;
   sla: CustomerSla;
   travellingCharges: TravellingCharges;
   remarks: string;
+  isStenoCustomer: boolean;
+  isAudioCustomer: boolean;
+  isCaptionsCustomer: boolean;
   field1Status: CustomerFieldStatus;
   field1Name: string;
   field2Status: CustomerFieldStatus;
@@ -70,11 +74,15 @@ export interface CustomerPayload {
   contactPerson?: string;
   contactPhone?: string;
   contactEmail?: string;
+  paymentTerms?: string;
   priorityErpNumber?: string;
   hourlyRate?: number;
   sla?: CustomerSla | string;
   travellingCharges?: TravellingCharges | string;
   remarks?: string;
+  isStenoCustomer?: boolean;
+  isAudioCustomer?: boolean;
+  isCaptionsCustomer?: boolean;
   field1Status?: CustomerFieldStatus | string;
   field1Name?: string;
   field2Status?: CustomerFieldStatus | string;
@@ -84,6 +92,32 @@ export interface CustomerPayload {
   field4Status?: CustomerFieldStatus | string;
   field4Name?: string;
   enabled?: boolean;
+}
+
+export interface CustomerImportRow {
+  name?: string;
+  alias?: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  paymentTerms?: string;
+  priorityErpNumber?: string;
+  hourlyRate?: number | string;
+  sla?: string;
+  travellingCharges?: string;
+  remarks?: string;
+  isStenoCustomer?: boolean | string | number;
+  isAudioCustomer?: boolean | string | number;
+  isCaptionsCustomer?: boolean | string | number;
+  enabled?: boolean | string | number;
+  status?: string;
+}
+
+export interface CustomerImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{ row: number; message: string }>;
 }
 
 export interface CustomerFieldValuePayload {

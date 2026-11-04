@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { deleteCustomer, fetchCustomerRecords } from '../../api/customers';
-import { travellingChargesLabelKey, truncateRemarks } from '../../config/customer';
+import {
+  deleteCustomer,
+  fetchCustomerRecords,
+  updateCustomerStatus,
+} from '../../api/customers';
+import { truncateRemarks } from '../../config/customer';
 import { canAccessTravellingChargesModule } from '../../config/permissions';
-import type { CustomerRecord } from '../../types/customer';
+import type { CustomerImportResult, CustomerRecord } from '../../types/customer';
 import CustomerDetailsForm from './CustomerDetailsForm';
 import CustomerFieldsConfigurationPanel from './CustomerFieldsConfigurationPanel';
 import CustomerTravellingChargesPanel from './CustomerTravellingChargesPanel';
 import DeleteCustomerDialog, { parseCustomerDeleteError } from './DeleteCustomerDialog';
+import ImportCustomersDialog from './ImportCustomersDialog';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getAuthUser } from '../../utils/auth';
 import '../../styles/projects.css';
@@ -19,6 +24,8 @@ const PAGE_SIZE = 20;
 type FormMode = 'closed' | 'create' | 'edit';
 type ViewMode = 'list' | 'fields-config' | 'travelling-charges';
 type SortDirection = 'asc' | 'desc';
+type StatusFilter = 'all' | 'enabled' | 'disabled';
+type ServiceTypeFilter = 'all' | 'steno' | 'audio' | 'captions';
 
 export default function CustomersTable() {
   const { t } = useLanguage();
@@ -35,8 +42,13 @@ export default function CustomersTable() {
   const [deleteTarget, setDeleteTarget] = useState<CustomerRecord | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('enabled');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<ServiceTypeFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadCustomers = useCallback(async () => {
     setLoading(true);
@@ -55,12 +67,37 @@ export default function CustomersTable() {
     void loadCustomers();
   }, [loadCustomers]);
 
+  const filteredRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return customers.filter((customer) => {
+      if (statusFilter === 'enabled' && !customer.enabled) return false;
+      if (statusFilter === 'disabled' && customer.enabled) return false;
+      if (serviceTypeFilter === 'steno' && !customer.isStenoCustomer) return false;
+      if (serviceTypeFilter === 'audio' && !customer.isAudioCustomer) return false;
+      if (serviceTypeFilter === 'captions' && !customer.isCaptionsCustomer) return false;
+      if (!query) return true;
+      const haystack = [
+        customer.name,
+        customer.alias,
+        customer.contactPerson,
+        customer.contactPhone,
+        customer.contactEmail,
+        customer.paymentTerms,
+        customer.priorityErpNumber,
+        customer.remarks,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [customers, searchQuery, serviceTypeFilter, statusFilter]);
+
   const sortedRows = useMemo(() => {
-    return [...customers].sort((a, b) => {
+    return [...filteredRows].sort((a, b) => {
       const comparison = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [customers, sortDirection]);
+  }, [filteredRows, sortDirection]);
 
   const totalEntries = sortedRows.length;
   const totalPages = Math.max(1, Math.ceil(totalEntries / PAGE_SIZE));
@@ -90,11 +127,16 @@ export default function CustomersTable() {
     setSelectedCustomerId(null);
   };
 
-  const handleSaved = async (message: string) => {
-    setFormMode('closed');
-    setSelectedCustomerId(null);
+  const handleSaved = async (message: string, next: 'close' | 'add-another' = 'close') => {
     setSuccess(message);
     await loadCustomers();
+    if (next === 'add-another') {
+      setFormMode('create');
+      setSelectedCustomerId(null);
+      return;
+    }
+    setFormMode('closed');
+    setSelectedCustomerId(null);
   };
 
   const handleOpenFieldsConfig = (customer: CustomerRecord) => {
@@ -146,6 +188,33 @@ export default function CustomersTable() {
     }
   };
 
+  const handleToggleStatus = async (customer: CustomerRecord) => {
+    setStatusUpdatingId(customer.id);
+    setError('');
+    try {
+      await updateCustomerStatus(customer.id, !customer.enabled);
+      setSuccess(
+        customer.enabled ? t('customerDisabledSuccess') : t('customerEnabledSuccess'),
+      );
+      await loadCustomers();
+    } catch {
+      setError(t('customerStatusUpdateError'));
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
+  const handleImported = async (summary: CustomerImportResult) => {
+    setShowImport(false);
+    setSuccess(
+      t('customerImportSuccess')
+        .replace('{created}', String(summary.created))
+        .replace('{updated}', String(summary.updated))
+        .replace('{skipped}', String(summary.skipped)),
+    );
+    await loadCustomers();
+  };
+
   const toggleSort = () => {
     setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
     setPage(1);
@@ -154,14 +223,19 @@ export default function CustomersTable() {
   return (
     <div className="projects-page">
       {showList && (
-        <div className="page-header projects-header">
+        <div className="page-header projects-header customers-header">
           <div>
             <h1 className="page-title">{t('customers')}</h1>
             <p className="page-subtitle">{t('customersSubtitle')}</p>
           </div>
-          <button type="button" className="btn-primary" onClick={handleOpenCreate}>
-            {t('addNew')}
-          </button>
+          <div className="customers-header-actions">
+            <button type="button" className="profile-cancel-btn" onClick={() => setShowImport(true)}>
+              {t('importFromExcel')}
+            </button>
+            <button type="button" className="btn-primary" onClick={handleOpenCreate}>
+              {t('addNew')}
+            </button>
+          </div>
         </div>
       )}
 
@@ -201,8 +275,71 @@ export default function CustomersTable() {
         />
       )}
 
+      {showImport && (
+        <ImportCustomersDialog
+          onClose={() => setShowImport(false)}
+          onImported={(summary) => {
+            void handleImported(summary);
+          }}
+        />
+      )}
+
       {showList && (
         <div className="projects-panel">
+          <div className="filters">
+            <div className="filters-row customers-filters-row">
+              <label className="filter-select">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value as StatusFilter);
+                    setPage(1);
+                  }}
+                >
+                  <option value="all">{t('allStatuses')}</option>
+                  <option value="enabled">{t('enabled')}</option>
+                  <option value="disabled">{t('disabled')}</option>
+                </select>
+              </label>
+
+              <label className="filter-select">
+                <select
+                  value={serviceTypeFilter}
+                  onChange={(e) => {
+                    setServiceTypeFilter(e.target.value as ServiceTypeFilter);
+                    setPage(1);
+                  }}
+                >
+                  <option value="all">{t('allTypes')}</option>
+                  <option value="steno">{t('stenoCustomer')}</option>
+                  <option value="audio">{t('audioCustomer')}</option>
+                  <option value="captions">{t('captionsCustomer')}</option>
+                </select>
+              </label>
+
+              <div className="customers-search">
+                <input
+                  type="search"
+                  className="profile-input"
+                  value={searchQuery}
+                  placeholder={t('search')}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1);
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn-primary customers-refresh-btn"
+                  onClick={() => void loadCustomers()}
+                  title={t('refresh')}
+                >
+                  ↻
+                </button>
+              </div>
+            </div>
+          </div>
+
           {error && <div className="profile-alert profile-alert-error">{error}</div>}
           {success && <div className="profile-alert profile-alert-success">{success}</div>}
 
@@ -211,10 +348,9 @@ export default function CustomersTable() {
           ) : (
             <>
               <div className="table-wrapper">
-                <table className="projects-table">
+                <table className="projects-table customers-table">
                   <thead>
                     <tr>
-                      <th>{t('customerNumber')}</th>
                       <th className="sorted-col">
                         <button type="button" className="sort-header-btn" onClick={toggleSort}>
                           {t('name')}
@@ -225,33 +361,46 @@ export default function CustomersTable() {
                       <th>{t('contactPerson')}</th>
                       <th>{t('contactPhone')}</th>
                       <th>{t('contactEmail')}</th>
-                      <th>{t('hourlyRate')}</th>
-                      <th>{t('serviceLevelAgreement')}</th>
-                      <th>{t('travellingCharges')}</th>
+                      <th>{t('paymentTerms')}</th>
+                      <th>{t('priorityErpNumber')}</th>
+                      <th>{t('status')}</th>
                       <th>{t('remarks')}</th>
+                      <th className="center">{t('stenoCustomer')}</th>
+                      <th className="center">{t('audioCustomer')}</th>
+                      <th className="center">{t('captionsCustomer')}</th>
                       <th className="actions-col">{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageRows.length === 0 ? (
                       <tr>
-                        <td colSpan={11} className="empty-row">
+                        <td colSpan={13} className="empty-row">
                           {t('noRecordsFound')}
                         </td>
                       </tr>
                     ) : (
                       pageRows.map((row) => (
                         <tr key={row.id}>
-                          <td>{row.customerNumber}</td>
                           <td>{row.name}</td>
                           <td>{row.alias}</td>
                           <td>{row.contactPerson || '—'}</td>
                           <td>{row.contactPhone || '—'}</td>
                           <td>{row.contactEmail || '—'}</td>
-                          <td>{row.hourlyRate.toFixed(2)}</td>
-                          <td>{row.sla}</td>
-                          <td>{t(travellingChargesLabelKey(row.travellingCharges))}</td>
+                          <td>{row.paymentTerms || '—'}</td>
+                          <td>{row.priorityErpNumber || '—'}</td>
+                          <td>
+                            <span
+                              className={`profile-status-badge ${
+                                row.enabled ? 'profile-status-active' : 'profile-status-inactive'
+                              }`}
+                            >
+                              {row.enabled ? t('enabled') : t('disabled')}
+                            </span>
+                          </td>
                           <td>{truncateRemarks(row.remarks)}</td>
+                          <td className="center">{row.isStenoCustomer ? '✓' : ''}</td>
+                          <td className="center">{row.isAudioCustomer ? '✓' : ''}</td>
+                          <td className="center">{row.isCaptionsCustomer ? '✓' : ''}</td>
                           <td className="actions-col">
                             <div className="row-actions">
                               <button type="button" onClick={() => handleOpenEdit(row)}>
@@ -260,11 +409,21 @@ export default function CustomersTable() {
                               <button type="button" onClick={() => handleDeleteRequest(row)}>
                                 {t('delete')}
                               </button>
+                              <button
+                                type="button"
+                                disabled={statusUpdatingId === row.id}
+                                onClick={() => void handleToggleStatus(row)}
+                              >
+                                {row.enabled ? t('disable') : t('enable')}
+                              </button>
                               <button type="button" onClick={() => handleOpenFieldsConfig(row)}>
-                                {t('fieldsConfiguration')}
+                                {t('fields')}
                               </button>
                               {canManageTravellingCharges ? (
-                                <button type="button" onClick={() => handleOpenTravellingCharges(row)}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenTravellingCharges(row)}
+                                >
                                   {t('travellingCharges')}
                                 </button>
                               ) : null}

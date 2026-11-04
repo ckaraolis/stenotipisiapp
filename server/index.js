@@ -64,11 +64,13 @@ import {
   deleteCustomer,
   deleteCustomerFieldValue,
   findCustomerRecordById,
+  importCustomers,
   listCustomerFieldValues,
   listCustomerRecords,
   replaceCustomerFieldValues,
   updateCustomer,
   updateCustomerFieldValue,
+  updateCustomerStatus,
 } from './customers.js';
 import { listDistricts, listDistrictRecords, createDistrict, updateDistrict, deleteDistrict, findDistrictRecordById } from './districts.js';
 import {
@@ -1154,6 +1156,70 @@ app.put('/api/customers/records/:id', (req, res) => {
   }
 
   res.json(result.customer);
+});
+
+app.patch('/api/customers/records/:id/status', (req, res) => {
+  const actor = requireProjectsCustomers(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const enabled = Boolean(req.body?.enabled);
+  const before = findCustomerRecordById(req.params.id);
+  const result = updateCustomerStatus(req.params.id, enabled);
+  if (result.errors) {
+    res.status(404).json({ errors: result.errors });
+    return;
+  }
+
+  recordAuditEntry({
+    actor,
+    module: 'projects',
+    entityName: 'customer',
+    entityNumber: result.customer.customerNumber || result.customer.id,
+    entryType: 'updated',
+    entryDetails: buildUpdatedDetailsFromMaps(
+      getCustomerAuditFieldMap(before),
+      getCustomerAuditFieldMap(result.customer),
+    ),
+  });
+
+  res.json(result.customer);
+});
+
+app.post('/api/customers/import', (req, res) => {
+  const actor = requireProjectsCustomers(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.customers)
+      ? req.body.customers
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['customerImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importCustomers(rows);
+
+  recordAuditEntry({
+    actor,
+    module: 'projects',
+    entityName: 'customer',
+    entityNumber: 'import',
+    entryType: 'updated',
+    entryDetails: {
+      fields: [
+        { field: 'created', before: '', after: String(summary.created) },
+        { field: 'updated', before: '', after: String(summary.updated) },
+        { field: 'skipped', before: '', after: String(summary.skipped) },
+      ],
+    },
+  });
+
+  res.json(summary);
 });
 
 app.delete('/api/customers/records/:id', (req, res) => {

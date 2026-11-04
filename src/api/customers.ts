@@ -1,6 +1,8 @@
 import type {
   CustomerFieldValue,
   CustomerFieldValuePayload,
+  CustomerImportResult,
+  CustomerImportRow,
   CustomerPayload,
   CustomerRecord,
 } from '../types/customer';
@@ -84,6 +86,39 @@ export async function deleteCustomer(customerId: string): Promise<CustomerRecord
   }
 
   return data as CustomerRecord;
+}
+
+export async function updateCustomerStatus(
+  customerId: string,
+  enabled: boolean,
+): Promise<CustomerRecord> {
+  const response = await fetch(`/api/customers/records/${customerId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ enabled }),
+  });
+
+  const data = (await response.json()) as CustomerRecord | { errors: string[] };
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
+  }
+
+  return data as CustomerRecord;
+}
+
+export async function importCustomerRows(rows: CustomerImportRow[]): Promise<CustomerImportResult> {
+  const response = await fetch('/api/customers/import', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ rows }),
+  });
+
+  const data = (await response.json()) as CustomerImportResult | { errors: string[] };
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
+  }
+
+  return data as CustomerImportResult;
 }
 
 export async function fetchCustomerFieldValues(
