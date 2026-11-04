@@ -8,6 +8,7 @@ import type { JobSubmissionRecord } from '../../../types/jobSubmission';
 import type { JobRecord } from '../../../types/jobRecord';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import type { TranslationKey } from '../../../i18n/translations';
+import { formatDateDisplay } from '../../../utils/dateFormat';
 import '../../../styles/profile.css';
 import '../../../styles/workflow-wizard.css';
 
@@ -208,7 +209,7 @@ export default function FinalValidationForm({ job, submission }: FinalValidation
             <div>
               <dt>{t('date')}</dt>
               <dd>
-                <SummaryValue value={job.date} />
+                <SummaryValue value={formatDateDisplay(job.date)} />
               </dd>
             </div>
           </dl>

@@ -9,6 +9,7 @@ import {
 } from '../../config/travellingCharges';
 import type { TravellingChargeRecord } from '../../types/travellingCharges';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import DeleteTravellingChargeDialog, {
   parseTravellingChargeDeleteError,
 } from '../financials/DeleteTravellingChargeDialog';
@@ -165,7 +166,7 @@ export default function CustomerTravellingChargesPanel({
                     <tr key={row.id}>
                       <td>{formatTravellingChargeDistrictLabel(row)}</td>
                       <td>{formatTravellingChargeAmount(row.amount)}</td>
-                      <td>{row.validityFrom}</td>
+                      <td>{formatDateDisplay(row.validityFrom)}</td>
                       <td className="actions-col">
                         <div className="row-actions">
                           <button

@@ -3,6 +3,7 @@ import { fetchTranscriptFileHistory } from '../../api/transcriptFiles';
 import { formatTranscriptFileSize } from '../../config/transcriptFiles';
 import type { TranscriptFileListItem, TranscriptFileVersion } from '../../types/transcript';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateTimeDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 import '../../styles/projects.css';
 
@@ -89,7 +90,7 @@ export default function TranscriptFileHistoryDialog({
                     <td>{entry.name}</td>
                     <td>{entry.description || '—'}</td>
                     <td>{formatTranscriptFileSize(entry.size)}</td>
-                    <td>{formatUploadedAt(entry.uploadedAt)}</td>
+                    <td>{formatDateTimeDisplay(entry.uploadedAt)}</td>
                     <td>{entry.uploadedByName || '—'}</td>
                   </tr>
                 ))
@@ -105,11 +106,4 @@ export default function TranscriptFileHistoryDialog({
       </div>
     </div>
   );
-}
-
-function formatUploadedAt(value: string): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
 }

@@ -10,6 +10,7 @@ import DeleteTravellingTimeDialog, {
 } from './DeleteTravellingTimeDialog';
 import TravellingTimeDetailsForm from './TravellingTimeDetailsForm';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/projects.css';
 import '../../styles/profile.css';
 import '../../styles/dashboard.css';
@@ -263,7 +264,7 @@ export default function TravellingTimesTable() {
                             })}
                           </td>
                           <td>{row.travellingTime}</td>
-                          <td>{row.validityFrom}</td>
+                          <td>{formatDateDisplay(row.validityFrom)}</td>
                           <td className="actions-col">
                             <div className="row-actions">
                               <button type="button" onClick={() => handleOpenEdit(row.id)}>

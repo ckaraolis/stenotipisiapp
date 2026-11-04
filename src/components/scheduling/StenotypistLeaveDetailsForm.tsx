@@ -17,6 +17,7 @@ import {
 } from '../../config/permissions';
 import type { StenotypistLeavePayload, StenotypistLeaveStatus } from '../../types/stenotypistLeave';
 import { getAuthUser } from '../../utils/auth';
+import { formatDateTimeDisplay } from '../../utils/dateFormat';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
@@ -58,13 +59,6 @@ function parseApiErrors(message: string, t: (key: TranslationKey) => string): st
     // ignore
   }
   return t('stenotypistLeaveSaveError');
-}
-
-function formatCreatedOn(value: string): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
 }
 
 function canManageAllStenotypists(): boolean {
@@ -126,7 +120,7 @@ export default function StenotypistLeaveDetailsForm({
           reason: leave.reason,
           status: leave.status,
           createdByName: leave.createdByName || '—',
-          createdOn: formatCreatedOn(leave.createdAt),
+          createdOn: formatDateTimeDisplay(leave.createdAt),
         });
         setInitialStatus(leave.status);
       })

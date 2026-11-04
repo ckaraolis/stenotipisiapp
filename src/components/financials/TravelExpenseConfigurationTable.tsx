@@ -18,6 +18,7 @@ import type {
   TravelExpenseConfigurationRecord,
 } from '../../types/travelExpenses';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import DeleteTravelExpenseDialog from './DeleteTravelExpenseDialog';
 import TravelExpenseConfigurationForm from './TravelExpenseConfigurationForm';
 import '../../styles/financials.css';
@@ -272,7 +273,7 @@ export default function TravelExpenseConfigurationTable() {
                         {formatTravelExpenseDistrictLabel(row.districtName, row.districtAlias)}
                       </td>
                       <td>{formatTravelExpenseAmount(row.amount)}</td>
-                      <td>{row.validFrom}</td>
+                      <td>{formatDateDisplay(row.validFrom)}</td>
                       <td className="table-actions">
                         <button
                           type="button"

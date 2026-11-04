@@ -15,6 +15,7 @@ import type {
   StenotypistBonusConfigurationRecord,
 } from '../../types/stenotypistBonus';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import BonusConfigurationForm from './BonusConfigurationForm';
 import DeleteBonusConfigurationDialog from './DeleteBonusConfigurationDialog';
 import '../../styles/financials.css';
@@ -237,7 +238,7 @@ export default function BonusConfigurationTable() {
                       </td>
                       <td>{formatBonusBaseHours(row.baseHours)}</td>
                       <td>{formatBonusPerExtraHour(row.bonusPerExtraHour)}</td>
-                      <td>{row.validFrom}</td>
+                      <td>{formatDateDisplay(row.validFrom)}</td>
                       <td className="table-actions">
                         <button
                           type="button"

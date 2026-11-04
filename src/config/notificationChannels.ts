@@ -1,6 +1,7 @@
 import type { TranslationKey } from '../i18n/translations';
 import type { NotificationChannel } from '../types/notifications';
 import { NOTIFICATION_CHANNELS } from '../types/notifications';
+import { formatDateTimeDisplay } from '../utils/dateFormat';
 
 export { NOTIFICATION_CHANNELS };
 export type { NotificationChannel };
@@ -18,12 +19,6 @@ export function notificationChannelLabelKey(channel: string): TranslationKey {
   }
 }
 
-export function formatNotificationTimestamp(value: string, language: string): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat(language === 'el' ? 'el-GR' : 'en-GB', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(date);
+export function formatNotificationTimestamp(value: string, _language?: string): string {
+  return formatDateTimeDisplay(value);
 }

@@ -6,6 +6,7 @@ import DeletePublicHolidayDialog, {
 } from './DeletePublicHolidayDialog';
 import PublicHolidayDetailsForm from './PublicHolidayDetailsForm';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/projects.css';
 import '../../styles/profile.css';
 import '../../styles/dashboard.css';
@@ -268,7 +269,7 @@ export default function PublicHolidaysTable() {
                     ) : (
                       pageRows.map((row) => (
                         <tr key={row.id}>
-                          <td>{row.date}</td>
+                          <td>{formatDateDisplay(row.date)}</td>
                           <td>{row.name}</td>
                           <td className="actions-col">
                             <div className="row-actions">

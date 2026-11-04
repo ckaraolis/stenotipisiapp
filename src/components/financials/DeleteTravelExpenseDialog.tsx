@@ -4,6 +4,7 @@ import {
   formatTravelExpenseStenotypistLabel,
 } from '../../config/travelExpenses';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 
 interface DeleteTravelExpenseDialogProps {
@@ -49,7 +50,7 @@ export default function DeleteTravelExpenseDialog({
                 configuration.districtAlias,
               ),
             )
-            .replace('{validFrom}', configuration.validFrom)}
+            .replace('{validFrom}', formatDateDisplay(configuration.validFrom))}
         </p>
         {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
         <div className="dialog-actions">

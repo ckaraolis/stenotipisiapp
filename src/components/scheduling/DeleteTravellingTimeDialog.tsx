@@ -2,6 +2,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { formatTravellingTimeRoute } from '../../config/travellingTime';
 import type { TravellingTimeRecord } from '../../types/travellingTime';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 
 interface DeleteTravellingTimeDialogProps {
@@ -40,7 +41,7 @@ export default function DeleteTravellingTimeDialog({
         <p>
           {t('deleteTravellingTimeMessage')
             .replace('{route}', routeLabel)
-            .replace('{validityFrom}', trip.validityFrom)}
+            .replace('{validityFrom}', formatDateDisplay(trip.validityFrom))}
         </p>
 
         {error && <div className="profile-alert profile-alert-error">{error}</div>}

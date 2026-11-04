@@ -1,5 +1,6 @@
 import type { TranslationKey } from '../i18n/translations';
 import type { ProformaDocumentType, ProformaStatus, ProformaWorkflowStatus } from '../types/proforma';
+import { formatDateDisplay } from '../utils/dateFormat';
 
 /** §3.1 — Typical billing cadence; additional proformas per customer/month remain allowed. */
 export const PROFORMA_TYPICAL_ONE_PER_CUSTOMER_MONTH = true;
@@ -38,11 +39,9 @@ export function proformaStatusLabelKey(status: ProformaWorkflowStatus | string):
   return 'proformaStatusPending';
 }
 
-/** §3.2 — Display proforma date as dd/mm/yy. */
+/** §3.2 — Display proforma date as DD/MM/YYYY. */
 export function formatProformaDate(date: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
-  if (!match) return date;
-  return `${match[3]}/${match[2]}/${match[1].slice(-2)}`;
+  return formatDateDisplay(date);
 }
 
 export function formatProformaBillingPeriod(year: number, month: number): string {

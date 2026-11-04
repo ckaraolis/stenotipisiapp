@@ -31,6 +31,7 @@ import StenotypistAssignmentForm from './StenotypistAssignmentForm';
 import JobRejectDialog, { parseJobActionError } from './JobRejectDialog';
 import JobDeleteDialog from './JobDeleteDialog';
 import { getAuthUser } from '../../utils/auth';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/scheduling.css';
@@ -573,7 +574,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
                           })}
                         </td>
                         <td>{row.locationDetails || '—'}</td>
-                        <td>{row.date}</td>
+                        <td>{formatDateDisplay(row.date)}</td>
                         <td>{row.time}</td>
                         <td>{formatJobStenotypistLabel(row)}</td>
                         <td className="center">{row.expedite ? '✓' : ''}</td>

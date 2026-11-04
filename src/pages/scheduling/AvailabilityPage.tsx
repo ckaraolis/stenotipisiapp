@@ -1,5 +1,6 @@
 import { mockAvailability } from '../../data/mockScheduling';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/scheduling.css';
 
 export default function AvailabilityPage() {
@@ -33,7 +34,7 @@ export default function AvailabilityPage() {
                 <tr key={`${row.stenotypist}-${row.date}`}>
                   <td>{row.stenotypist}</td>
                   <td>{row.district}</td>
-                  <td>{row.date}</td>
+                  <td>{formatDateDisplay(row.date)}</td>
                   <td>{row.from}</td>
                   <td>{row.to}</td>
                   <td>

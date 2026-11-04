@@ -5,6 +5,7 @@ import {
 import type { TravellingChargeRecord } from '../../types/travellingCharges';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 
 interface DeleteTravellingChargeDialogProps {
@@ -38,7 +39,7 @@ export default function DeleteTravellingChargeDialog({
           {t('deleteTravellingChargeMessage')
             .replace('{customer}', formatTravellingChargeCustomerLabel(charge))
             .replace('{district}', formatTravellingChargeDistrictLabel(charge))
-            .replace('{validityFrom}', charge.validityFrom)}
+            .replace('{validityFrom}', formatDateDisplay(charge.validityFrom))}
         </p>
         {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
         <div className="dialog-actions">

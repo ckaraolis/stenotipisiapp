@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { RateRow } from '../../data/mockFinancials';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/financials.css';
 
 interface FinancialRatesTableProps {
@@ -112,7 +113,7 @@ export default function FinancialRatesTable({
                     <td>{row.slaExpedited}</td>
                     <td>{row.workingHoursStart}</td>
                     <td>{row.workingHoursEnd}</td>
-                    <td>{row.validityFrom}</td>
+                    <td>{formatDateDisplay(row.validityFrom)}</td>
                     <td className="actions-col">
                       <div className="row-actions">
                         <button type="button">{t('edit')}</button>

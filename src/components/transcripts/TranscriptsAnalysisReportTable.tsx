@@ -9,6 +9,7 @@ import type {
   TranscriptAnalysisRow,
 } from '../../types/transcript';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/dashboard.css';
 import '../../styles/profile.css';
 
@@ -205,7 +206,7 @@ export default function TranscriptsAnalysisReportTable() {
                   </td>
                   <td>{row.customerName || '—'}</td>
                   <td className="project-cell">{row.projectNumber || '—'}</td>
-                  <td>{row.date}</td>
+                  <td>{formatDateDisplay(row.date)}</td>
                   <td>{row.stenotypistAlias || row.stenotypistName || '—'}</td>
                   <td>{row.editorName || '—'}</td>
                   <td>{row.reviewerName || '—'}</td>

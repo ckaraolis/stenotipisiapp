@@ -7,6 +7,7 @@ import {
   formatTravellingChargeAmount,
   normalizeTravellingChargeAmountInput,
 } from './travellingCharges';
+import { formatDateDisplay } from '../utils/dateFormat';
 
 export const JOB_RECONCILIATION_LIST_STATUSES: readonly JobStatus[] = [
   'published',
@@ -35,9 +36,7 @@ export function formatJobTravellingChargeAmount(amount: number): string {
 }
 
 export function formatJobReconciliationDate(date: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
-  if (!match) return date;
-  return `${match[3]}/${match[2]}/${match[1].slice(-2)}`;
+  return formatDateDisplay(date);
 }
 
 export function formatJobReconciliationProjectLabel(

@@ -1,6 +1,7 @@
 import { formatBonusConfigurationStenotypistLabel } from '../../config/stenotypistBonus';
 import type { StenotypistBonusConfigurationRecord } from '../../types/stenotypistBonus';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 
 interface DeleteBonusConfigurationDialogProps {
@@ -39,7 +40,7 @@ export default function DeleteBonusConfigurationDialog({
                 configuration.stenotypistUsername,
               ),
             )
-            .replace('{validFrom}', configuration.validFrom)}
+            .replace('{validFrom}', formatDateDisplay(configuration.validFrom))}
         </p>
         {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
         <div className="dialog-actions">

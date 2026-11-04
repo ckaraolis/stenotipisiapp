@@ -14,6 +14,7 @@ import { formatDistrictLabel } from '../../config/travellingTime';
 import type { DistrictOption } from '../../types/district';
 import type { TravellingChargeRecord } from '../../types/travellingCharges';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import DeleteTravellingChargeDialog, {
   parseTravellingChargeDeleteError,
 } from './DeleteTravellingChargeDialog';
@@ -272,7 +273,7 @@ export default function TravellingChargesTable() {
                       <td>{formatTravellingChargeCustomerLabel(row)}</td>
                       <td>{formatTravellingChargeDistrictLabel(row)}</td>
                       <td>{formatTravellingChargeAmount(row.amount)}</td>
-                      <td>{row.validityFrom}</td>
+                      <td>{formatDateDisplay(row.validityFrom)}</td>
                       <td className="actions-col">
                         <div className="row-actions">
                           <button

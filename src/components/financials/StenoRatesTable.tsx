@@ -5,6 +5,7 @@ import { downloadStenoRatesImportTemplate } from '../../config/stenoRatesImport'
 import type { StenoRateImportResult, StenoRateRecord } from '../../types/stenoRates';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import ImportStenoRatesDialog from './ImportStenoRatesDialog';
 import StenoRateDetailsForm from './StenoRateDetailsForm';
 import '../../styles/financials.css';
@@ -308,7 +309,7 @@ export default function StenoRatesTable() {
                       <td>{row.slaExpedited}</td>
                       <td>{row.workingHoursStart}</td>
                       <td>{row.workingHoursEnd}</td>
-                      <td>{row.validityFrom}</td>
+                      <td>{formatDateDisplay(row.validityFrom)}</td>
                       <td className="actions-col">
                         <div className="row-actions">
                           <button
@@ -396,7 +397,7 @@ export default function StenoRatesTable() {
             <p>
               {t('deleteStenoRateMessage')
                 .replace('{customer}', deleteTarget.customerName || deleteTarget.customerAlias)
-                .replace('{validityFrom}', deleteTarget.validityFrom)}
+                .replace('{validityFrom}', formatDateDisplay(deleteTarget.validityFrom))}
             </p>
             {deleteError ? (
               <div className="profile-alert profile-alert-error">{deleteError}</div>

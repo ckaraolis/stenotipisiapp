@@ -10,6 +10,7 @@ import {
 } from '../../config/stenotypistPenalty';
 import type { StenotypistPenaltyConfigurationRecord } from '../../types/stenotypistPenalty';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import DeletePenaltyConfigurationDialog from './DeletePenaltyConfigurationDialog';
 import PenaltyConfigurationForm from './PenaltyConfigurationForm';
 import '../../styles/financials.css';
@@ -192,7 +193,7 @@ export default function PenaltyConfigurationTable() {
                       <td>{formatPenaltyGracePeriodHours(row.gracePeriodHours)}</td>
                       <td>{formatPenaltyCurrency(row.basePenalty)}</td>
                       <td>{formatPenaltyCurrency(row.extraPenaltyPerHour)}</td>
-                      <td>{row.validFrom}</td>
+                      <td>{formatDateDisplay(row.validFrom)}</td>
                       <td className="table-actions">
                         <button
                           type="button"

@@ -1,5 +1,6 @@
 import type { JobRecord } from '../../types/jobRecord';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 import '../../styles/workflow-wizard.css';
 
@@ -53,7 +54,7 @@ export default function JobSubmissionWorkflowHeader({ job }: JobSubmissionWorkfl
           id="submission-date"
           type="text"
           className="profile-input profile-input-readonly"
-          value={job.date}
+          value={formatDateDisplay(job.date)}
           readOnly
         />
       </div>

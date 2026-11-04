@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { SimpleFinancialRow } from '../../data/mockFinancials';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/financials.css';
 
 interface SimpleFinancialsTableProps {
@@ -95,7 +96,7 @@ export default function SimpleFinancialsTable({
                     <td>{row.customer}</td>
                     <td>{row.description}</td>
                     <td>{row.amount}</td>
-                    <td>{row.validityFrom}</td>
+                    <td>{formatDateDisplay(row.validityFrom)}</td>
                     <td>{row.status}</td>
                     <td className="actions-col">
                       <div className="row-actions">

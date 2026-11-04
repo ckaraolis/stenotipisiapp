@@ -1,5 +1,6 @@
 import type { TranscriptRecord } from '../../../types/transcript';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../../utils/dateFormat';
 import '../../../styles/profile.css';
 import '../../../styles/workflow-wizard.css';
 
@@ -72,7 +73,7 @@ export default function EditedTranscriptFinalValidationForm({
             <div>
               <dt>{t('date')}</dt>
               <dd>
-                <SummaryValue value={transcript.date} />
+                <SummaryValue value={formatDateDisplay(transcript.date)} />
               </dd>
             </div>
             <div>

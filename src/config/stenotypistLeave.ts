@@ -5,6 +5,7 @@ import {
   type StenotypistLeaveReason,
   type StenotypistLeaveStatus,
 } from '../types/stenotypistLeave';
+import { formatDateTimeDisplay } from '../utils/dateFormat';
 
 const REASON_LABEL_KEYS: Record<StenotypistLeaveReason, TranslationKey> = {
   sick_leave: 'leaveReasonSickLeave',
@@ -50,8 +51,5 @@ export function formatStenotypistLeaveLabel(record: {
 }
 
 export function formatRequestedOn(value: string): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
+  return formatDateTimeDisplay(value);
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { mockCustomerFields } from '../../data/mockProjects';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/projects.css';
 
 export default function CustomerFieldsTable() {
@@ -90,7 +91,7 @@ export default function CustomerFieldsTable() {
                     <td>{row.fieldName}</td>
                     <td>{row.fieldValue}</td>
                     <td>{row.users}</td>
-                    <td>{row.validityFrom}</td>
+                    <td>{formatDateDisplay(row.validityFrom)}</td>
                   </tr>
                 ))
               )}

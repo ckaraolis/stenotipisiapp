@@ -1,5 +1,6 @@
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 
 interface DeletePublicHolidayDialogProps {
@@ -34,7 +35,7 @@ export default function DeletePublicHolidayDialog({
         <p>
           {t('deletePublicHolidayMessage')
             .replace('{name}', holidayName)
-            .replace('{date}', holidayDate)}
+            .replace('{date}', formatDateDisplay(holidayDate))}
         </p>
 
         {error && <div className="profile-alert profile-alert-error">{error}</div>}

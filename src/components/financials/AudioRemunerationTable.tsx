@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { mockAudioRemuneration } from '../../data/mockFinancials';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/financials.css';
 
 const PAGE_SIZE = 10;
@@ -96,7 +97,7 @@ export default function AudioRemunerationTable() {
                     <td>{row.percentage}</td>
                     <td>{row.targetHoursBeforeDeadline}</td>
                     <td>{row.penaltyPerHourLate}</td>
-                    <td>{row.validFrom}</td>
+                    <td>{formatDateDisplay(row.validFrom)}</td>
                     <td className="actions-col">
                       <div className="row-actions">
                         <button type="button">{t('edit')}</button>

@@ -1,5 +1,6 @@
 import type { TranscriptRecord } from '../../../types/transcript';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../../utils/dateFormat';
 import '../../../styles/profile.css';
 import '../../../styles/workflow-wizard.css';
 
@@ -57,7 +58,7 @@ export default function SubmitReviewedTranscriptWorkflowHeader({
           id="reviewed-workflow-date"
           type="text"
           className="profile-input profile-input-readonly"
-          value={transcript.date}
+          value={formatDateDisplay(transcript.date)}
           readOnly
         />
 

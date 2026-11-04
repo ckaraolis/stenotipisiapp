@@ -2,6 +2,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { formatStenotypistLeaveLabel } from '../../config/stenotypistLeave';
 import type { StenotypistLeaveRecord } from '../../types/stenotypistLeave';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/profile.css';
 
 interface DeleteStenotypistLeaveDialogProps {
@@ -35,8 +36,8 @@ export default function DeleteStenotypistLeaveDialog({
         <p>
           {t('deleteStenotypistLeaveMessage')
             .replace('{stenotypist}', stenotypistLabel)
-            .replace('{dateFrom}', leave.dateFrom)
-            .replace('{dateTo}', leave.dateTo)}
+            .replace('{dateFrom}', formatDateDisplay(leave.dateFrom))
+            .replace('{dateTo}', formatDateDisplay(leave.dateTo))}
         </p>
 
         {error && <div className="profile-alert profile-alert-error">{error}</div>}

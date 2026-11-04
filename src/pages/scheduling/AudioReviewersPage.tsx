@@ -1,5 +1,6 @@
 import { mockAudioReviewers } from '../../data/mockScheduling';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/scheduling.css';
 
 export default function AudioReviewersPage() {
@@ -31,7 +32,7 @@ export default function AudioReviewersPage() {
                 <tr key={`${row.reviewer}-${row.shift}`}>
                   <td>{row.reviewer}</td>
                   <td>{row.district}</td>
-                  <td>{row.date}</td>
+                  <td>{formatDateDisplay(row.date)}</td>
                   <td>{row.shift}</td>
                   <td className="center">{row.onDuty ? '✓' : '—'}</td>
                 </tr>

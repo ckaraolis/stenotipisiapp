@@ -4,6 +4,7 @@ import { MATRIX_METRIC_KEYS, type MatrixMetricKey } from '../../config/jobMatrix
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import type { StenotypistInfoPanelView, StenotypistInfoPeriod } from '../../types/stenotypistInfoPanel';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/job-allocation.css';
 
 interface StenotypistInfoPanelProps {
@@ -180,7 +181,7 @@ export default function StenotypistInfoPanel({
                   value={data.assets.stenotypeMachineSerialNumber || '—'}
                 />
                 <InfoRow label={t('eKeyNumber')} value={data.assets.eKeyNumber || '—'} />
-                <InfoRow label={t('eKeyExpiryDate')} value={data.assets.eKeyExpiryDate || '—'} />
+                <InfoRow label={t('eKeyExpiryDate')} value={formatDateDisplay(data.assets.eKeyExpiryDate)} />
               </section>
 
               <section className="stenotypist-info-section">
@@ -209,7 +210,7 @@ export default function StenotypistInfoPanel({
                       {data.personalDictionaryEntries.map((entry) => (
                         <tr key={entry.jobId}>
                           <td>{entry.jobNumber}</td>
-                          <td>{entry.date}</td>
+                          <td>{formatDateDisplay(entry.date)}</td>
                           <td>{entry.lines}</td>
                         </tr>
                       ))}
@@ -267,7 +268,10 @@ export default function StenotypistInfoPanel({
                   value={data.periodInfo.pagesWrittenBilledHoursRatio}
                 />
                 <InfoRow label={t('infoDaysOut')} value={String(data.periodInfo.daysOut)} />
-                <InfoRow label={t('infoLastDateOut')} value={data.periodInfo.lastDateOut} />
+                <InfoRow
+                  label={t('infoLastDateOut')}
+                  value={formatDateDisplay(data.periodInfo.lastDateOut)}
+                />
                 <InfoRow
                   label={t('infoDelayedTranscripts')}
                   value={String(data.periodInfo.delayedTranscriptCount)}

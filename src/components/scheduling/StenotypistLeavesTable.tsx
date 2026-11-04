@@ -20,6 +20,7 @@ import {
 } from '../../config/permissions';
 import type { StenotypistLeaveRecord } from '../../types/stenotypistLeave';
 import { getAuthUser } from '../../utils/auth';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import DeleteStenotypistLeaveDialog, {
   parseStenotypistLeaveDeleteError,
 } from './DeleteStenotypistLeaveDialog';
@@ -446,8 +447,8 @@ export default function StenotypistLeavesTable() {
                       pageRows.map((row) => (
                         <tr key={row.id}>
                           <td>{formatStenotypistLeaveLabel(row)}</td>
-                          <td>{row.dateFrom}</td>
-                          <td>{row.dateTo}</td>
+                          <td>{formatDateDisplay(row.dateFrom)}</td>
+                          <td>{formatDateDisplay(row.dateTo)}</td>
                           <td>
                             {row.reason ? t(stenotypistLeaveReasonLabelKey(row.reason)) : '—'}
                           </td>

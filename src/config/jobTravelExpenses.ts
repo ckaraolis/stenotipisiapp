@@ -1,5 +1,6 @@
 import type { TranslationKey } from '../i18n/translations';
 import type { JobTravelExpenseCandidate, TravelExpenseStatus } from '../types/jobTravelExpenses';
+import { formatDateDisplay } from '../utils/dateFormat';
 
 export const JOB_TRAVEL_EXPENSES_PAGE_SIZE = 20;
 
@@ -38,9 +39,7 @@ export function formatProjectDistrictLabel(name: string, alias: string): string 
 }
 
 export function formatJobDateDdMmYy(isoDate: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate?.trim() ?? '');
-  if (!match) return isoDate || '—';
-  return `${match[3]}/${match[2]}/${match[1].slice(2)}`;
+  return formatDateDisplay(isoDate);
 }
 
 export function formatTravelExpenseListAmount(value: number): string {
