@@ -71,6 +71,9 @@ function expandTwoDigitYear(yearText) {
 }
 
 function normalizeValidityFrom(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
   if (typeof value === 'number' && Number.isFinite(value)) {
     const fromSerial = excelSerialToIso(value);
     if (fromSerial) return fromSerial;

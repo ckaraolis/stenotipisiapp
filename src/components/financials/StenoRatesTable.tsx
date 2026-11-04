@@ -133,7 +133,11 @@ export default function StenoRatesTable() {
 
   const handleImported = (summary: StenoRateImportResult) => {
     setShowImport(false);
+    const imported = summary.created + summary.updated;
+    const total = imported + summary.skipped;
     let message = t('stenoRateImportSuccess')
+      .replace('{imported}', String(imported))
+      .replace('{total}', String(total))
       .replace('{created}', String(summary.created))
       .replace('{updated}', String(summary.updated))
       .replace('{skipped}', String(summary.skipped));
@@ -220,20 +224,6 @@ export default function StenoRatesTable() {
       setDeleting(false);
     }
   };
-
-  if (formMode !== 'closed') {
-    return (
-      <StenoRateDetailsForm
-        mode={formMode}
-        rateId={selectedRateId ?? undefined}
-        onCancel={() => {
-          setFormMode('closed');
-          setSelectedRateId(null);
-        }}
-        onSaved={handleSaved}
-      />
-    );
-  }
 
   return (
     <div className="financials-page">
@@ -489,6 +479,18 @@ export default function StenoRatesTable() {
           </div>
         </div>
       </div>
+
+      {formMode !== 'closed' ? (
+        <StenoRateDetailsForm
+          mode={formMode}
+          rateId={selectedRateId ?? undefined}
+          onCancel={() => {
+            setFormMode('closed');
+            setSelectedRateId(null);
+          }}
+          onSaved={handleSaved}
+        />
+      ) : null}
 
       {showImport ? (
         <ImportStenoRatesDialog onClose={() => setShowImport(false)} onImported={handleImported} />

@@ -226,6 +226,67 @@
   background: rgba(15, 76, 129, 0.06);
 }
 
+.steno-rate-dialog {
+  width: min(100%, 640px);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 20px 24px 16px;
+}
+
+.steno-rate-dialog .dialog-card-header {
+  margin-bottom: 12px;
+}
+
+.steno-rate-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.steno-rate-form-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(180px, 1fr);
+  gap: 10px 16px;
+  align-items: center;
+}
+
+.steno-rate-form-grid .profile-label {
+  margin: 0;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.steno-rate-form-grid .profile-input {
+  min-width: 0;
+}
+
+.dialog-close-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.dialog-close-btn:hover {
+  color: var(--color-text);
+}
+
+@media (max-width: 720px) {
+  .steno-rate-form-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .steno-rate-form-grid .profile-label {
+    text-align: left;
+  }
+}
+
 .proforma-process-groups {
   display: flex;
   flex-direction: column;

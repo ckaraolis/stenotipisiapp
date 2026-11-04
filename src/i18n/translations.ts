@@ -951,7 +951,7 @@ export const translations = {
     stenoRateValidityFromRequired: 'Validity from date is required.',
     stenoRateValidityFromDuplicate:
       'A steno rate already exists for this customer and validity date.',
-    addStenoRate: 'Add Steno Rate',
+    addStenoRate: 'Add New Steno Rate',
     editStenoRate: 'Edit Steno Rate',
     stenoRateCreatedSuccess: 'Steno rate created successfully.',
     stenoRateUpdatedSuccess: 'Steno rate updated successfully.',
@@ -979,7 +979,7 @@ export const translations = {
     stenoRateImportError: 'Could not import steno rates.',
     stenoRateImportRowsRequired: 'Import rows are required.',
     stenoRateImportSuccess:
-      'Import finished. Created: {created}, updated: {updated}, skipped: {skipped}.',
+      'Import finished. Imported: {imported} of {total} (created: {created}, updated: {updated}, skipped: {skipped}).',
     stenoRateImportSkipReasons: 'Skip reasons: {reasons}.',
     stenoRateImportRowEmpty: 'Row is missing Customer and Validity From.',
     stenoRateImportCustomersCreated: 'New customers created: {count}.',
@@ -2541,7 +2541,7 @@ export const translations = {
     stenoRateImportError: 'Δεν ήταν δυνατή η εισαγωγή τιμολογίων steno.',
     stenoRateImportRowsRequired: 'Απαιτούνται γραμμές εισαγωγής.',
     stenoRateImportSuccess:
-      'Η εισαγωγή ολοκληρώθηκε. Δημιουργήθηκαν: {created}, ενημερώθηκαν: {updated}, παραλείφθηκαν: {skipped}.',
+      'Η εισαγωγή ολοκληρώθηκε. Εισήχθησαν: {imported} από {total} (δημιουργήθηκαν: {created}, ενημερώθηκαν: {updated}, παραλείφθηκαν: {skipped}).',
     stenoRateImportSkipReasons: 'Λόγοι παράλειψης: {reasons}.',
     stenoRateImportRowEmpty: 'Η γραμμή δεν έχει Πελάτη και Ημερομηνία Ισχύος Από.',
     stenoRateImportCustomersCreated: 'Νέοι πελάτες που δημιουργήθηκαν: {count}.',

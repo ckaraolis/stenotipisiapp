@@ -5,11 +5,11 @@ import {
   fetchStenoRateById,
   updateStenoRate,
 } from '../../api/stenoRates';
+import { SLA_OPTIONS } from '../../types/customer';
 import type { StenoRatePayload } from '../../types/stenoRates';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
-import '../../styles/workflow-wizard.css';
 import '../../styles/financials.css';
 
 interface StenoRateDetailsFormProps {
@@ -37,23 +37,33 @@ type StenoRateFormState = {
   validityFrom: string;
 };
 
-const EMPTY_FORM: StenoRateFormState = {
-  customerId: '',
-  hourlyRate: '0',
-  hourlyRateExpedited: '0',
-  hourlyRateOutsideWorkingHrs: '0',
-  hourlyRateOutsideWorkingHrsExpedited: '0',
-  firstDiscountPercentage: '0',
-  nrExemptedStenotypists: '0',
-  secondDiscountPercentage: '0',
-  secondStenotypistDiscountThreshold: '0',
-  travelByKmAmount: '0',
-  sla: '1 day',
-  slaExpedited: '',
-  workingHoursStart: '',
-  workingHoursEnd: '',
-  validityFrom: '',
-};
+function getTodayDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function createEmptyForm(): StenoRateFormState {
+  return {
+    customerId: '',
+    hourlyRate: '0',
+    hourlyRateExpedited: '0',
+    hourlyRateOutsideWorkingHrs: '0',
+    hourlyRateOutsideWorkingHrsExpedited: '0',
+    firstDiscountPercentage: '0',
+    nrExemptedStenotypists: '0',
+    secondDiscountPercentage: '0',
+    secondStenotypistDiscountThreshold: '0',
+    travelByKmAmount: '0',
+    sla: '1 day',
+    slaExpedited: '1 day',
+    workingHoursStart: '09:00',
+    workingHoursEnd: '17:00',
+    validityFrom: getTodayDate(),
+  };
+}
 
 function parseApiErrors(message: string, t: (key: TranslationKey) => string): string {
   try {
@@ -87,6 +97,12 @@ function toPayload(form: StenoRateFormState): StenoRatePayload {
   };
 }
 
+function normalizeSlaValue(value: string): string {
+  const normalized = value.trim().toLowerCase();
+  const match = SLA_OPTIONS.find((option) => option.toLowerCase() === normalized);
+  return match ?? SLA_OPTIONS[0];
+}
+
 export default function StenoRateDetailsForm({
   mode,
   rateId,
@@ -98,7 +114,7 @@ export default function StenoRateDetailsForm({
   const [loading, setLoading] = useState(mode === 'edit');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState<StenoRateFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<StenoRateFormState>(createEmptyForm);
 
   useEffect(() => {
     let active = true;
@@ -115,7 +131,11 @@ export default function StenoRateDetailsForm({
   }, [t]);
 
   useEffect(() => {
-    if (mode !== 'edit' || !rateId) return;
+    if (mode !== 'edit' || !rateId) {
+      setForm(createEmptyForm());
+      setLoading(false);
+      return;
+    }
     let active = true;
     setLoading(true);
     fetchStenoRateById(rateId)
@@ -134,11 +154,11 @@ export default function StenoRateDetailsForm({
           secondDiscountPercentage: String(rate.secondDiscountPercentage ?? 0),
           secondStenotypistDiscountThreshold: String(rate.secondStenotypistDiscountThreshold ?? 0),
           travelByKmAmount: String(rate.travelByKmAmount ?? 0),
-          sla: rate.sla ?? '1 day',
-          slaExpedited: rate.slaExpedited ?? '',
-          workingHoursStart: rate.workingHoursStart ?? '',
-          workingHoursEnd: rate.workingHoursEnd ?? '',
-          validityFrom: rate.validityFrom ?? '',
+          sla: normalizeSlaValue(rate.sla || '1 day'),
+          slaExpedited: normalizeSlaValue(rate.slaExpedited || '1 day'),
+          workingHoursStart: rate.workingHoursStart || '09:00',
+          workingHoursEnd: rate.workingHoursEnd || '17:00',
+          validityFrom: rate.validityFrom || getTodayDate(),
         });
       })
       .catch(() => {
@@ -185,216 +205,266 @@ export default function StenoRateDetailsForm({
     }
   };
 
-  if (loading) {
-    return <div className="profile-message">{t('loading')}</div>;
-  }
-
   return (
-    <div className="financials-page">
-      <div className="page-header financials-header">
-        <div>
-          <h1 className="page-title">
+    <div
+      className="dialog-overlay"
+      role="presentation"
+      onClick={() => {
+        if (!saving) onCancel();
+      }}
+    >
+      <div
+        className="dialog-card dialog-card-wide steno-rate-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="steno-rate-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="dialog-card-header">
+          <h2 id="steno-rate-dialog-title">
             {mode === 'edit' ? t('editStenoRate') : t('addStenoRate')}
-          </h1>
-          <p className="page-subtitle">{t('stenoRatesSubtitle')}</p>
+          </h2>
+          <button
+            type="button"
+            className="dialog-close-btn"
+            onClick={onCancel}
+            disabled={saving}
+            aria-label={t('cancel')}
+          >
+            ×
+          </button>
         </div>
+
+        {loading ? (
+          <div className="profile-message">{t('loading')}</div>
+        ) : (
+          <form className="steno-rate-dialog-form" onSubmit={(event) => void handleSubmit(event)}>
+            {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
+
+            <div className="steno-rate-form-grid">
+              <label className="profile-label" htmlFor="steno-rate-customer">
+                {t('customer')}
+              </label>
+              <select
+                id="steno-rate-customer"
+                className="profile-input"
+                value={form.customerId}
+                onChange={(event) => updateField('customerId', event.target.value)}
+                disabled={mode === 'edit'}
+                required
+              >
+                <option value="">{t('selectCustomer')}</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
+
+              <label className="profile-label" htmlFor="steno-rate-hourly">
+                {t('hourlyRate')}
+              </label>
+              <input
+                id="steno-rate-hourly"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.hourlyRate}
+                onChange={(event) => updateField('hourlyRate', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-hourly-exp">
+                {t('hourlyRateExpedited')}
+              </label>
+              <input
+                id="steno-rate-hourly-exp"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.hourlyRateExpedited}
+                onChange={(event) => updateField('hourlyRateExpedited', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-hourly-owh">
+                {t('hourlyRateOutsideWorkingHrs')}
+              </label>
+              <input
+                id="steno-rate-hourly-owh"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.hourlyRateOutsideWorkingHrs}
+                onChange={(event) => updateField('hourlyRateOutsideWorkingHrs', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-hourly-owh-exp">
+                {t('hourlyRateOutsideWorkingHrsExpedited')}
+              </label>
+              <input
+                id="steno-rate-hourly-owh-exp"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.hourlyRateOutsideWorkingHrsExpedited}
+                onChange={(event) =>
+                  updateField('hourlyRateOutsideWorkingHrsExpedited', event.target.value)
+                }
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-discount-1">
+                {t('firstDiscountPercentage')}
+              </label>
+              <input
+                id="steno-rate-discount-1"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.firstDiscountPercentage}
+                onChange={(event) => updateField('firstDiscountPercentage', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-exempted">
+                {t('nrExemptedStenotypists')}
+              </label>
+              <input
+                id="steno-rate-exempted"
+                type="number"
+                step="1"
+                min="0"
+                className="profile-input"
+                value={form.nrExemptedStenotypists}
+                onChange={(event) => updateField('nrExemptedStenotypists', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-discount-2">
+                {t('secondDiscountPercentage')}
+              </label>
+              <input
+                id="steno-rate-discount-2"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.secondDiscountPercentage}
+                onChange={(event) => updateField('secondDiscountPercentage', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-threshold">
+                {t('secondStenotypistDiscountThreshold')}
+              </label>
+              <input
+                id="steno-rate-threshold"
+                type="number"
+                step="1"
+                min="0"
+                className="profile-input"
+                value={form.secondStenotypistDiscountThreshold}
+                onChange={(event) =>
+                  updateField('secondStenotypistDiscountThreshold', event.target.value)
+                }
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-travel-km">
+                {t('travelByKmAmount')}
+              </label>
+              <input
+                id="steno-rate-travel-km"
+                type="number"
+                step="0.01"
+                min="0"
+                className="profile-input"
+                value={form.travelByKmAmount}
+                onChange={(event) => updateField('travelByKmAmount', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-sla">
+                {t('sla')}
+              </label>
+              <select
+                id="steno-rate-sla"
+                className="profile-input"
+                value={form.sla}
+                onChange={(event) => updateField('sla', event.target.value)}
+              >
+                {SLA_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+
+              <label className="profile-label" htmlFor="steno-rate-sla-exp">
+                {t('slaExpedited')}
+              </label>
+              <select
+                id="steno-rate-sla-exp"
+                className="profile-input"
+                value={form.slaExpedited}
+                onChange={(event) => updateField('slaExpedited', event.target.value)}
+              >
+                {SLA_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+
+              <label className="profile-label" htmlFor="steno-rate-hours-start">
+                {t('workingHoursStart')}
+              </label>
+              <input
+                id="steno-rate-hours-start"
+                type="time"
+                className="profile-input"
+                value={form.workingHoursStart}
+                onChange={(event) => updateField('workingHoursStart', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-hours-end">
+                {t('workingHoursEnd')}
+              </label>
+              <input
+                id="steno-rate-hours-end"
+                type="time"
+                className="profile-input"
+                value={form.workingHoursEnd}
+                onChange={(event) => updateField('workingHoursEnd', event.target.value)}
+              />
+
+              <label className="profile-label" htmlFor="steno-rate-validity">
+                {t('validityFrom')}
+              </label>
+              <input
+                id="steno-rate-validity"
+                type="date"
+                className="profile-input"
+                value={form.validityFrom}
+                onChange={(event) => updateField('validityFrom', event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="dialog-actions">
+              <button
+                type="button"
+                className="profile-cancel-btn"
+                onClick={onCancel}
+                disabled={saving}
+              >
+                {t('cancel')}
+              </button>
+              <button type="submit" className="profile-submit" disabled={saving}>
+                {saving ? t('saving') : t('save')}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
-
-      <form className="profile-form financials-panel" onSubmit={(event) => void handleSubmit(event)}>
-        {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
-
-        <div className="profile-grid">
-          <label className="profile-label">
-            {t('customer')}
-            <select
-              className="profile-input"
-              value={form.customerId}
-              onChange={(event) => updateField('customerId', event.target.value)}
-              disabled={mode === 'edit'}
-              required
-            >
-              <option value="">{t('selectCustomer')}</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="profile-label">
-            {t('validityFrom')}
-            <input
-              type="date"
-              className="profile-input"
-              value={form.validityFrom}
-              onChange={(event) => updateField('validityFrom', event.target.value)}
-              required
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('hourlyRate')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.hourlyRate}
-              onChange={(event) => updateField('hourlyRate', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('hourlyRateExpedited')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.hourlyRateExpedited}
-              onChange={(event) => updateField('hourlyRateExpedited', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('hourlyRateOutsideWorkingHrs')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.hourlyRateOutsideWorkingHrs}
-              onChange={(event) => updateField('hourlyRateOutsideWorkingHrs', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('hourlyRateOutsideWorkingHrsExpedited')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.hourlyRateOutsideWorkingHrsExpedited}
-              onChange={(event) =>
-                updateField('hourlyRateOutsideWorkingHrsExpedited', event.target.value)
-              }
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('firstDiscountPercentage')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.firstDiscountPercentage}
-              onChange={(event) => updateField('firstDiscountPercentage', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('nrExemptedStenotypists')}
-            <input
-              type="number"
-              step="1"
-              min="0"
-              className="profile-input"
-              value={form.nrExemptedStenotypists}
-              onChange={(event) => updateField('nrExemptedStenotypists', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('secondDiscountPercentage')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.secondDiscountPercentage}
-              onChange={(event) => updateField('secondDiscountPercentage', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('secondStenotypistDiscountThreshold')}
-            <input
-              type="number"
-              step="1"
-              min="0"
-              className="profile-input"
-              value={form.secondStenotypistDiscountThreshold}
-              onChange={(event) =>
-                updateField('secondStenotypistDiscountThreshold', event.target.value)
-              }
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('travelByKmAmount')}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              className="profile-input"
-              value={form.travelByKmAmount}
-              onChange={(event) => updateField('travelByKmAmount', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('sla')}
-            <input
-              type="text"
-              className="profile-input"
-              value={form.sla}
-              onChange={(event) => updateField('sla', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('slaExpedited')}
-            <input
-              type="text"
-              className="profile-input"
-              value={form.slaExpedited}
-              onChange={(event) => updateField('slaExpedited', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('workingHoursStart')}
-            <input
-              type="time"
-              className="profile-input"
-              value={form.workingHoursStart}
-              onChange={(event) => updateField('workingHoursStart', event.target.value)}
-            />
-          </label>
-
-          <label className="profile-label">
-            {t('workingHoursEnd')}
-            <input
-              type="time"
-              className="profile-input"
-              value={form.workingHoursEnd}
-              onChange={(event) => updateField('workingHoursEnd', event.target.value)}
-            />
-          </label>
-        </div>
-
-        <div className="profile-actions">
-          <button type="button" className="profile-cancel-btn" onClick={onCancel} disabled={saving}>
-            {t('cancel')}
-          </button>
-          <button type="submit" className="profile-submit" disabled={saving}>
-            {saving ? t('saving') : t('save')}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }
