@@ -14,6 +14,7 @@ export const PERMISSIONS = [
   'projects.customers',
   'projects.projects',
   'projects.district',
+  'financials.steno_rates',
   'financials.travelling_charges',
   'financials.reconciliation',
   'financials.proformas',
@@ -45,6 +46,7 @@ export const MANAGER_PERMISSIONS: readonly Permission[] = [
   'projects.customers',
   'projects.projects',
   'projects.district',
+  'financials.steno_rates',
   'financials.travelling_charges',
   'financials.reconciliation',
   'financials.proformas',
@@ -221,6 +223,17 @@ export function getDefaultProjectsPath(
 }
 
 /** §1.5 — Travelling charges configuration is available to Manager only (Super Admin bypass). */
+export const STENO_RATES_MODULE_ROLES: readonly UserRole[] = ['manager'];
+
+export function canAccessStenoRatesModule(
+  roleOrRoles: string | readonly string[] | null | undefined,
+): boolean {
+  if (isSuperAdminRole(normalizeRoles(roleOrRoles))) {
+    return true;
+  }
+  return normalizeRoles(roleOrRoles).some((role) => STENO_RATES_MODULE_ROLES.includes(role));
+}
+
 export const TRAVELLING_CHARGES_MODULE_ROLES: readonly UserRole[] = ['manager'];
 
 export function canAccessTravellingChargesModule(
@@ -463,6 +476,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/projects/customers': 'projects.customers',
   '/projects/list': 'projects.projects',
   '/projects/district': 'projects.district',
+  '/financials/steno-rates': 'financials.steno_rates',
   '/financials/travelling-charges': 'financials.travelling_charges',
   '/financials/reconciliation': 'financials.reconciliation',
   '/financials/proformas': 'financials.proformas',
@@ -493,6 +507,7 @@ const DEFAULT_PATH_ORDER = [
   '/projects/customers',
   '/projects/list',
   '/projects/district',
+  '/financials/steno-rates',
   '/financials/travelling-charges',
   '/financials/reconciliation',
   '/financials/proformas',
@@ -524,6 +539,10 @@ export function canAccessPath(
 
   if (pathname === '/scheduling/stenotypist-leave') {
     return canAccessStenotypistLeaveModule(roleOrRoles);
+  }
+
+  if (pathname === '/financials/steno-rates') {
+    return canAccessStenoRatesModule(roleOrRoles);
   }
 
   if (pathname === '/financials/travelling-charges') {

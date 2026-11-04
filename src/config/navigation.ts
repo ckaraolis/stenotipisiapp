@@ -39,6 +39,11 @@ export const projectsNavItems: readonly NavItem[] = [
 
 export const financialsNavItems: readonly NavItem[] = [
   {
+    key: 'stenoRates',
+    path: '/financials/steno-rates',
+    permission: 'financials.steno_rates',
+  },
+  {
     key: 'travellingCharges',
     path: '/financials/travelling-charges',
     permission: 'financials.travelling_charges',
@@ -94,7 +99,7 @@ export const mainNavGroups = [
   { key: 'scheduling' as const, path: '/scheduling/jobs-steno', children: schedulingNavItems },
   { key: 'transcripts' as const, path: '/transcripts/steno', children: transcriptsNavItems },
   { key: 'projects' as const, path: '/projects/list', children: projectsNavItems },
-  { key: 'financials' as const, path: '/financials/travelling-charges', children: financialsNavItems },
+  { key: 'financials' as const, path: '/financials/steno-rates', children: financialsNavItems },
   { key: 'administration' as const, path: '/administration/users', children: administrationNavItems },
 ];
 

@@ -47,6 +47,7 @@ import { ensureStenotypistBonusDatabase } from './stenotypistBonus.js';
 import { ensureStenotypistPenaltyDatabase } from './stenotypistPenalty.js';
 import { ensureTravelExpensesDatabase } from './travelExpenses.js';
 import { ensureJobTravelExpensesDatabase } from './jobTravelExpenses.js';
+import { ensureStenoRatesDatabase } from './stenoRates.js';
 
 const DEFAULT_PROFILE = {
   contactPhone: '',
@@ -180,6 +181,7 @@ export function ensureDatabase() {
   ensureStenotypistPenaltyDatabase();
   ensureTravelExpensesDatabase();
   ensureJobTravelExpensesDatabase();
+  ensureStenoRatesDatabase();
 
   if (!collectionExists('users')) {
     writeUsersFile({

@@ -13,7 +13,7 @@ import {
   isAdministrationPath,
   type NavItem,
 } from '../../config/navigation';
-import { hasPermission, getDefaultProjectsPath, canAccessTravellingChargesModule, canAccessJobReconciliationModule, canAccessCustomerInvoicingModule, canAccessBonusConfigurationModule, canAccessStenotypistBonusesModule, canAccessPenaltyConfigurationModule, canAccessStenotypistPenaltiesModule, canAccessTravelExpenseConfigurationModule, canAccessTravelExpenseListModule, canAccessStenotypistFinancialsReportModule } from '../../config/permissions';
+import { hasPermission, getDefaultProjectsPath, canAccessStenoRatesModule, canAccessTravellingChargesModule, canAccessJobReconciliationModule, canAccessCustomerInvoicingModule, canAccessBonusConfigurationModule, canAccessStenotypistBonusesModule, canAccessPenaltyConfigurationModule, canAccessStenotypistPenaltiesModule, canAccessTravelExpenseConfigurationModule, canAccessTravelExpenseListModule, canAccessStenotypistFinancialsReportModule } from '../../config/permissions';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getAuthUser, signOut } from '../../utils/auth';
 import { getRoleLabelKey } from '../../config/roles';
@@ -40,6 +40,9 @@ function filterNavItems(
   roleOrRoles: string | readonly string[] | undefined,
 ) {
   return items.filter((item) => {
+    if (item.path === '/financials/steno-rates') {
+      return canAccessStenoRatesModule(roleOrRoles);
+    }
     if (item.path === '/financials/travelling-charges') {
       return canAccessTravellingChargesModule(roleOrRoles);
     }

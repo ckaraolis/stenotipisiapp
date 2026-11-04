@@ -6,6 +6,7 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import SchedulingReportsPage from './pages/scheduling/SchedulingReportsPage';
 import UsersPage from './pages/UsersPage';
 import SignInPage from './pages/SignInPage';
+import StenoRatesPage from './pages/financials/StenoRatesPage';
 import TravellingChargesPage from './pages/financials/TravellingChargesPage';
 import JobReconciliationPage from './pages/financials/JobReconciliationPage';
 import ProformasPage from './pages/financials/ProformasPage';
@@ -213,7 +214,15 @@ export default function App() {
           }
         />
 
-        <Route path="financials" element={<Navigate to="/financials/travelling-charges" replace />} />
+        <Route path="financials" element={<Navigate to="/financials/steno-rates" replace />} />
+        <Route
+          path="financials/steno-rates"
+          element={
+            <PermissionRoute>
+              <StenoRatesPage />
+            </PermissionRoute>
+          }
+        />
         <Route
           path="financials/travelling-charges"
           element={

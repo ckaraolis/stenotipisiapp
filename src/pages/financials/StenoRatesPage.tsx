@@ -1,12 +1,5 @@
-import FinancialRatesTable from '../../components/financials/FinancialRatesTable';
-import { mockStenoRates } from '../../data/mockFinancials';
+import StenoRatesTable from '../../components/financials/StenoRatesTable';
 
 export default function StenoRatesPage() {
-  return (
-    <FinancialRatesTable
-      titleKey="stenoRates"
-      subtitleKey="stenoRatesSubtitle"
-      rows={mockStenoRates}
-    />
-  );
+  return <StenoRatesTable />;
 }

@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   'projects.customers',
   'projects.projects',
   'projects.district',
+  'financials.steno_rates',
   'financials.travelling_charges',
   'financials.reconciliation',
   'financials.proformas',
@@ -163,6 +164,16 @@ export function canAccessProjectModule(userOrRoles) {
 }
 
 /** §1.5 — Travelling charges configuration is available to Manager only (Super Admin bypass). */
+export const STENO_RATES_MODULE_ROLES = ['manager'];
+
+export function canAccessStenoRatesModule(userOrRoles) {
+  const roles = normalizeRoles(userOrRoles);
+  if (roles.includes('super_admin')) {
+    return true;
+  }
+  return roles.some((role) => STENO_RATES_MODULE_ROLES.includes(role));
+}
+
 export const TRAVELLING_CHARGES_MODULE_ROLES = ['manager'];
 
 export function canAccessTravellingChargesModule(userOrRoles) {

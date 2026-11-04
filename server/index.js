@@ -24,6 +24,7 @@ import {
 } from './db.js';
 import {
   canAccessStenotypistLeaveModule,
+  canAccessStenoRatesModule,
   canAccessTravellingChargesModule,
   canAccessJobReconciliationModule,
   canAccessCustomerInvoicingModule,
@@ -168,6 +169,15 @@ import {
   updateTravellingCharge,
 } from './travellingCharges.js';
 import {
+  createStenoRate,
+  deleteStenoRate,
+  ensureStenoRatesDatabase,
+  findStenoRateById,
+  importStenoRates,
+  listStenoRateRecords,
+  updateStenoRate,
+} from './stenoRates.js';
+import {
   createBonusConfigurationRecord,
   deleteBonusConfigurationRecord,
   findBonusConfigurationRecordById,
@@ -308,6 +318,7 @@ async function ensureAppReady() {
       ensureAssetsFile();
       ensureTranscriptFileStorageRoot();
       ensureTravellingChargesDatabase();
+      ensureStenoRatesDatabase();
       ensureAuditTrailDatabase();
       remoteBootstrapped = true;
     }
@@ -320,6 +331,7 @@ async function ensureAppReady() {
       ensureAssetsFile();
       ensureTranscriptFileStorageRoot();
       ensureTravellingChargesDatabase();
+      ensureStenoRatesDatabase();
       ensureAuditTrailDatabase();
     })();
   }
@@ -499,6 +511,19 @@ function requireSchedulingTravellingTime(req, res) {
     return null;
   }
   if (!hasPermission(user, 'scheduling.travelling_time')) {
+    res.status(403).json({ error: 'Forbidden.' });
+    return null;
+  }
+  return user;
+}
+
+function requireFinancialsStenoRates(req, res) {
+  const user = getAuthedUser(req);
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized.' });
+    return null;
+  }
+  if (!canAccessStenoRatesModule(user)) {
     res.status(403).json({ error: 'Forbidden.' });
     return null;
   }
@@ -1859,6 +1884,176 @@ app.delete('/api/scheduling/travelling-times/records/:id', (req, res) => {
   });
 
   res.json(result.trip);
+});
+
+function getStenoRateAuditFieldMap(rate) {
+  if (!rate) return {};
+  return {
+    customer: rate.customerAlias || rate.customerName || rate.customerId || '',
+    hourlyRate: String(rate.hourlyRate ?? ''),
+    hourlyRateExpedited: String(rate.hourlyRateExpedited ?? ''),
+    hourlyRateOutsideWorkingHrs: String(rate.hourlyRateOutsideWorkingHrs ?? ''),
+    hourlyRateOutsideWorkingHrsExpedited: String(rate.hourlyRateOutsideWorkingHrsExpedited ?? ''),
+    firstDiscountPercentage: String(rate.firstDiscountPercentage ?? ''),
+    nrExemptedStenotypists: String(rate.nrExemptedStenotypists ?? ''),
+    secondDiscountPercentage: String(rate.secondDiscountPercentage ?? ''),
+    secondStenotypistDiscountThreshold: String(rate.secondStenotypistDiscountThreshold ?? ''),
+    travelByKmAmount: String(rate.travelByKmAmount ?? ''),
+    sla: rate.sla ?? '',
+    slaExpedited: rate.slaExpedited ?? '',
+    workingHoursStart: rate.workingHoursStart ?? '',
+    workingHoursEnd: rate.workingHoursEnd ?? '',
+    validityFrom: rate.validityFrom ?? '',
+  };
+}
+
+function stenoRateEntityNumber(rate) {
+  return (
+    `${rate.customerAlias || rate.customerName} @ ${rate.validityFrom}`.trim() || rate.id
+  );
+}
+
+app.get('/api/financials/steno-rates', (req, res) => {
+  const actor = requireFinancialsStenoRates(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  res.json({
+    rates: listStenoRateRecords({
+      customerId: typeof req.query.customerId === 'string' ? req.query.customerId : '',
+      dateFrom: typeof req.query.dateFrom === 'string' ? req.query.dateFrom : '',
+      dateTo: typeof req.query.dateTo === 'string' ? req.query.dateTo : '',
+      search: typeof req.query.search === 'string' ? req.query.search : '',
+    }),
+  });
+});
+
+app.post('/api/financials/steno-rates/import', (req, res) => {
+  const actor = requireFinancialsStenoRates(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.rates)
+      ? req.body.rates
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['stenoRateImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importStenoRates(rows);
+
+  recordAuditEntry({
+    actor,
+    module: 'financials',
+    entityName: 'steno_rate',
+    entityNumber: 'import',
+    entryType: 'updated',
+    entryDetails: {
+      fields: [
+        { field: 'created', before: '', after: String(summary.created) },
+        { field: 'updated', before: '', after: String(summary.updated) },
+        { field: 'skipped', before: '', after: String(summary.skipped) },
+      ],
+    },
+  });
+
+  res.json(summary);
+});
+
+app.get('/api/financials/steno-rates/:id', (req, res) => {
+  const actor = requireFinancialsStenoRates(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rate = findStenoRateById(req.params.id);
+  if (!rate) {
+    res.status(404).json({ errors: ['stenoRateNotFound'] });
+    return;
+  }
+
+  res.json(rate);
+});
+
+app.post('/api/financials/steno-rates', (req, res) => {
+  const actor = requireFinancialsStenoRates(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = createStenoRate(req.body ?? {});
+  if (result.errors) {
+    res.status(400).json({ errors: result.errors });
+    return;
+  }
+
+  recordAuditEntry({
+    actor,
+    module: 'financials',
+    entityName: 'steno_rate',
+    entityNumber: stenoRateEntityNumber(result.rate),
+    entryType: 'created',
+    entryDetails: buildCreatedDetailsFromMap(getStenoRateAuditFieldMap(result.rate)),
+  });
+
+  res.status(201).json(result.rate);
+});
+
+app.put('/api/financials/steno-rates/:id', (req, res) => {
+  const actor = requireFinancialsStenoRates(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const before = findStenoRateById(req.params.id);
+  const result = updateStenoRate(req.params.id, req.body ?? {});
+  if (result.errors) {
+    const status = result.errors.includes('stenoRateNotFound') ? 404 : 400;
+    res.status(status).json({ errors: result.errors });
+    return;
+  }
+
+  const fieldChanges = buildUpdatedDetailsFromMaps(
+    getStenoRateAuditFieldMap(before),
+    getStenoRateAuditFieldMap(result.rate),
+  );
+  if ((fieldChanges.fields ?? []).length > 0) {
+    recordAuditEntry({
+      actor,
+      module: 'financials',
+      entityName: 'steno_rate',
+      entityNumber: stenoRateEntityNumber(result.rate),
+      entryType: 'updated',
+      entryDetails: fieldChanges,
+    });
+  }
+
+  res.json(result.rate);
+});
+
+app.delete('/api/financials/steno-rates/:id', (req, res) => {
+  const actor = requireFinancialsStenoRates(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const before = findStenoRateById(req.params.id);
+  const result = deleteStenoRate(req.params.id);
+  if (result.errors) {
+    res.status(404).json({ errors: result.errors });
+    return;
+  }
+
+  recordAuditEntry({
+    actor,
+    module: 'financials',
+    entityName: 'steno_rate',
+    entityNumber: stenoRateEntityNumber(before || result.rate),
+    entryType: 'deleted',
+    entryDetails: buildCreatedDetailsFromMap(getStenoRateAuditFieldMap(result.rate)),
+  });
+
+  res.json(result.rate);
 });
 
 app.get('/api/financials/travelling-charges', (req, res) => {
