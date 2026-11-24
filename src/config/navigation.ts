@@ -19,12 +19,7 @@ export const schedulingNavItems: readonly NavItem[] = [
 ];
 
 export const transcriptsNavItems: readonly NavItem[] = [
-  { key: 'transcripts', path: '/transcripts/steno', permission: 'transcripts.transcripts' },
-  {
-    key: 'transcriptsAnalysisReport',
-    path: '/transcripts/analysis-report',
-    permission: 'transcripts.transcripts_analysis_report',
-  },
+  { key: 'transcriptsSteno', path: '/transcripts/steno', permission: 'transcripts.transcripts' },
 ];
 
 export const projectsNavItems: readonly NavItem[] = [
@@ -136,9 +131,6 @@ export function getPathLabelKey(pathname: string): NavKey | null {
   }
 
   if (pathname.startsWith('/transcripts/')) {
-    if (pathname === '/transcripts/steno') {
-      return 'transcripts';
-    }
     const match = transcriptsNavItems.find((item) => item.path === pathname);
     return match?.key ?? 'transcripts';
   }
