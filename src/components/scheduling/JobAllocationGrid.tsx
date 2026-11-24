@@ -83,8 +83,28 @@ export default function JobAllocationGrid() {
   const [matrixActionLoading, setMatrixActionLoading] = useState(false);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const locale = language === 'el' ? 'el-GR' : 'en-GB';
+  const stenotypistScrollRef = useRef<HTMLDivElement | null>(null);
+  const scheduleScrollRef = useRef<HTMLDivElement | null>(null);
+  const syncingVerticalScroll = useRef(false);
 
   const scheduleDays = useMemo(() => getMatrixScheduleDays(centerDate), [centerDate]);
+
+  const syncVerticalScroll = (source: 'stenotypist' | 'schedule') => {
+    if (syncingVerticalScroll.current) return;
+    const left = stenotypistScrollRef.current;
+    const right = scheduleScrollRef.current;
+    if (!left || !right) return;
+
+    syncingVerticalScroll.current = true;
+    if (source === 'stenotypist') {
+      right.scrollTop = left.scrollTop;
+    } else {
+      left.scrollTop = right.scrollTop;
+    }
+    requestAnimationFrame(() => {
+      syncingVerticalScroll.current = false;
+    });
+  };
   const centerDateKey = formatAllocationDateKey(centerDate);
   const nextWorkingDayKey = useMemo(
     () => formatAllocationDateKey(getNextWorkingDay(new Date(), holidayDates)),
@@ -393,7 +413,11 @@ export default function JobAllocationGrid() {
                 className="stenotypist-list-panel"
                 aria-label={t('stenotypistListPanel')}
               >
-                <div className="stenotypist-list-scroll">
+                <div
+                  ref={stenotypistScrollRef}
+                  className="stenotypist-list-scroll"
+                  onScroll={() => syncVerticalScroll('stenotypist')}
+                >
                   <table className="allocation-table job-matrix-table stenotypist-list-table">
                     <thead>
                       <tr>
@@ -454,7 +478,11 @@ export default function JobAllocationGrid() {
               </section>
 
               <section className="schedule-panel" aria-label={t('schedulePanel')}>
-                <div className="schedule-panel-scroll">
+                <div
+                  ref={scheduleScrollRef}
+                  className="schedule-panel-scroll"
+                  onScroll={() => syncVerticalScroll('schedule')}
+                >
                   <table className="allocation-table job-matrix-table schedule-panel-table">
                     <thead>
                       <tr>
