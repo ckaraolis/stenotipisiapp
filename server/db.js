@@ -34,6 +34,7 @@ import {
 } from './customers.js';
 import { ensureDistrictsDatabase } from './districts.js';
 import { ensureProjectTypesDatabase } from './projectTypes.js';
+import { ensureCustomerFieldsToUsersDatabase } from './customerFieldsToUsers.js';
 import { ensureProjectsDatabase } from './projects.js';
 import { ensurePublicHolidaysDatabase } from './publicHolidays.js';
 import { ensureStenotypistLeavesDatabase } from './stenotypistLeaves.js';
@@ -169,6 +170,7 @@ export function ensureDatabase() {
   ensureCustomersDatabase();
   ensureDistrictsDatabase();
   ensureProjectTypesDatabase();
+  ensureCustomerFieldsToUsersDatabase();
   ensureProjectsDatabase();
   ensurePublicHolidaysDatabase();
   ensureStenotypistLeavesDatabase();

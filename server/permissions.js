@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   'projects.customers',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
   'financials.steno_rates',
   'financials.travelling_charges',
@@ -73,6 +74,7 @@ export const DISTRICT_ADMIN_PERMISSIONS = [
   'scheduling.jobs',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
   'administration.account_management',
   'administration.notifications',
@@ -83,15 +85,17 @@ export const COORDINATOR_PERMISSIONS = [
   'scheduling.job_allocation',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'administration.notifications',
 ];
 
 export const CUSTOMER_MODULE_PERMISSIONS = ['projects.customers'];
 
-/** §3.4 — Project module permissions (projects list, types, and district). */
+/** §3.4 — Project module permissions (projects list, types, fields, and district). */
 export const PROJECT_MODULE_PERMISSIONS = [
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
 ];
 

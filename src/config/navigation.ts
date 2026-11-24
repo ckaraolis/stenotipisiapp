@@ -26,6 +26,11 @@ export const projectsNavItems: readonly NavItem[] = [
   { key: 'customers', path: '/projects/customers', permission: 'projects.customers' },
   { key: 'projectsList', path: '/projects/list', permission: 'projects.projects' },
   { key: 'projectTypes', path: '/projects/types', permission: 'projects.project_types' },
+  {
+    key: 'customerFieldsToUsers',
+    path: '/projects/customer-fields',
+    permission: 'projects.customer_fields',
+  },
 ];
 
 export const financialsNavItems: readonly NavItem[] = [

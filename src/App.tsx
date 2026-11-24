@@ -22,6 +22,7 @@ import NotificationsPage from './pages/administration/NotificationsPage';
 import CustomersPage from './pages/projects/CustomersPage';
 import ProjectsListPage from './pages/projects/ProjectsListPage';
 import ProjectTypesPage from './pages/projects/ProjectTypesPage';
+import CustomerFieldsPage from './pages/projects/CustomerFieldsPage';
 import DistrictPage from './pages/projects/DistrictPage';
 import TranscriptsStenoPage from './pages/transcripts/TranscriptsStenoPage';
 import TranscriptsAnalysisReportPage from './pages/transcripts/TranscriptsAnalysisReportPage';
@@ -211,6 +212,14 @@ export default function App() {
           element={
             <PermissionRoute>
               <ProjectTypesPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="projects/customer-fields"
+          element={
+            <PermissionRoute>
+              <CustomerFieldsPage />
             </PermissionRoute>
           }
         />

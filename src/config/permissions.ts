@@ -14,6 +14,7 @@ export const PERMISSIONS = [
   'projects.customers',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
   'financials.steno_rates',
   'financials.travelling_charges',
@@ -47,6 +48,7 @@ export const MANAGER_PERMISSIONS: readonly Permission[] = [
   'projects.customers',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
   'financials.steno_rates',
   'financials.travelling_charges',
@@ -104,6 +106,7 @@ export const DISTRICT_ADMIN_PERMISSIONS: readonly Permission[] = [
   'scheduling.jobs',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
   'administration.account_management',
   'administration.notifications',
@@ -114,16 +117,18 @@ export const COORDINATOR_PERMISSIONS: readonly Permission[] = [
   'scheduling.job_allocation',
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'administration.notifications',
 ];
 
 /** Customer module access per §2.6 — only Customer and Manager roles. */
 export const CUSTOMER_MODULE_PERMISSIONS: readonly Permission[] = ['projects.customers'];
 
-/** §3.4 — Project module permissions (projects list, types, and district). */
+/** §3.4 — Project module permissions (projects list, types, fields, and district). */
 export const PROJECT_MODULE_PERMISSIONS: readonly Permission[] = [
   'projects.projects',
   'projects.project_types',
+  'projects.customer_fields',
   'projects.district',
 ];
 
@@ -481,6 +486,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/projects/customers': 'projects.customers',
   '/projects/list': 'projects.projects',
   '/projects/types': 'projects.project_types',
+  '/projects/customer-fields': 'projects.customer_fields',
   '/administration/districts': 'projects.district',
   '/financials/steno-rates': 'financials.steno_rates',
   '/financials/travelling-charges': 'financials.travelling_charges',
@@ -513,6 +519,7 @@ const DEFAULT_PATH_ORDER = [
   '/projects/customers',
   '/projects/list',
   '/projects/types',
+  '/projects/customer-fields',
   '/administration/districts',
   '/financials/steno-rates',
   '/financials/travelling-charges',

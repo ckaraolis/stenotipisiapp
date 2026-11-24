@@ -86,6 +86,15 @@ import {
   updateProjectTypeStatus,
 } from './projectTypes.js';
 import {
+  createCustomerFieldUserMapping,
+  deleteCustomerFieldUserMapping,
+  findCustomerFieldUserMappingRecordById,
+  importCustomerFieldUserMappings,
+  listCustomerFieldUserMappings,
+  listCustomerFieldUserMappingUserOptions,
+  updateCustomerFieldUserMapping,
+} from './customerFieldsToUsers.js';
+import {
   createProject,
   deleteProject,
   findProjectRecordById,
@@ -502,6 +511,19 @@ function requireProjectsProjectTypes(req, res) {
   return user;
 }
 
+function requireProjectsCustomerFields(req, res) {
+  const user = getAuthedUser(req);
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized.' });
+    return null;
+  }
+  if (!hasPermission(user, 'projects.customer_fields')) {
+    res.status(403).json({ error: 'Forbidden.' });
+    return null;
+  }
+  return user;
+}
+
 function requireProjectTypeLookup(req, res) {
   const user = getAuthedUser(req);
   if (!user) {
@@ -753,6 +775,7 @@ function requireCustomerLookup(req, res) {
     !hasPermission(user, 'projects.customers') &&
     !hasPermission(user, 'projects.projects') &&
     !hasPermission(user, 'projects.project_types') &&
+    !hasPermission(user, 'projects.customer_fields') &&
     !hasPermission(user, 'administration.users')
   ) {
     res.status(403).json({ error: 'Forbidden.' });
@@ -1704,6 +1727,98 @@ app.delete('/api/project-types/records/:id', (req, res) => {
   }
 
   res.json(result.projectType);
+});
+
+app.get('/api/customer-fields-to-users/records', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+  res.json({ mappings: listCustomerFieldUserMappings() });
+});
+
+app.get('/api/customer-fields-to-users/user-options', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+  res.json({ users: listCustomerFieldUserMappingUserOptions() });
+});
+
+app.get('/api/customer-fields-to-users/records/:id', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const mapping = findCustomerFieldUserMappingRecordById(req.params.id);
+  if (!mapping) {
+    res.status(404).json({ errors: ['customerFieldUserNotFound'] });
+    return;
+  }
+
+  res.json(mapping);
+});
+
+app.post('/api/customer-fields-to-users/records', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = createCustomerFieldUserMapping(req.body ?? {});
+  if (result.errors) {
+    res.status(400).json({ errors: result.errors });
+    return;
+  }
+
+  res.status(201).json(result.mapping);
+});
+
+app.put('/api/customer-fields-to-users/records/:id', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = updateCustomerFieldUserMapping(req.params.id, req.body ?? {});
+  if (result.errors) {
+    const status = result.errors.includes('customerFieldUserNotFound') ? 404 : 400;
+    res.status(status).json({ errors: result.errors });
+    return;
+  }
+
+  res.json(result.mapping);
+});
+
+app.post('/api/customer-fields-to-users/import', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.mappings)
+      ? req.body.mappings
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['customerFieldUserImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importCustomerFieldUserMappings(rows);
+  res.json(summary);
+});
+
+app.delete('/api/customer-fields-to-users/records/:id', (req, res) => {
+  const actor = requireProjectsCustomerFields(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = deleteCustomerFieldUserMapping(req.params.id);
+  if (result.errors) {
+    const status = result.errors.includes('customerFieldUserNotFound') ? 404 : 400;
+    res.status(status).json({ errors: result.errors });
+    return;
+  }
+
+  res.json(result.mapping);
 });
 
 app.get('/api/scheduling/public-holidays/records', (req, res) => {
