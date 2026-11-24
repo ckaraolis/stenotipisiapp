@@ -49,6 +49,7 @@ import { getEmailConfig, loadEmailEnvFile } from './emailConfig.js';
 import { buildAppActionUrl } from './notificationChannels.js';
 import { sendAccountEmailChangeNotifications } from './accountEmails.js';
 import { sendUserEnrollmentEmail } from './mfaEnrollmentEmail.js';
+import { importUsers } from './userImport.js';
 import { createMfaSession, consumeMfaSession } from './mfaSessions.js';
 import { generateTotp, verifyTotp } from './totp.js';
 import { MFA_LOGIN_ENABLED } from './authFeatures.js';
@@ -4477,6 +4478,42 @@ app.post('/api/users', async (req, res) => {
   }
 
   res.status(201).json(result.user);
+});
+
+app.post('/api/users/import', (req, res) => {
+  const actor = requireAdminUsers(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.users)
+      ? req.body.users
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['userImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importUsers(rows);
+
+  recordAuditEntry({
+    actor,
+    module: 'administration',
+    entityName: 'user',
+    entityNumber: 'import',
+    entryType: 'updated',
+    entryDetails: {
+      fields: [
+        { field: 'created', before: '', after: String(summary.created) },
+        { field: 'updated', before: '', after: String(summary.updated) },
+        { field: 'skipped', before: '', after: String(summary.skipped) },
+      ],
+    },
+  });
+
+  res.json(summary);
 });
 
 app.put('/api/users/:id', (req, res) => {

@@ -5,13 +5,16 @@ import {
   fetchUsers,
   updateUserStatus,
   type CustomerOption,
+  type UserImportResult,
   type UserProfile,
 } from '../../api/profile';
 import { USER_ROLES, formatRoleLabels, getRoleLabelKey } from '../../config/roles';
 import type { UserRole } from '../../config/roles';
 import DeleteUserDialog, { parseDeleteError } from './DeleteUserDialog';
+import ImportUsersDialog from './ImportUsersDialog';
 import UserDetailsForm from './UserDetailsForm';
 import { useLanguage } from '../../i18n/LanguageContext';
+import type { TranslationKey } from '../../i18n/translations';
 import type { UserStatus } from '../../types/user';
 import '../../styles/projects.css';
 import '../../styles/profile.css';
@@ -36,6 +39,8 @@ export default function UsersTable() {
   const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
   const [customerFilter, setCustomerFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -154,17 +159,41 @@ export default function UsersTable() {
     setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
   };
 
+  const handleImported = async (summary: UserImportResult) => {
+    setShowImport(false);
+    setSuccess(
+      t('userImportSuccess')
+        .replace('{created}', String(summary.created))
+        .replace('{updated}', String(summary.updated))
+        .replace('{skipped}', String(summary.skipped)),
+    );
+    setImportWarnings(
+      (summary.errors ?? []).slice(0, 20).map((item) =>
+        t('userImportErrorLine')
+          .replace('{row}', String(item.row))
+          .replace('{message}', t(item.message as TranslationKey))
+          .replace('{detail}', item.detail ? ` (${item.detail})` : ''),
+      ),
+    );
+    await loadUsers();
+  };
+
   return (
     <div className="projects-page">
-      <div className="page-header projects-header">
+      <div className="page-header projects-header customers-header">
         <div>
           <h1 className="page-title">{t('users')}</h1>
           <p className="page-subtitle">{t('usersSubtitle')}</p>
         </div>
         {formMode === 'closed' && (
-          <button type="button" className="btn-primary" onClick={handleOpenCreate}>
-            {t('addNew')}
-          </button>
+          <div className="customers-header-actions">
+            <button type="button" className="profile-cancel-btn" onClick={() => setShowImport(true)}>
+              {t('importFromExcel')}
+            </button>
+            <button type="button" className="btn-primary" onClick={handleOpenCreate}>
+              {t('addNew')}
+            </button>
+          </div>
         )}
       </div>
 
@@ -187,6 +216,16 @@ export default function UsersTable() {
         />
       )}
 
+      {showImport && (
+        <ImportUsersDialog
+          onClose={() => setShowImport(false)}
+          onImported={(summary) => {
+            void handleImported(summary);
+          }}
+        />
+      )}
+
+      {formMode === 'closed' && (
       <div className="projects-panel">
         <div className="filters">
           <div className="filters-row">
@@ -242,6 +281,16 @@ export default function UsersTable() {
 
         {error && <div className="profile-alert profile-alert-error">{error}</div>}
         {success && <div className="profile-alert profile-alert-success">{success}</div>}
+        {importWarnings.length > 0 && (
+          <div className="profile-alert profile-alert-error">
+            <div>{t('userImportErrorsHeading')}</div>
+            <ul className="project-type-import-warnings">
+              {importWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {loading ? (
           <div className="profile-message">{t('loading')}</div>
         ) : (
@@ -370,6 +419,7 @@ export default function UsersTable() {
           </>
         )}
       </div>
+      )}
     </div>
   );
 }

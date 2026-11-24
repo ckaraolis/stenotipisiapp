@@ -128,6 +128,29 @@ export async function fetchCustomers(): Promise<CustomerOption[]> {
   return data.customers;
 }
 
+export interface UserImportRow {
+  Username?: string;
+  Alias?: string;
+  'Full Name'?: string;
+  Name?: string;
+  Email?: string;
+  Roles?: string;
+  Role?: string;
+  Status?: string;
+  Customer?: string;
+  'Contact Phone'?: string;
+  'Mobile Phone'?: string;
+  Language?: string;
+  [key: string]: string | undefined;
+}
+
+export interface UserImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{ row: number; message: string; detail?: string }>;
+}
+
 export async function createUser(payload: UserDetailsPayload): Promise<UserProfile> {
   const response = await fetch('/api/users', {
     method: 'POST',
@@ -141,6 +164,21 @@ export async function createUser(payload: UserDetailsPayload): Promise<UserProfi
   }
 
   return data as UserProfile;
+}
+
+export async function importUserRows(rows: UserImportRow[]): Promise<UserImportResult> {
+  const response = await fetch('/api/users/import', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ rows }),
+  });
+
+  const data = (await response.json()) as UserImportResult | { errors: string[] };
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
+  }
+
+  return data as UserImportResult;
 }
 
 export async function updateUser(
