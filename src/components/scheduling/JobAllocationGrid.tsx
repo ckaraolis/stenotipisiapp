@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { fetchJobMatrix } from '../../api/jobMatrix';
 import { confirmAllPendingJobs, matrixAllocateJob, matrixUnassignJob } from '../../api/jobs';
 import { fetchPublicHolidayRecords } from '../../api/publicHolidays';
+import { fetchCustomers, type CustomerOption } from '../../api/profile';
 import { jobStatusLabelKey } from '../../config/job';
 import {
   ALLOCATION_METRIC_COLUMNS,
@@ -762,6 +763,7 @@ function UnassignedJobsPanel({
   onDragLeave: () => void;
   onDrop: (event: DragEvent<HTMLElement>) => void;
 }) {
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [customerFilter, setCustomerFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [jobFilter, setJobFilter] = useState('');
@@ -776,10 +778,27 @@ function UnassignedJobsPanel({
     }
   }, [nextWorkingDayKey]);
 
-  const customerOptions = useMemo(
-    () => [...new Set(jobs.map((job) => job.customerAlias).filter(Boolean))].sort(),
-    [jobs],
-  );
+  useEffect(() => {
+    let active = true;
+    fetchCustomers()
+      .then((data) => {
+        if (!active) return;
+        setCustomers(
+          [...data].sort((a, b) => {
+            const left = (a.alias || a.name).toLocaleLowerCase();
+            const right = (b.alias || b.name).toLocaleLowerCase();
+            return left.localeCompare(right);
+          }),
+        );
+      })
+      .catch(() => {
+        if (active) setCustomers([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const districtOptions = useMemo(
     () => [...new Set(jobs.map((job) => job.district).filter(Boolean))].sort(),
     [jobs],
@@ -794,7 +813,7 @@ function UnassignedJobsPanel({
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
-      if (customerFilter && job.customerAlias !== customerFilter) return false;
+      if (customerFilter && job.customerId !== customerFilter) return false;
       if (districtFilter && job.district !== districtFilter) return false;
       if (jobFilter && job.id !== jobFilter) return false;
       if (dateFrom && job.date < dateFrom) return false;
@@ -845,9 +864,9 @@ function UnassignedJobsPanel({
           <span>{t('customer')}</span>
           <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}>
             <option value="">{t('allCustomers')}</option>
-            {customerOptions.map((customer) => (
-              <option key={customer} value={customer}>
-                {customer}
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.alias ? `${customer.alias} – ${customer.name}` : customer.name}
               </option>
             ))}
           </select>

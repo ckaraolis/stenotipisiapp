@@ -536,6 +536,7 @@ function buildUnassignedJobs(jobs) {
       const publicJob = toPublicJob(job);
       return {
         id: job.id,
+        customerId: publicJob.customerId || job.customerId || '',
         customerAlias: publicJob.customerAlias || publicJob.customerName || '—',
         district: publicJob.districtAlias || publicJob.districtName || publicJob.locationDetails || '—',
         projectField1: publicJob.projectField1 || '—',

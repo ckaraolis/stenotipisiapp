@@ -38,6 +38,7 @@ export interface JobMatrixUnassignedJob {
   id: string;
   title: string;
   time: string;
+  customerId: string;
   customerAlias: string;
   district: string;
   projectField1: string;
