@@ -5,6 +5,7 @@ import { MANAGER_ASSIGNABLE_ROLES } from './roles';
 export const GLOBAL_USER_ROLES: readonly UserRole[] = [
   'stenotypist',
   'manager',
+  'assistant_manager',
   'reconciliator',
   'accountant',
   'super_admin',
@@ -16,6 +17,7 @@ export const CUSTOMER_USER_ROLES: readonly UserRole[] = [
   'district_admin',
   'coordinator',
   'transcript_owner',
+  'stenographer',
 ];
 
 export function getAllowedRolesForCustomer(customerId: string | null): UserRole[] {

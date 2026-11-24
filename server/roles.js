@@ -1,8 +1,10 @@
 export const USER_ROLES = [
   'super_admin',
   'manager',
+  'assistant_manager',
   'customer',
   'stenotypist',
+  'stenographer',
   'transcript_owner',
   'reconciliator',
   'accountant',
@@ -13,6 +15,7 @@ export const USER_ROLES = [
 export const GLOBAL_USER_ROLES = [
   'stenotypist',
   'manager',
+  'assistant_manager',
   'reconciliator',
   'accountant',
   'super_admin',
@@ -23,14 +26,23 @@ export const CUSTOMER_USER_ROLES = [
   'district_admin',
   'coordinator',
   'transcript_owner',
+  'stenographer',
 ];
+
+/** Internal manager-equivalent roles (elevated operational access). */
+export const MANAGER_EQUIVALENT_ROLES = ['manager', 'assistant_manager'];
+
+/** Roles treated as stenotypist workers for scheduling/financial assignment. */
+export const STENOTYPIST_EQUIVALENT_ROLES = ['stenotypist', 'stenographer'];
 
 const ROLE_ALIASES = {
   superadmin: 'super_admin',
   'super admin': 'super_admin',
   admin: 'super_admin',
+  assistantmanager: 'assistant_manager',
+  'assistant manager': 'assistant_manager',
   steno: 'stenotypist',
-  stenographer: 'stenotypist',
+  stenographer: 'stenographer',
   owner: 'transcript_owner',
   'transcript owner': 'transcript_owner',
   'district admin': 'district_admin',
@@ -73,4 +85,14 @@ export function getAllowedRolesForCustomer(customerId) {
 export function validateRolesForCustomer(customerId, roles) {
   const allowed = new Set(getAllowedRolesForCustomer(customerId));
   return roles.every((role) => allowed.has(normalizeRole(role)));
+}
+
+export function hasManagerEquivalentRole(userOrRoles) {
+  const roles = normalizeRoles(userOrRoles);
+  return roles.some((role) => MANAGER_EQUIVALENT_ROLES.includes(role));
+}
+
+export function hasStenotypistEquivalentRole(userOrRoles) {
+  const roles = normalizeRoles(userOrRoles);
+  return roles.some((role) => STENOTYPIST_EQUIVALENT_ROLES.includes(role));
 }

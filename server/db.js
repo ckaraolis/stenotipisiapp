@@ -653,7 +653,10 @@ export function updateAccountProfile(userId, updates) {
   else if (!EMAIL_PATTERN.test(email)) errors.push('emailInvalid');
 
   const roles = normalizeRoles(current);
-  if (roles.includes('stenotypist') && !mobilePhone) {
+  if (
+    (roles.includes('stenotypist') || roles.includes('stenographer')) &&
+    !mobilePhone
+  ) {
     errors.push('mobilePhoneRequired');
   }
 

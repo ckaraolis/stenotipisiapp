@@ -36,8 +36,12 @@ import {
   isStenotypistActor,
 } from './jobAccess.js';
 import { isStenotypistOnApprovedLeave } from './stenotypistLeaves.js';
-import { normalizeRoles } from './roles.js';
-
+import {
+  hasManagerEquivalentRole,
+  hasStenotypistEquivalentRole,
+  normalizeRoles,
+} from './roles.js';
+
 const JOBS_PATH = path.join(DB_DIR, 'jobs.json');
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -147,13 +151,13 @@ export function normalizeRejectionReason(value) {
 
 function isManagerOrSuperAdmin(actor) {
   const roles = normalizeRoles(actor);
-  return roles.includes('manager') || roles.includes('super_admin');
+  return hasManagerEquivalentRole(roles) || roles.includes('super_admin');
 }
 
 function userIsStenotypist(userId) {
   const user = findUserById(userId);
   if (!user || user.status !== 'active') return false;
-  return normalizeRoles(user).includes('stenotypist');
+  return hasStenotypistEquivalentRole(user);
 }
 
 function generateJobNumber(jobs) {
@@ -465,7 +469,7 @@ function assertCrossCuttingAction(job, actor, actionId) {
 
 export function listJobStenotypistCandidates() {
   return listUsers()
-    .filter((user) => user.status === 'active' && normalizeRoles(user).includes('stenotypist'))
+    .filter((user) => user.status === 'active' && hasStenotypistEquivalentRole(user))
     .map((user) => ({
       id: user.id,
       fullName: user.fullName,

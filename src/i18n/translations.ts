@@ -250,8 +250,10 @@ export const translations = {
     role: 'Role',
     roleSuperAdmin: 'Super Admin',
     roleManager: 'Manager',
+    roleAssistantManager: 'Assistant Manager',
     roleCustomer: 'Customer',
     roleStenotypist: 'Stenotypist',
+    roleStenographer: 'Stenographer',
     roleTranscriptOwner: 'TRANSCRIPT OWNER',
     roleReconciliator: 'Reconciliator',
     roleAccountant: 'Accountant',
@@ -261,10 +263,14 @@ export const translations = {
     roleSuperAdminDescription: 'Unlimited access to all aspects of the software.',
     roleManagerDescription:
       'Manage Customer Accounts and User Roles (excluding assigning Super Admin), access the Project module, manage Public Holidays, schedule Jobs, publish Transcripts, and view and edit Financials.',
+    roleAssistantManagerDescription:
+      'Same operational access as Manager for day-to-day administration, scheduling, projects, and financials.',
     roleCustomerDescription:
       'Access the Customer module to view and manage customer records and field configuration.',
     roleStenotypistDescription:
       'Access the Project module, view and create Jobs, and work with Transcripts for Projects where you are assigned.',
+    roleStenographerDescription:
+      'Customer-side stenographer access to projects, jobs, and transcripts for the assigned customer.',
     roleTranscriptOwnerDescription:
       'View and download Transcripts on behalf of the Customer.',
     roleReconciliatorDescription:
@@ -1892,8 +1898,10 @@ export const translations = {
     role: 'Ρόλος',
     roleSuperAdmin: 'Super Admin',
     roleManager: 'Manager',
+    roleAssistantManager: 'Βοηθός Manager',
     roleCustomer: 'Πελάτης',
-    roleStenotypist: 'Στενογράφος',
+    roleStenotypist: 'Στενοτυπίστρια',
+    roleStenographer: 'Στενογράφος',
     roleTranscriptOwner: 'Ιδιοκτήτης Απομαγνητοφώνησης',
     roleReconciliator: 'Συμφωνιστής',
     roleAccountant: 'Λογιστής',
@@ -1903,10 +1911,14 @@ export const translations = {
     roleSuperAdminDescription: 'Απεριόριστη πρόσβαση σε όλες τις λειτουργίες του συστήματος.',
     roleManagerDescription:
       'Διαχείριση πελατών και ρόλων χρηστών (χωρίς ανάθεση Super Admin), πρόσβαση στη λειτουργική μονάδα Έργων, διαχείριση δημοσίων αργιών, προγραμματισμός εργασιών, δημοσίευση απομαγνητοφωνήσεων και επεξεργασία οικονομικών.',
+    roleAssistantManagerDescription:
+      'Ίδια λειτουργική πρόσβαση με τον Manager για καθημερινή διαχείριση, προγραμματισμό, έργα και οικονομικά.',
     roleCustomerDescription:
       'Πρόσβαση στη λειτουργική μονάδα Πελατών για προβολή και διαχείριση εγγραφών πελατών και ρύθμισης πεδίων.',
     roleStenotypistDescription:
       'Πρόσβαση στη λειτουργική μονάδα Έργων, προβολή και δημιουργία εργασιών και εργασία με απομαγνητοφωνήσεις για έργα στα οποία έχετε ανατεθεί.',
+    roleStenographerDescription:
+      'Πρόσβαση στενογράφου πελάτη σε έργα, εργασίες και απομαγνητοφωνήσεις για τον ανατεθέντα πελάτη.',
     roleTranscriptOwnerDescription:
       'Προβολή και λήψη απομαγνητοφωνήσεων εκ μέρους του Πελάτη.',
     roleReconciliatorDescription:

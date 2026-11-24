@@ -1,5 +1,9 @@
 import { getPhaseForJobStatus } from './job';
-import { normalizeRoles } from './roles';
+import {
+  hasManagerEquivalentRole,
+  hasStenotypistEquivalentRole,
+  normalizeRoles,
+} from './roles';
 import type { UserRole } from './roles';
 import type { JobAssignmentRole } from '../types/job';
 import type { JobRecord } from '../types/jobRecord';
@@ -31,7 +35,9 @@ const JOB_LIST_ACCESS_ROLES: readonly UserRole[] = [
   'district_admin',
   'coordinator',
   'stenotypist',
+  'stenographer',
   'manager',
+  'assistant_manager',
 ];
 
 /** §4.11.1 — District Admin job list view (not manager/coordinator/super admin). */
@@ -41,7 +47,7 @@ export function isDistrictAdminJobListView(
   const roles = normalizeRoles(roleOrRoles);
   if (
     roles.includes('super_admin') ||
-    roles.includes('manager') ||
+    hasManagerEquivalentRole(roles) ||
     roles.includes('coordinator')
   ) {
     return false;
@@ -54,7 +60,7 @@ export function isCoordinatorJobListView(
   roleOrRoles: string | readonly string[] | null | undefined,
 ): boolean {
   const roles = normalizeRoles(roleOrRoles);
-  if (roles.includes('super_admin') || roles.includes('manager')) {
+  if (roles.includes('super_admin') || hasManagerEquivalentRole(roles)) {
     return false;
   }
   return roles.includes('coordinator');
@@ -68,7 +74,7 @@ export function isManagerJobListView(
   if (roles.includes('super_admin')) {
     return false;
   }
-  return roles.includes('manager');
+  return hasManagerEquivalentRole(roles);
 }
 
 /** §4.11.4 — Stenotypist job list view (not manager/coordinator/district admin/super admin). */
@@ -78,13 +84,13 @@ export function isStenotypistJobListView(
   const roles = normalizeRoles(roleOrRoles);
   if (
     roles.includes('super_admin') ||
-    roles.includes('manager') ||
+    hasManagerEquivalentRole(roles) ||
     roles.includes('coordinator') ||
     roles.includes('district_admin')
   ) {
     return false;
   }
-  return roles.includes('stenotypist');
+  return hasStenotypistEquivalentRole(roles);
 }
 
 export function isCustomerOrganisationJobListView(
@@ -98,7 +104,7 @@ export function hasFullJobDetailsFormAccess(
   roleOrRoles: string | readonly string[] | null | undefined,
 ): boolean {
   const roles = normalizeRoles(roleOrRoles);
-  return roles.includes('super_admin') || roles.includes('manager');
+  return roles.includes('super_admin') || hasManagerEquivalentRole(roles);
 }
 
 export function isCustomerOrganisationJobDetailsView(

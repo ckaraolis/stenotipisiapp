@@ -1,4 +1,9 @@
-import { normalizeRole, normalizeRoles } from './roles.js';
+import {
+  hasManagerEquivalentRole,
+  hasStenotypistEquivalentRole,
+  normalizeRole,
+  normalizeRoles,
+} from './roles.js';
 
 export const PERMISSIONS = [
   'dashboard.view',
@@ -108,8 +113,10 @@ export const CUSTOMER_PERMISSIONS = [
 export const ROLE_PERMISSIONS = {
   super_admin: SUPER_ADMIN_PERMISSIONS,
   manager: MANAGER_PERMISSIONS,
+  assistant_manager: MANAGER_PERMISSIONS,
   customer: CUSTOMER_PERMISSIONS,
   stenotypist: STENOTYPIST_PERMISSIONS,
+  stenographer: STENOTYPIST_PERMISSIONS,
   transcript_owner: TRANSCRIPT_OWNER_PERMISSIONS,
   reconciliator: RECONCILIATOR_PERMISSIONS,
   accountant: ACCOUNTANT_PERMISSIONS,
@@ -246,15 +253,15 @@ export function canManageStenotypistLeaveForOthers(userOrRoles) {
   if (roles.includes('super_admin')) {
     return true;
   }
-  return roles.includes('manager');
+  return hasManagerEquivalentRole(roles);
 }
 
 export function isStenotypistLeaveSelfServiceOnly(userOrRoles) {
   const roles = normalizeRoles(userOrRoles);
-  if (roles.includes('super_admin') || roles.includes('manager')) {
+  if (roles.includes('super_admin') || hasManagerEquivalentRole(roles)) {
     return false;
   }
-  return roles.includes('stenotypist');
+  return hasStenotypistEquivalentRole(roles);
 }
 
 /** §4.6 — Bonus configuration is available to Manager only (Super Admin bypass). */
@@ -313,7 +320,12 @@ export function canAccessTravelExpenseConfigurationModule(userOrRoles) {
 }
 
 /** §6.7 — Travel expense list is available to Manager and Stenotypist (Super Admin bypass). */
-export const TRAVEL_EXPENSE_LIST_MODULE_ROLES = ['manager', 'stenotypist'];
+export const TRAVEL_EXPENSE_LIST_MODULE_ROLES = [
+  'manager',
+  'assistant_manager',
+  'stenotypist',
+  'stenographer',
+];
 
 export function canAccessTravelExpenseListModule(userOrRoles) {
   const roles = normalizeRoles(userOrRoles);
@@ -325,14 +337,19 @@ export function canAccessTravelExpenseListModule(userOrRoles) {
 
 export function isStenotypistTravelExpenseSelfServiceOnly(userOrRoles) {
   const roles = normalizeRoles(userOrRoles);
-  if (roles.includes('super_admin') || roles.includes('manager')) {
+  if (roles.includes('super_admin') || hasManagerEquivalentRole(roles)) {
     return false;
   }
-  return roles.includes('stenotypist');
+  return hasStenotypistEquivalentRole(roles);
 }
 
 /** §7.2 — Stenotypist Financials Report is available to Manager and Stenotypist (Super Admin bypass). */
-export const STENOTYPIST_FINANCIALS_REPORT_MODULE_ROLES = ['manager', 'stenotypist'];
+export const STENOTYPIST_FINANCIALS_REPORT_MODULE_ROLES = [
+  'manager',
+  'assistant_manager',
+  'stenotypist',
+  'stenographer',
+];
 
 export function canAccessStenotypistFinancialsReportModule(userOrRoles) {
   const roles = normalizeRoles(userOrRoles);
@@ -344,8 +361,8 @@ export function canAccessStenotypistFinancialsReportModule(userOrRoles) {
 
 export function isStenotypistFinancialsReportSelfServiceOnly(userOrRoles) {
   const roles = normalizeRoles(userOrRoles);
-  if (roles.includes('super_admin') || roles.includes('manager')) {
+  if (roles.includes('super_admin') || hasManagerEquivalentRole(roles)) {
     return false;
   }
-  return roles.includes('stenotypist');
+  return hasStenotypistEquivalentRole(roles);
 }

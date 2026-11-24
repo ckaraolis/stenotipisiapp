@@ -1,14 +1,29 @@
 import { getPhaseForJobStatus } from './jobCatalog.js';
-import { normalizeRoles } from './roles.js';
+import {
+  hasManagerEquivalentRole,
+  hasStenotypistEquivalentRole,
+  normalizeRoles,
+} from './roles.js';
 
 /** §4.11 — Roles with access to Job List and Details Form. */
-export const JOB_LIST_ACCESS_ROLES = ['district_admin', 'coordinator', 'stenotypist', 'manager'];
+export const JOB_LIST_ACCESS_ROLES = [
+  'district_admin',
+  'coordinator',
+  'stenotypist',
+  'stenographer',
+  'manager',
+  'assistant_manager',
+];
 
 const REQUESTED_OR_SCHEDULED_PHASES = new Set(['requested', 'scheduled']);
 
 export function isDistrictAdminActor(actor) {
   const roles = normalizeRoles(actor);
-  if (roles.includes('super_admin') || roles.includes('manager') || roles.includes('coordinator')) {
+  if (
+    roles.includes('super_admin') ||
+    hasManagerEquivalentRole(roles) ||
+    roles.includes('coordinator')
+  ) {
     return false;
   }
   return roles.includes('district_admin');
@@ -16,7 +31,7 @@ export function isDistrictAdminActor(actor) {
 
 export function isCoordinatorActor(actor) {
   const roles = normalizeRoles(actor);
-  if (roles.includes('super_admin') || roles.includes('manager')) {
+  if (roles.includes('super_admin') || hasManagerEquivalentRole(roles)) {
     return false;
   }
   return roles.includes('coordinator');
@@ -27,20 +42,20 @@ export function isManagerActor(actor) {
   if (roles.includes('super_admin')) {
     return false;
   }
-  return roles.includes('manager');
+  return hasManagerEquivalentRole(roles);
 }
 
 export function isStenotypistActor(actor) {
   const roles = normalizeRoles(actor);
   if (
     roles.includes('super_admin') ||
-    roles.includes('manager') ||
+    hasManagerEquivalentRole(roles) ||
     roles.includes('coordinator') ||
     roles.includes('district_admin')
   ) {
     return false;
   }
-  return roles.includes('stenotypist');
+  return hasStenotypistEquivalentRole(roles);
 }
 
 export function isCustomerOrganisationActor(actor) {

@@ -3,8 +3,10 @@ import type { TranslationKey } from '../i18n/translations';
 export const USER_ROLES = [
   'super_admin',
   'manager',
+  'assistant_manager',
   'customer',
   'stenotypist',
+  'stenographer',
   'transcript_owner',
   'reconciliator',
   'accountant',
@@ -18,8 +20,10 @@ const ROLE_ALIASES: Record<string, UserRole> = {
   superadmin: 'super_admin',
   'super admin': 'super_admin',
   admin: 'super_admin',
+  assistantmanager: 'assistant_manager',
+  'assistant manager': 'assistant_manager',
   steno: 'stenotypist',
-  stenographer: 'stenotypist',
+  stenographer: 'stenographer',
   owner: 'transcript_owner',
   'transcript owner': 'transcript_owner',
   'district admin': 'district_admin',
@@ -29,8 +33,10 @@ const ROLE_ALIASES: Record<string, UserRole> = {
 export const ROLE_LABEL_KEYS: Record<UserRole, TranslationKey> = {
   super_admin: 'roleSuperAdmin',
   manager: 'roleManager',
+  assistant_manager: 'roleAssistantManager',
   customer: 'roleCustomer',
   stenotypist: 'roleStenotypist',
+  stenographer: 'roleStenographer',
   transcript_owner: 'roleTranscriptOwner',
   reconciliator: 'roleReconciliator',
   accountant: 'roleAccountant',
@@ -41,8 +47,10 @@ export const ROLE_LABEL_KEYS: Record<UserRole, TranslationKey> = {
 export const ROLE_DESCRIPTION_KEYS: Partial<Record<UserRole, TranslationKey>> = {
   super_admin: 'roleSuperAdminDescription',
   manager: 'roleManagerDescription',
+  assistant_manager: 'roleAssistantManagerDescription',
   customer: 'roleCustomerDescription',
   stenotypist: 'roleStenotypistDescription',
+  stenographer: 'roleStenographerDescription',
   transcript_owner: 'roleTranscriptOwnerDescription',
   reconciliator: 'roleReconciliatorDescription',
   accountant: 'roleAccountantDescription',
@@ -50,11 +58,22 @@ export const ROLE_DESCRIPTION_KEYS: Partial<Record<UserRole, TranslationKey>> = 
   coordinator: 'roleCoordinatorDescription',
 };
 
+/** Internal manager-equivalent roles. */
+export const MANAGER_EQUIVALENT_ROLES: readonly UserRole[] = ['manager', 'assistant_manager'];
+
+/** Roles treated as stenotypist workers for scheduling/financial assignment. */
+export const STENOTYPIST_EQUIVALENT_ROLES: readonly UserRole[] = [
+  'stenotypist',
+  'stenographer',
+];
+
 /** Roles a Manager may assign when managing users (Super Admin is excluded). */
 export const MANAGER_ASSIGNABLE_ROLES: readonly UserRole[] = [
   'manager',
+  'assistant_manager',
   'customer',
   'stenotypist',
+  'stenographer',
   'transcript_owner',
   'reconciliator',
   'accountant',
@@ -109,4 +128,18 @@ export function formatRoleLabels(
 
 export function isSuperAdminRole(roles: readonly string[]): boolean {
   return normalizeRoles(roles).includes('super_admin');
+}
+
+export function hasManagerEquivalentRole(
+  roleOrRoles: string | readonly string[] | null | undefined,
+): boolean {
+  return normalizeRoles(roleOrRoles).some((role) => MANAGER_EQUIVALENT_ROLES.includes(role));
+}
+
+export function hasStenotypistEquivalentRole(
+  roleOrRoles: string | readonly string[] | null | undefined,
+): boolean {
+  return normalizeRoles(roleOrRoles).some((role) =>
+    STENOTYPIST_EQUIVALENT_ROLES.includes(role),
+  );
 }
