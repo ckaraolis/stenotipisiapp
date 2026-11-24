@@ -43,15 +43,21 @@ export interface AuthUser {
 }
 
 interface LoginResponse {
-  requiresMfa: true;
-  mfaToken: string;
-  email: string;
+  requiresMfa?: boolean;
+  mfaToken?: string;
+  email?: string;
+  user?: AuthUser;
+  token?: string;
 }
 
 export interface MfaChallenge {
   mfaToken: string;
   email: string;
 }
+
+export type SignInResult =
+  | { kind: 'mfa'; challenge: MfaChallenge }
+  | { kind: 'session'; user: AuthUser };
 
 export function isAuthenticated(): boolean {
   return localStorage.getItem(AUTH_KEY) !== null;
@@ -129,7 +135,7 @@ export function validateLoginCredentials(
   return null;
 }
 
-export async function signIn(email: string, password: string): Promise<MfaChallenge> {
+export async function signIn(email: string, password: string): Promise<SignInResult> {
   const response = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -154,14 +160,26 @@ export async function signIn(email: string, password: string): Promise<MfaChalle
     );
   }
 
-  const data = body as LoginResponse & { requiresMfa?: boolean; mfaToken?: string; email?: string };
+  const data = body as LoginResponse;
+
+  // Password-only login (MFA temporarily disabled).
+  if (data.user && data.token && data.requiresMfa !== true) {
+    return {
+      kind: 'session',
+      user: storeSession(data.user, data.token),
+    };
+  }
+
   if (!data.requiresMfa || !data.mfaToken) {
     throw new AuthError('invalidCredentials', 'Unexpected login response.');
   }
 
   return {
-    mfaToken: data.mfaToken,
-    email: data.email ?? email,
+    kind: 'mfa',
+    challenge: {
+      mfaToken: data.mfaToken,
+      email: data.email ?? email,
+    },
   };
 }
 

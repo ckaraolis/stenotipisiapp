@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
+import { MFA_LOGIN_ENABLED } from '../config/authFeatures';
 import {
   AuthError,
   type AuthErrorCode,
@@ -82,9 +83,19 @@ export default function SignInPage() {
     setLoading(true);
     try {
       const trimmedEmail = email.trim();
-      const challenge = await signIn(trimmedEmail, password);
-      setMfaToken(challenge.mfaToken);
-      setEmail(challenge.email);
+      const result = await signIn(trimmedEmail, password);
+      if (result.kind === 'session') {
+        persistRememberMe(trimmedEmail, rememberMe);
+        navigate(getPostLoginPath(result.user));
+        return;
+      }
+
+      // MFA step retained for when MFA_LOGIN_ENABLED is turned back on.
+      if (!MFA_LOGIN_ENABLED) {
+        throw new AuthError('invalidCredentials', 'Unexpected login response.');
+      }
+      setMfaToken(result.challenge.mfaToken);
+      setEmail(result.challenge.email);
       setMfaCode('');
       setStep('mfa');
     } catch (err) {
@@ -138,7 +149,58 @@ export default function SignInPage() {
 
       <section className="signin-form-panel">
         <div className="signin-card">
-          {step === 'credentials' ? (
+          {step === 'mfa' && MFA_LOGIN_ENABLED ? (
+            <>
+              <div className="signin-card-header">
+                <div className="signin-mfa-badge">
+                  <ShieldIcon />
+                  <span>{t('mfaBadge')}</span>
+                </div>
+                <h2 className="signin-title">{t('mfaTitle')}</h2>
+                <p className="signin-subtitle">{t('mfaSubtitle')}</p>
+                <p className="signin-mfa-email">{email}</p>
+              </div>
+
+              <form className="signin-form" onSubmit={handleMfaSubmit}>
+                {error && <div className="signin-error">{error}</div>}
+
+                <label className="signin-label" htmlFor="mfa-code">
+                  {t('mfaCode')}
+                </label>
+                <div className="signin-field signin-field-mfa">
+                  <input
+                    id="mfa-code"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    placeholder={t('mfaCodePlaceholder')}
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    autoFocus
+                  />
+                  <span className="signin-field-icon" aria-hidden="true">
+                    <ShieldIcon />
+                  </span>
+                </div>
+
+                <p className="signin-mfa-hint">{t('mfaHint')}</p>
+
+                <button
+                  type="submit"
+                  className="signin-submit"
+                  disabled={loading || mfaCode.length !== 6}
+                >
+                  <ArrowRightIcon />
+                  {loading ? t('loading') : t('mfaVerify')}
+                </button>
+
+                <button type="button" className="signin-back" onClick={handleBackToCredentials}>
+                  {t('mfaBack')}
+                </button>
+              </form>
+            </>
+          ) : (
             <>
               <div className="signin-card-header">
                 <h2 className="signin-title">{t('signIn')}</h2>
@@ -237,57 +299,6 @@ export default function SignInPage() {
                   {t('forgotPassword')}
                 </Link>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="signin-card-header">
-                <div className="signin-mfa-badge">
-                  <ShieldIcon />
-                  <span>{t('mfaBadge')}</span>
-                </div>
-                <h2 className="signin-title">{t('mfaTitle')}</h2>
-                <p className="signin-subtitle">{t('mfaSubtitle')}</p>
-                <p className="signin-mfa-email">{email}</p>
-              </div>
-
-              <form className="signin-form" onSubmit={handleMfaSubmit}>
-                {error && <div className="signin-error">{error}</div>}
-
-                <label className="signin-label" htmlFor="mfa-code">
-                  {t('mfaCode')}
-                </label>
-                <div className="signin-field signin-field-mfa">
-                  <input
-                    id="mfa-code"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    placeholder={t('mfaCodePlaceholder')}
-                    value={mfaCode}
-                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    autoFocus
-                  />
-                  <span className="signin-field-icon" aria-hidden="true">
-                    <ShieldIcon />
-                  </span>
-                </div>
-
-                <p className="signin-mfa-hint">{t('mfaHint')}</p>
-
-                <button
-                  type="submit"
-                  className="signin-submit"
-                  disabled={loading || mfaCode.length !== 6}
-                >
-                  <ArrowRightIcon />
-                  {loading ? t('loading') : t('mfaVerify')}
-                </button>
-
-                <button type="button" className="signin-back" onClick={handleBackToCredentials}>
-                  {t('mfaBack')}
-                </button>
-              </form>
             </>
           )}
         </div>

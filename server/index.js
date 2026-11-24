@@ -51,6 +51,7 @@ import { sendAccountEmailChangeNotifications } from './accountEmails.js';
 import { sendUserEnrollmentEmail } from './mfaEnrollmentEmail.js';
 import { createMfaSession, consumeMfaSession } from './mfaSessions.js';
 import { generateTotp, verifyTotp } from './totp.js';
+import { MFA_LOGIN_ENABLED } from './authFeatures.js';
 import {
   createStenotypistAsset,
   deleteStenotypistAsset,
@@ -778,6 +779,27 @@ app.post('/api/auth/login', async (req, res) => {
     res.status(403).json({
       error: 'This account is inactive. Contact an administrator.',
       errorCode: 'accountInactive',
+    });
+    return;
+  }
+
+  // MFA challenge is temporarily disabled for sign-in (see authFeatures.js).
+  // Keep the MFA paths below so authenticator login can be re-enabled later.
+  if (!MFA_LOGIN_ENABLED) {
+    recordAuditEntry({
+      actor: user,
+      module: 'administration',
+      entityName: 'program_access',
+      entityNumber: user.username || user.id,
+      entryType: 'session_opened',
+      entryDetails: buildSessionOpenedEntryDetails(req.headers['user-agent'] ?? ''),
+    });
+
+    const token = await createAuthSession(user.id);
+    res.json({
+      requiresMfa: false,
+      user: toPublicUser(user),
+      token,
     });
     return;
   }
