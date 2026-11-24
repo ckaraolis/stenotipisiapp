@@ -180,22 +180,26 @@ export default function UsersTable() {
 
   return (
     <div className="projects-page">
-      <div className="page-header projects-header customers-header">
-        <div>
-          <h1 className="page-title">{t('users')}</h1>
-          <p className="page-subtitle">{t('usersSubtitle')}</p>
-        </div>
-        {formMode === 'closed' && (
+      {formMode === 'closed' && (
+        <div className="page-header projects-header customers-header">
+          <div>
+            <h1 className="page-title">{t('users')}</h1>
+            <p className="page-subtitle">{t('usersSubtitle')}</p>
+          </div>
           <div className="customers-header-actions">
-            <button type="button" className="profile-cancel-btn" onClick={() => setShowImport(true)}>
+            <button
+              type="button"
+              className="btn-primary users-import-btn"
+              onClick={() => setShowImport(true)}
+            >
               {t('importFromExcel')}
             </button>
             <button type="button" className="btn-primary" onClick={handleOpenCreate}>
               {t('addNew')}
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {formMode !== 'closed' && (
         <UserDetailsForm
