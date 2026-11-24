@@ -8,6 +8,37 @@
   align-items: flex-start;
 }
 
+.projects-add-btn {
+  margin-top: 12px;
+}
+
+.project-type-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.project-type-actions button {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.project-type-actions button:hover {
+  background: #152a46;
+}
+
+.project-type-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .customers-header {
   gap: 16px;
 }
@@ -199,6 +230,62 @@
 
 .projects-table tbody tr:hover {
   background: #f8fafc;
+}
+
+.projects-table .actions-col {
+  min-width: 96px;
+  position: sticky;
+  right: 0;
+  background: var(--color-surface);
+  z-index: 1;
+}
+
+.projects-table thead .actions-col {
+  background: #f8fafc;
+}
+
+.project-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 84px;
+}
+
+.project-actions-stack button {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.project-actions-stack button:hover {
+  background: #152a46;
+}
+
+.status-badge.status-project-open {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid #16a34a;
+  border-radius: 2px;
+  color: #15803d;
+  background: #f0fdf4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-badge.status-project-closed {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid #94a3b8;
+  border-radius: 2px;
+  color: #475569;
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .sorted-col {

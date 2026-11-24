@@ -757,23 +757,6 @@
   grid-column: 1 / -1;
 }
 
-.transcript-workflow-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.transcript-workflow-actions button {
-  padding: 4px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  background: transparent;
-  color: var(--color-primary-dark);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 2px;
-}
-
 .empty-row {
   text-align: center;
   color: var(--color-text-muted);

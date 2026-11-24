@@ -18,8 +18,6 @@ import {
   formatTranscriptOwnerLabels,
   formatTranscriptSlaLabel,
   getTranscriptDownloadTarget,
-  getTranscriptListInlineActions,
-  getTranscriptListPrimaryActions,
   isTranscriptApprovedPublication,
   type TranscriptListInlineAction,
   type TranscriptListSortDirection,
@@ -285,29 +283,6 @@ export default function TranscriptsTable({
     }
   };
 
-  const actionLabel = (action: TranscriptListInlineAction): string => {
-    switch (action) {
-      case 'edit':
-        return t('edit');
-      case 'edited':
-        return t('transcriptActionEdited');
-      case 'reviewed':
-        return t('transcriptActionReviewed');
-      case 'publish':
-        return t('transcriptActionPublish');
-      case 'report':
-        return t('report');
-      case 'files':
-        return t('files');
-      case 'download':
-        return t('download');
-      case 'permissions':
-        return t('permissions');
-      default:
-        return action;
-    }
-  };
-
   if (overlayMode === 'edit' && selectedTranscript) {
     return (
       <TranscriptDetailsForm
@@ -563,7 +538,7 @@ export default function TranscriptsTable({
               <th>{t('remarks')}</th>
               <th>{t('evaluationStatus')}</th>
               <th>{t('average')}</th>
-              <th className="actions-col">{t('actions')}</th>
+              <th className="actions-col" aria-label={t('actions')} />
             </tr>
           </thead>
           <tbody>
@@ -581,19 +556,7 @@ export default function TranscriptsTable({
               </tr>
             ) : (
               rows.map((row) => {
-                const roleOrRoles = authUser?.roles ?? authUser?.role;
-                const primaryActions = getTranscriptListPrimaryActions(row, roleOrRoles);
-                const workflowActions = getTranscriptListInlineActions(
-                  row,
-                  roleOrRoles,
-                  authUser?.id ?? '',
-                ).filter(
-                  (action) =>
-                    action === 'edited' ||
-                    action === 'reviewed' ||
-                    action === 'publish' ||
-                    action === 'report',
-                );
+                const canDownload = Boolean(getTranscriptDownloadTarget(row));
                 return (
                   <tr key={row.id}>
                     <td>
@@ -626,49 +589,28 @@ export default function TranscriptsTable({
                     <td>—</td>
                     <td className="actions-col">
                       <div className="transcript-actions-grid">
-                        {primaryActions.includes('edit') ? (
-                          <button type="button" onClick={() => void handleAction('edit', row)}>
-                            {t('edit')}
-                          </button>
-                        ) : null}
-                        {primaryActions.includes('files') ? (
-                          <button type="button" onClick={() => void handleAction('files', row)}>
-                            {t('files')}
-                          </button>
-                        ) : null}
-                        {primaryActions.includes('download') ? (
-                          <button
-                            type="button"
-                            className="transcript-action-wide"
-                            disabled={downloadingId === row.id}
-                            onClick={() => void handleAction('download', row)}
-                          >
-                            {downloadingId === row.id ? t('downloading') : t('download')}
-                          </button>
-                        ) : null}
-                        {primaryActions.includes('permissions') ? (
-                          <button
-                            type="button"
-                            className="transcript-action-wide"
-                            onClick={() => void handleAction('permissions', row)}
-                          >
-                            {t('permissions')}
-                          </button>
-                        ) : null}
+                        <button type="button" onClick={() => void handleAction('edit', row)}>
+                          {t('edit')}
+                        </button>
+                        <button type="button" onClick={() => void handleAction('files', row)}>
+                          {t('files')}
+                        </button>
+                        <button
+                          type="button"
+                          className="transcript-action-wide"
+                          disabled={!canDownload || downloadingId === row.id}
+                          onClick={() => void handleAction('download', row)}
+                        >
+                          {downloadingId === row.id ? t('downloading') : t('download')}
+                        </button>
+                        <button
+                          type="button"
+                          className="transcript-action-wide"
+                          onClick={() => void handleAction('permissions', row)}
+                        >
+                          {t('permissions')}
+                        </button>
                       </div>
-                      {workflowActions.length > 0 ? (
-                        <div className="transcript-workflow-actions">
-                          {workflowActions.map((action) => (
-                            <button
-                              key={`${row.id}-${action}`}
-                              type="button"
-                              onClick={() => void handleAction(action, row)}
-                            >
-                              {actionLabel(action)}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
                     </td>
                   </tr>
                 );

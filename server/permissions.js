@@ -12,6 +12,7 @@ export const PERMISSIONS = [
   'transcripts.transcripts_analysis_report',
   'projects.customers',
   'projects.projects',
+  'projects.project_types',
   'projects.district',
   'financials.steno_rates',
   'financials.travelling_charges',
@@ -71,6 +72,7 @@ export const ACCOUNTANT_PERMISSIONS = [
 export const DISTRICT_ADMIN_PERMISSIONS = [
   'scheduling.jobs',
   'projects.projects',
+  'projects.project_types',
   'projects.district',
   'administration.account_management',
   'administration.notifications',
@@ -80,13 +82,18 @@ export const COORDINATOR_PERMISSIONS = [
   'scheduling.jobs',
   'scheduling.job_allocation',
   'projects.projects',
+  'projects.project_types',
   'administration.notifications',
 ];
 
 export const CUSTOMER_MODULE_PERMISSIONS = ['projects.customers'];
 
-/** §3.4 — Project module permissions (projects list and district). */
-export const PROJECT_MODULE_PERMISSIONS = ['projects.projects', 'projects.district'];
+/** §3.4 — Project module permissions (projects list, types, and district). */
+export const PROJECT_MODULE_PERMISSIONS = [
+  'projects.projects',
+  'projects.project_types',
+  'projects.district',
+];
 
 export const CUSTOMER_PERMISSIONS = [
   ...CUSTOMER_MODULE_PERMISSIONS,

@@ -33,6 +33,7 @@ import {
   listCustomers,
 } from './customers.js';
 import { ensureDistrictsDatabase } from './districts.js';
+import { ensureProjectTypesDatabase } from './projectTypes.js';
 import { ensureProjectsDatabase } from './projects.js';
 import { ensurePublicHolidaysDatabase } from './publicHolidays.js';
 import { ensureStenotypistLeavesDatabase } from './stenotypistLeaves.js';
@@ -167,6 +168,7 @@ function migrateUsers(data) {
 export function ensureDatabase() {
   ensureCustomersDatabase();
   ensureDistrictsDatabase();
+  ensureProjectTypesDatabase();
   ensureProjectsDatabase();
   ensurePublicHolidaysDatabase();
   ensureStenotypistLeavesDatabase();

@@ -76,6 +76,16 @@ import {
 } from './customers.js';
 import { listDistricts, listDistrictRecords, createDistrict, updateDistrict, deleteDistrict, findDistrictRecordById } from './districts.js';
 import {
+  createProjectType,
+  deleteProjectType,
+  findProjectTypeRecordById,
+  importProjectTypes,
+  listProjectTypeOptions,
+  listProjectTypeRecords,
+  updateProjectType,
+  updateProjectTypeStatus,
+} from './projectTypes.js';
+import {
   createProject,
   deleteProject,
   findProjectRecordById,
@@ -479,6 +489,35 @@ function requireProjectsDistrict(req, res) {
   return user;
 }
 
+function requireProjectsProjectTypes(req, res) {
+  const user = getAuthedUser(req);
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized.' });
+    return null;
+  }
+  if (!hasPermission(user, 'projects.project_types')) {
+    res.status(403).json({ error: 'Forbidden.' });
+    return null;
+  }
+  return user;
+}
+
+function requireProjectTypeLookup(req, res) {
+  const user = getAuthedUser(req);
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized.' });
+    return null;
+  }
+  if (
+    !hasPermission(user, 'projects.project_types') &&
+    !hasPermission(user, 'projects.projects')
+  ) {
+    res.status(403).json({ error: 'Forbidden.' });
+    return null;
+  }
+  return user;
+}
+
 function requireSchedulingPublicHolidays(req, res) {
   const user = getAuthedUser(req);
   if (!user) {
@@ -713,6 +752,7 @@ function requireCustomerLookup(req, res) {
   if (
     !hasPermission(user, 'projects.customers') &&
     !hasPermission(user, 'projects.projects') &&
+    !hasPermission(user, 'projects.project_types') &&
     !hasPermission(user, 'administration.users')
   ) {
     res.status(403).json({ error: 'Forbidden.' });
@@ -1547,6 +1587,123 @@ app.delete('/api/districts/records/:id', (req, res) => {
   }
 
   res.json(result.district);
+});
+
+app.get('/api/project-types', (req, res) => {
+  const actor = requireProjectTypeLookup(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const customerId =
+    typeof req.query.customerId === 'string' && req.query.customerId.trim()
+      ? req.query.customerId.trim()
+      : null;
+  res.json({
+    projectTypes: listProjectTypeOptions({
+      customerId,
+      enabledOnly: true,
+    }),
+  });
+});
+
+app.get('/api/project-types/records', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+  res.json({ projectTypes: listProjectTypeRecords() });
+});
+
+app.get('/api/project-types/records/:id', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const projectType = findProjectTypeRecordById(req.params.id);
+  if (!projectType) {
+    res.status(404).json({ errors: ['projectTypeNotFound'] });
+    return;
+  }
+
+  res.json(projectType);
+});
+
+app.post('/api/project-types/records', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = createProjectType(req.body ?? {});
+  if (result.errors) {
+    res.status(400).json({ errors: result.errors });
+    return;
+  }
+
+  res.status(201).json(result.projectType);
+});
+
+app.put('/api/project-types/records/:id', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = updateProjectType(req.params.id, req.body ?? {});
+  if (result.errors) {
+    const status = result.errors.includes('projectTypeNotFound') ? 404 : 400;
+    res.status(status).json({ errors: result.errors });
+    return;
+  }
+
+  res.json(result.projectType);
+});
+
+app.patch('/api/project-types/records/:id/status', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const enabled = Boolean(req.body?.enabled);
+  const result = updateProjectTypeStatus(req.params.id, enabled);
+  if (result.errors) {
+    res.status(404).json({ errors: result.errors });
+    return;
+  }
+
+  res.json(result.projectType);
+});
+
+app.post('/api/project-types/import', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.projectTypes)
+      ? req.body.projectTypes
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['projectTypeImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importProjectTypes(rows);
+  res.json(summary);
+});
+
+app.delete('/api/project-types/records/:id', (req, res) => {
+  const actor = requireProjectsProjectTypes(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = deleteProjectType(req.params.id);
+  if (result.errors) {
+    const status = result.errors.includes('projectTypeNotFound') ? 404 : 400;
+    res.status(status).json({ errors: result.errors });
+    return;
+  }
+
+  res.json(result.projectType);
 });
 
 app.get('/api/scheduling/public-holidays/records', (req, res) => {

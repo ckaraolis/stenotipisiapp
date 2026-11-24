@@ -21,6 +21,7 @@ import AuditTrailPage from './pages/administration/AuditTrailPage';
 import NotificationsPage from './pages/administration/NotificationsPage';
 import CustomersPage from './pages/projects/CustomersPage';
 import ProjectsListPage from './pages/projects/ProjectsListPage';
+import ProjectTypesPage from './pages/projects/ProjectTypesPage';
 import DistrictPage from './pages/projects/DistrictPage';
 import TranscriptsStenoPage from './pages/transcripts/TranscriptsStenoPage';
 import TranscriptsAnalysisReportPage from './pages/transcripts/TranscriptsAnalysisReportPage';
@@ -202,6 +203,14 @@ export default function App() {
           element={
             <PermissionRoute>
               <ProjectsListPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="projects/types"
+          element={
+            <PermissionRoute>
+              <ProjectTypesPage />
             </PermissionRoute>
           }
         />

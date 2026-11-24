@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchDistrictOptions } from '../../api/districts';
 import {
-  deleteProject,
   fetchProjectRecords,
   updateProjectStatus,
 } from '../../api/projects';
@@ -9,7 +8,6 @@ import { travellingChargesLabelKey } from '../../config/customer';
 import type { DistrictOption } from '../../types/district';
 import type { ProjectRecord } from '../../types/project';
 import CloseProjectDialog from './CloseProjectDialog';
-import DeleteProjectDialog, { parseProjectDeleteError } from './DeleteProjectDialog';
 import OpenProjectDialog from './OpenProjectDialog';
 import ProjectDetailsForm from './ProjectDetailsForm';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -50,9 +48,6 @@ export default function ProjectsTable() {
   const [formMode, setFormMode] = useState<FormMode>('closed');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [scrollToTranscriptOwners, setScrollToTranscriptOwners] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<ProjectRecord | null>(null);
-  const [deleteError, setDeleteError] = useState('');
-  const [deleting, setDeleting] = useState(false);
   const [closeTarget, setCloseTarget] = useState<ProjectRecord | null>(null);
   const [closing, setClosing] = useState(false);
   const [openTarget, setOpenTarget] = useState<ProjectRecord | null>(null);
@@ -64,6 +59,7 @@ export default function ProjectsTable() {
   const [field2Filter, setField2Filter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('open');
+  const [transcriptOwnerFilter, setTranscriptOwnerFilter] = useState('');
 
   const loadProjects = useCallback(async () => {
     setLoading(true);
@@ -137,6 +133,18 @@ export default function ProjectsTable() {
     return [...options.entries()].map(([id, name]) => ({ id, name }));
   }, [districts, projects]);
 
+  const transcriptOwnerOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    projects.forEach((project) => {
+      project.transcriptOwners.forEach((owner) => {
+        options.set(owner.id, owner.username || owner.fullName);
+      });
+    });
+    return [...options.entries()]
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+  }, [projects]);
+
   const filteredRows = useMemo(() => {
     return projects.filter((row) => {
       if (statusFilter === 'open' && row.status !== 'open') return false;
@@ -145,9 +153,23 @@ export default function ProjectsTable() {
       if (districtFilter && row.districtId !== districtFilter) return false;
       if (field1Filter && row.field1ValueId !== field1Filter) return false;
       if (field2Filter && row.field2ValueId !== field2Filter) return false;
+      if (
+        transcriptOwnerFilter &&
+        !row.transcriptOwnerIds.includes(transcriptOwnerFilter)
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [projects, statusFilter, customerFilter, districtFilter, field1Filter, field2Filter]);
+  }, [
+    projects,
+    statusFilter,
+    customerFilter,
+    districtFilter,
+    field1Filter,
+    field2Filter,
+    transcriptOwnerFilter,
+  ]);
 
   const sortedRows = useMemo(() => {
     return [...filteredRows].sort((a, b) => {
@@ -195,32 +217,6 @@ export default function ProjectsTable() {
     setScrollToTranscriptOwners(false);
     setSuccess(message);
     await loadProjects();
-  };
-
-  const handleDeleteRequest = (project: ProjectRecord) => {
-    setDeleteError('');
-    setDeleteTarget(project);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteTarget(null);
-    setDeleteError('');
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    setDeleteError('');
-    try {
-      await deleteProject(deleteTarget.id);
-      setDeleteTarget(null);
-      setSuccess(t('projectDeletedSuccess'));
-      await loadProjects();
-    } catch (err) {
-      setDeleteError(parseProjectDeleteError((err as Error).message, t));
-    } finally {
-      setDeleting(false);
-    }
   };
 
   const handleCloseRequest = (project: ProjectRecord) => {
@@ -281,13 +277,12 @@ export default function ProjectsTable() {
       <div className="page-header projects-header">
         <div>
           <h1 className="page-title">{t('projectsList')}</h1>
-          <p className="page-subtitle">{t('projectsListSubtitle')}</p>
+          {formMode === 'closed' && (
+            <button type="button" className="btn-primary projects-add-btn" onClick={handleOpenCreate}>
+              {t('addNew')}
+            </button>
+          )}
         </div>
-        {formMode === 'closed' && (
-          <button type="button" className="btn-primary" onClick={handleOpenCreate}>
-            {t('addNew')}
-          </button>
-        )}
       </div>
 
       {formMode !== 'closed' && (
@@ -298,16 +293,6 @@ export default function ProjectsTable() {
           onCancel={handleCloseForm}
           onSaved={handleSaved}
           onTranscriptOwnersChanged={loadProjects}
-        />
-      )}
-
-      {deleteTarget && (
-        <DeleteProjectDialog
-          projectNumber={deleteTarget.projectNumber}
-          error={deleteError}
-          deleting={deleting}
-          onCancel={handleDeleteCancel}
-          onConfirm={handleDeleteConfirm}
         />
       )}
 
@@ -352,40 +337,6 @@ export default function ProjectsTable() {
 
               <label className="filter-select">
                 <select
-                  value={field1Filter}
-                  onChange={(event) => {
-                    setField1Filter(event.target.value);
-                    resetPage();
-                  }}
-                >
-                  <option value="">{t('allField1')}</option>
-                  {field1Options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="filter-select">
-                <select
-                  value={field2Filter}
-                  onChange={(event) => {
-                    setField2Filter(event.target.value);
-                    resetPage();
-                  }}
-                >
-                  <option value="">{t('allField2')}</option>
-                  {field2Options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="filter-select">
-                <select
                   value={districtFilter}
                   onChange={(event) => {
                     setDistrictFilter(event.target.value);
@@ -403,15 +354,66 @@ export default function ProjectsTable() {
 
               <label className="filter-select">
                 <select
+                  value={field1Filter}
+                  onChange={(event) => {
+                    setField1Filter(event.target.value);
+                    resetPage();
+                  }}
+                >
+                  <option value="">{t('allField1Values')}</option>
+                  {field1Options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="filter-select">
+                <select
+                  value={field2Filter}
+                  onChange={(event) => {
+                    setField2Filter(event.target.value);
+                    resetPage();
+                  }}
+                >
+                  <option value="">{t('allField2Values')}</option>
+                  {field2Options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="filter-select">
+                <select
                   value={statusFilter}
                   onChange={(event) => {
                     setStatusFilter(event.target.value as StatusFilter);
                     resetPage();
                   }}
                 >
-                  <option value="open">{t('openOnly')}</option>
+                  <option value="open">{t('projectStatusOpen')}</option>
                   <option value="closed">{t('projectStatusClosed')}</option>
                   <option value="">{t('allStatuses')}</option>
+                </select>
+              </label>
+
+              <label className="filter-select">
+                <select
+                  value={transcriptOwnerFilter}
+                  onChange={(event) => {
+                    setTranscriptOwnerFilter(event.target.value);
+                    resetPage();
+                  }}
+                >
+                  <option value="">{t('allTranscriptOwners')}</option>
+                  {transcriptOwnerOptions.map((owner) => (
+                    <option key={owner.id} value={owner.id}>
+                      {owner.label}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -436,20 +438,21 @@ export default function ProjectsTable() {
                       </th>
                       <th>{t('customer')}</th>
                       <th>{t('district')}</th>
+                      <th>{t('projectType')}</th>
                       <th>{t('field1')}</th>
                       <th>{t('field2')}</th>
                       <th>{t('field3')}</th>
                       <th>{t('field4')}</th>
-                      <th>{t('travellingCharges')}</th>
+                      <th>{t('travelling')}</th>
                       <th>{t('status')}</th>
-                      <th>{t('transcriptOwnerAliases')}</th>
-                      <th className="actions-col">{t('actions')}</th>
+                      <th>{t('own')}</th>
+                      <th className="actions-col" aria-label={t('actions')} />
                     </tr>
                   </thead>
                   <tbody>
                     {pageRows.length === 0 ? (
                       <tr>
-                        <td colSpan={11} className="empty-row">
+                        <td colSpan={12} className="empty-row">
                           {t('noRecordsFound')}
                         </td>
                       </tr>
@@ -459,20 +462,22 @@ export default function ProjectsTable() {
                           <td>{row.projectNumber}</td>
                           <td>{row.customerName}</td>
                           <td>{row.districtName || '—'}</td>
+                          <td>—</td>
                           <td>{displayFieldValue(row.field1Value)}</td>
                           <td>{displayFieldValue(row.field2Value)}</td>
                           <td>{displayFieldValue(row.field3)}</td>
                           <td>{displayFieldValue(row.field4)}</td>
                           <td>{t(travellingChargesLabelKey(row.travellingCharges))}</td>
-                          <td>{projectStatusLabel(row.status, t)}</td>
+                          <td>
+                            <span className={`status-badge status-project-${row.status}`}>
+                              {projectStatusLabel(row.status, t)}
+                            </span>
+                          </td>
                           <td>{formatTranscriptOwnerAliases(row)}</td>
                           <td className="actions-col">
-                            <div className="row-actions">
+                            <div className="project-actions-stack">
                               <button type="button" onClick={() => handleOpenEdit(row.id)}>
                                 {t('edit')}
-                              </button>
-                              <button type="button" onClick={() => handleDeleteRequest(row)}>
-                                {t('delete')}
                               </button>
                               {row.status === 'open' ? (
                                 <button type="button" onClick={() => handleCloseRequest(row)}>
@@ -483,12 +488,6 @@ export default function ProjectsTable() {
                                   {t('open')}
                                 </button>
                               )}
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEdit(row.id, true)}
-                              >
-                                {t('transcriptOwners')}
-                              </button>
                             </div>
                           </td>
                         </tr>

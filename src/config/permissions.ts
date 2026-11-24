@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   'transcripts.transcripts_analysis_report',
   'projects.customers',
   'projects.projects',
+  'projects.project_types',
   'projects.district',
   'financials.steno_rates',
   'financials.travelling_charges',
@@ -45,6 +46,7 @@ export const MANAGER_PERMISSIONS: readonly Permission[] = [
   'transcripts.transcripts_analysis_report',
   'projects.customers',
   'projects.projects',
+  'projects.project_types',
   'projects.district',
   'financials.steno_rates',
   'financials.travelling_charges',
@@ -101,6 +103,7 @@ export const ACCOUNTANT_PERMISSIONS: readonly Permission[] = [
 export const DISTRICT_ADMIN_PERMISSIONS: readonly Permission[] = [
   'scheduling.jobs',
   'projects.projects',
+  'projects.project_types',
   'projects.district',
   'administration.account_management',
   'administration.notifications',
@@ -110,15 +113,17 @@ export const COORDINATOR_PERMISSIONS: readonly Permission[] = [
   'scheduling.jobs',
   'scheduling.job_allocation',
   'projects.projects',
+  'projects.project_types',
   'administration.notifications',
 ];
 
 /** Customer module access per §2.6 — only Customer and Manager roles. */
 export const CUSTOMER_MODULE_PERMISSIONS: readonly Permission[] = ['projects.customers'];
 
-/** §3.4 — Project module permissions (projects list and district). */
+/** §3.4 — Project module permissions (projects list, types, and district). */
 export const PROJECT_MODULE_PERMISSIONS: readonly Permission[] = [
   'projects.projects',
+  'projects.project_types',
   'projects.district',
 ];
 
@@ -475,6 +480,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/transcripts/analysis-report': 'transcripts.transcripts_analysis_report',
   '/projects/customers': 'projects.customers',
   '/projects/list': 'projects.projects',
+  '/projects/types': 'projects.project_types',
   '/administration/districts': 'projects.district',
   '/financials/steno-rates': 'financials.steno_rates',
   '/financials/travelling-charges': 'financials.travelling_charges',
@@ -506,6 +512,7 @@ const DEFAULT_PATH_ORDER = [
   '/transcripts/analysis-report',
   '/projects/customers',
   '/projects/list',
+  '/projects/types',
   '/administration/districts',
   '/financials/steno-rates',
   '/financials/travelling-charges',
