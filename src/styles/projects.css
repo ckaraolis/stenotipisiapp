@@ -39,6 +39,11 @@
   cursor: not-allowed;
 }
 
+.project-type-import-warnings {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
 .customers-header {
   gap: 16px;
 }

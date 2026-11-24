@@ -118,11 +118,18 @@ export function findProjectTypeRecordById(projectTypeId) {
   return toPublicProjectType(row);
 }
 
+function normalizeCompare(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
 function validateProjectTypeInput(input, { existingId = null } = {}) {
   const errors = [];
   const customerId = typeof input.customerId === 'string' ? input.customerId.trim() : '';
   const type = typeof input.type === 'string' ? input.type.trim() : '';
-  const alias = typeof input.alias === 'string' ? input.alias.trim() : '';
+  let alias = typeof input.alias === 'string' ? input.alias.trim() : '';
   const transcriptText =
     typeof input.transcriptText === 'string' ? input.transcriptText.trim() : '';
   const enabled = normalizeEnabled(input.enabled, true);
@@ -130,16 +137,19 @@ function validateProjectTypeInput(input, { existingId = null } = {}) {
   if (!customerId) errors.push('projectTypeCustomerRequired');
   else if (!findCustomerById(customerId)) errors.push('projectTypeCustomerInvalid');
   if (!type) errors.push('projectTypeTypeRequired');
+  if (!alias && type) {
+    alias = type.slice(0, 12);
+  }
   if (!alias) errors.push('projectTypeAliasRequired');
 
   const data = readProjectTypesFile();
-  const duplicate = (data.projectTypes ?? []).find(
+  const duplicateType = (data.projectTypes ?? []).find(
     (row) =>
       row.id !== existingId &&
       row.customerId === customerId &&
-      row.alias.toLowerCase() === alias.toLowerCase(),
+      normalizeCompare(row.type) === normalizeCompare(type),
   );
-  if (alias && duplicate) errors.push('projectTypeAliasTaken');
+  if (type && duplicateType) errors.push('projectTypeTypeTaken');
 
   if (errors.length > 0) {
     return { errors };
@@ -229,15 +239,21 @@ export function deleteProjectType(projectTypeId) {
 }
 
 function findCustomerForImport(customerNameOrAlias) {
-  const needle = String(customerNameOrAlias ?? '')
-    .trim()
-    .toLowerCase();
+  const needle = normalizeCompare(customerNameOrAlias);
   if (!needle) return null;
   const customers = listCustomerRecords();
+  const exact =
+    customers.find((customer) => normalizeCompare(customer.name) === needle) ||
+    customers.find((customer) => normalizeCompare(customer.alias) === needle);
+  if (exact) return exact;
+
+  // Fallback for truncated Excel names / trailing punctuation differences.
+  if (needle.length < 6) return null;
   return (
-    customers.find((customer) => customer.name.toLowerCase() === needle) ||
-    customers.find((customer) => customer.alias.toLowerCase() === needle) ||
-    null
+    customers.find((customer) => {
+      const name = normalizeCompare(customer.name);
+      return name.startsWith(needle) || needle.startsWith(name);
+    }) || null
   );
 }
 
@@ -274,7 +290,8 @@ function normalizeImportRow(raw = {}) {
 
 /**
  * Import project types from Excel rows (ASTRAEA export shape).
- * Matching key: customer (name/alias) + alias (case-insensitive).
+ * Matching key: customer (name/alias) + type (case-insensitive).
+ * Rows that share the same customer+alias but different types are kept as separate records.
  */
 export function importProjectTypes(rows) {
   const list = Array.isArray(rows) ? rows : [];
@@ -295,7 +312,11 @@ export function importProjectTypes(rows) {
 
     const customer = findCustomerForImport(row.customer);
     if (!customer) {
-      summary.errors.push({ row: rowNumber, message: 'projectTypeCustomerInvalid' });
+      summary.errors.push({
+        row: rowNumber,
+        message: 'projectTypeCustomerInvalid',
+        detail: row.customer || '',
+      });
       summary.skipped += 1;
       return;
     }
@@ -304,23 +325,19 @@ export function importProjectTypes(rows) {
       summary.skipped += 1;
       return;
     }
-    if (!row.alias) {
-      summary.errors.push({ row: rowNumber, message: 'projectTypeAliasRequired' });
-      summary.skipped += 1;
-      return;
-    }
 
+    const alias = row.alias || row.type.slice(0, 12);
     const data = readProjectTypesFile();
     const existing = (data.projectTypes ?? []).find(
       (item) =>
         item.customerId === customer.id &&
-        item.alias.toLowerCase() === row.alias.toLowerCase(),
+        normalizeCompare(item.type) === normalizeCompare(row.type),
     );
 
     const payload = {
       customerId: customer.id,
       type: row.type,
-      alias: row.alias,
+      alias,
       transcriptText: row.transcriptText,
       enabled: row.enabled,
     };
@@ -328,7 +345,11 @@ export function importProjectTypes(rows) {
     if (existing) {
       const result = updateProjectType(existing.id, payload);
       if (result.errors) {
-        summary.errors.push({ row: rowNumber, message: result.errors[0] });
+        summary.errors.push({
+          row: rowNumber,
+          message: result.errors[0],
+          detail: row.type,
+        });
         summary.skipped += 1;
         return;
       }
@@ -338,7 +359,11 @@ export function importProjectTypes(rows) {
 
     const result = createProjectType(payload);
     if (result.errors) {
-      summary.errors.push({ row: rowNumber, message: result.errors[0] });
+      summary.errors.push({
+        row: rowNumber,
+        message: result.errors[0],
+        detail: row.type,
+      });
       summary.skipped += 1;
       return;
     }

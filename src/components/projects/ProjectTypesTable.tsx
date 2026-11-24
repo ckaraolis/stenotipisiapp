@@ -9,6 +9,7 @@ import DeleteProjectTypeDialog, { parseProjectTypeDeleteError } from './DeletePr
 import ImportProjectTypesDialog from './ImportProjectTypesDialog';
 import ProjectTypeDetailsForm from './ProjectTypeDetailsForm';
 import { useLanguage } from '../../i18n/LanguageContext';
+import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/projects.css';
 import '../../styles/profile.css';
 import '../../styles/dashboard.css';
@@ -26,6 +27,7 @@ export default function ProjectTypesTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [formMode, setFormMode] = useState<FormMode>('closed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTypeRecord | null>(null);
@@ -174,6 +176,14 @@ export default function ProjectTypesTable() {
         .replace('{updated}', String(summary.updated))
         .replace('{skipped}', String(summary.skipped)),
     );
+    setImportWarnings(
+      (summary.errors ?? []).slice(0, 20).map((item) =>
+        t('projectTypeImportErrorLine')
+          .replace('{row}', String(item.row))
+          .replace('{message}', t(item.message as TranslationKey))
+          .replace('{detail}', item.detail ? ` (${item.detail})` : ''),
+      ),
+    );
     await loadRows();
   };
 
@@ -290,6 +300,16 @@ export default function ProjectTypesTable() {
 
           {error && <div className="profile-alert profile-alert-error">{error}</div>}
           {success && <div className="profile-alert profile-alert-success">{success}</div>}
+          {importWarnings.length > 0 && (
+            <div className="profile-alert profile-alert-error">
+              <div>{t('projectTypeImportErrorsHeading')}</div>
+              <ul className="project-type-import-warnings">
+                {importWarnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {loading ? (
             <div className="profile-message">{t('loading')}</div>
