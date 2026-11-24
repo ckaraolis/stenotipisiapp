@@ -1535,6 +1535,7 @@ export const translations = {
     roles: 'Roles',
     userDetailsCreateTitle: 'New User',
     userDetailsEditTitle: 'Edit User',
+    userDetailsViewTitle: 'View User',
     availableRoles: 'Available Roles',
     assignedRoles: 'Assigned Roles',
     assignRole: 'Assign',
@@ -1546,6 +1547,19 @@ export const translations = {
     passwordKeepBlank: 'Leave blank to keep current password',
     temporaryPasswordAutoHint:
       'A temporary password will be generated automatically and emailed with the authenticator QR code. The user must change it on first login.',
+    resetPassword: 'Reset password',
+    resetUserPasswordTitle: 'Reset Password',
+    resetUserPasswordMessage:
+      'Reset the password for {name}? A temporary password will be generated. They must change it on next login.',
+    resetUserPasswordDoneMessage:
+      'Password reset for {name}. Share this temporary password securely:',
+    resetUserPasswordMustChangeHint:
+      'The user must change this password on their next login.',
+    temporaryPasswordLabel: 'Temporary password',
+    copyPassword: 'Copy password',
+    copied: 'Copied',
+    userPasswordResetSuccess: 'Password reset successfully.',
+    userPasswordResetError: 'Could not reset password.',
     cancel: 'Cancel',
     save: 'Save',
     userCreatedSuccess: 'User created successfully.',
@@ -3201,6 +3215,7 @@ export const translations = {
     roles: 'Ρόλοι',
     userDetailsCreateTitle: 'Νέος Χρήστης',
     userDetailsEditTitle: 'Επεξεργασία Χρήστη',
+    userDetailsViewTitle: 'Προβολή Χρήστη',
     availableRoles: 'Διαθέσιμοι Ρόλοι',
     assignedRoles: 'Ανατεθέντες Ρόλοι',
     assignRole: 'Ανάθεση',
@@ -3212,6 +3227,19 @@ export const translations = {
     passwordKeepBlank: 'Αφήστε κενό για να διατηρηθεί ο τρέχων κωδικός',
     temporaryPasswordAutoHint:
       'Θα δημιουργηθεί αυτόματα προσωρινός κωδικός και θα σταλεί με email μαζί με το QR του authenticator. Ο χρήστης πρέπει να τον αλλάξει στην πρώτη σύνδεση.',
+    resetPassword: 'Επαναφορά κωδικού',
+    resetUserPasswordTitle: 'Επαναφορά Κωδικού',
+    resetUserPasswordMessage:
+      'Επαναφορά κωδικού για τον χρήστη {name}; Θα δημιουργηθεί προσωρινός κωδικός. Πρέπει να τον αλλάξει στην επόμενη σύνδεση.',
+    resetUserPasswordDoneMessage:
+      'Ο κωδικός επαναφέρθηκε για τον χρήστη {name}. Μοιραστείτε αυτόν τον προσωρινό κωδικό με ασφάλεια:',
+    resetUserPasswordMustChangeHint:
+      'Ο χρήστης πρέπει να αλλάξει αυτόν τον κωδικό στην επόμενη σύνδεση.',
+    temporaryPasswordLabel: 'Προσωρινός κωδικός',
+    copyPassword: 'Αντιγραφή κωδικού',
+    copied: 'Αντιγράφηκε',
+    userPasswordResetSuccess: 'Ο κωδικός επαναφέρθηκε επιτυχώς.',
+    userPasswordResetError: 'Δεν ήταν δυνατή η επαναφορά κωδικού.',
     cancel: 'Ακύρωση',
     save: 'Αποθήκευση',
     userCreatedSuccess: 'Ο χρήστης δημιουργήθηκε επιτυχώς.',

@@ -566,6 +566,40 @@ export function updateUser(userId, input) {
   return { user: toPublicUser(next) };
 }
 
+/** Admin-initiated password reset: generates a temporary password and forces change on next login. */
+export function adminResetUserPassword(userId) {
+  const data = readUsersFile();
+  const index = data.users.findIndex((user) => user.id === userId);
+  if (index === -1) {
+    return { errors: ['userNotFound'] };
+  }
+
+  const current = data.users[index];
+  const temporaryPassword = generateTemporaryPassword();
+  const pwdResult = buildPasswordUpdate(
+    current,
+    temporaryPassword,
+    hashPassword,
+    verifyPassword,
+  );
+  if (pwdResult.errors) {
+    return { errors: pwdResult.errors };
+  }
+
+  const next = {
+    ...current,
+    ...pwdResult.updates,
+    mustChangePassword: true,
+  };
+
+  data.users[index] = next;
+  writeUsersFile(data);
+  return {
+    user: toPublicUser(next),
+    temporaryPassword,
+  };
+}
+
 export function deleteUser(userId) {
   const data = readUsersFile();
   const index = data.users.findIndex((user) => user.id === userId);

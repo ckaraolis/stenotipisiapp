@@ -17,10 +17,11 @@ import { validatePasswordPolicy } from '../../config/passwordPolicy';
 import '../../styles/profile.css';
 
 interface UserDetailsFormProps {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   userId?: string;
   onCancel: () => void;
   onSaved: (message: string) => void;
+  onSwitchToEdit?: () => void;
 }
 
 const EMPTY_FORM = {
@@ -52,12 +53,14 @@ export default function UserDetailsForm({
   userId,
   onCancel,
   onSaved,
+  onSwitchToEdit,
 }: UserDetailsFormProps) {
   const { t } = useLanguage();
   const actor = getAuthUser();
   const actorRoles = normalizeRoles(actor?.roles ?? actor?.role);
+  const readOnly = mode === 'view';
 
-  const [loading, setLoading] = useState(mode === 'edit');
+  const [loading, setLoading] = useState(mode === 'edit' || mode === 'view');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -101,7 +104,8 @@ export default function UserDetailsForm({
         if (active) setError(t('customersLoadError'));
       });
 
-    if (mode === 'edit' && userId) {
+    if ((mode === 'edit' || mode === 'view') && userId) {
+      setLoading(true);
       fetchUserById(userId)
         .then((user) => {
           if (!active) return;
@@ -130,6 +134,7 @@ export default function UserDetailsForm({
   }, [mode, userId, t]);
 
   const handleCustomerChange = (nextCustomerId: string) => {
+    if (readOnly) return;
     if (mode === 'edit' && nextCustomerId !== initialCustomerId) {
       setAssignedRoles([]);
       setAssignedSelection([]);
@@ -143,7 +148,7 @@ export default function UserDetailsForm({
   };
 
   const handleAssign = () => {
-    if (availableSelection.length === 0) return;
+    if (readOnly || availableSelection.length === 0) return;
     setAssignedRoles((current) => [
       ...new Set([...current, ...availableSelection]),
     ]);
@@ -152,7 +157,7 @@ export default function UserDetailsForm({
   };
 
   const handleUnassign = () => {
-    if (assignedSelection.length === 0) return;
+    if (readOnly || assignedSelection.length === 0) return;
     setAssignedRoles((current) =>
       current.filter((role) => !assignedSelection.includes(role)),
     );
@@ -175,6 +180,7 @@ export default function UserDetailsForm({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (readOnly) return;
     setError('');
     setNotice('');
 
@@ -216,12 +222,19 @@ export default function UserDetailsForm({
     return <div className="profile-message">{t('loading')}</div>;
   }
 
+  const title =
+    mode === 'create'
+      ? t('userDetailsCreateTitle')
+      : mode === 'view'
+        ? t('userDetailsViewTitle')
+        : t('userDetailsEditTitle');
+
   return (
     <div className="user-details-form">
       <div className="profile-card">
         <form className="profile-form" onSubmit={handleSubmit}>
           <div className="user-details-header">
-            <h2>{mode === 'create' ? t('userDetailsCreateTitle') : t('userDetailsEditTitle')}</h2>
+            <h2>{title}</h2>
           </div>
 
           {error && <div className="profile-alert profile-alert-error">{error}</div>}
@@ -236,7 +249,9 @@ export default function UserDetailsForm({
               className="profile-input"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              required
+              required={!readOnly}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
 
             <label className="profile-label" htmlFor="userUsername">
@@ -247,7 +262,9 @@ export default function UserDetailsForm({
               className="profile-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
+              required={!readOnly}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
 
             <label className="profile-label" htmlFor="userEmail">
@@ -259,7 +276,9 @@ export default function UserDetailsForm({
               className="profile-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              required={!readOnly}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
 
             {mode === 'create' ? (
@@ -269,7 +288,7 @@ export default function UserDetailsForm({
                   {t('temporaryPasswordAutoHint')}
                 </p>
               </>
-            ) : (
+            ) : mode === 'edit' ? (
               <>
                 <label className="profile-label" htmlFor="userPassword">
                   {t('password')} ({t('optional')})
@@ -284,7 +303,7 @@ export default function UserDetailsForm({
                 />
                 <p className="profile-field-hint">{t('passwordPolicyRequirements')}</p>
               </>
-            )}
+            ) : null}
 
             <label className="profile-label" htmlFor="userContactPhone">
               {t('contactPhone')}
@@ -294,6 +313,8 @@ export default function UserDetailsForm({
               className="profile-input"
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
 
             <label className="profile-label" htmlFor="userMobilePhone">
@@ -304,6 +325,8 @@ export default function UserDetailsForm({
               className="profile-input"
               value={mobilePhone}
               onChange={(e) => setMobilePhone(e.target.value)}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
 
             <label className="profile-label" htmlFor="userCustomer">
@@ -314,6 +337,7 @@ export default function UserDetailsForm({
               className="profile-input"
               value={customerId}
               onChange={(e) => handleCustomerChange(e.target.value)}
+              disabled={readOnly}
             >
               <option value="">{t('noCustomerSelected')}</option>
               {customers.map((customer) => (
@@ -331,6 +355,7 @@ export default function UserDetailsForm({
               className="profile-input"
               value={language}
               onChange={(e) => setLanguage(e.target.value as Language)}
+              disabled={readOnly}
             >
               <option value="en">{t('english')}</option>
               <option value="el">{t('greek')}</option>
@@ -345,6 +370,7 @@ export default function UserDetailsForm({
                   size={6}
                   className="role-list"
                   value={availableSelection}
+                  disabled={readOnly}
                   onChange={(e) =>
                     setAvailableSelection(
                       Array.from(e.target.selectedOptions, (option) => option.value as UserRole),
@@ -360,10 +386,20 @@ export default function UserDetailsForm({
               </div>
 
               <div className="role-actions">
-                <button type="button" className="role-action-btn" onClick={handleAssign}>
+                <button
+                  type="button"
+                  className="role-action-btn"
+                  onClick={handleAssign}
+                  disabled={readOnly}
+                >
                   {t('assignRole')} →
                 </button>
-                <button type="button" className="role-action-btn" onClick={handleUnassign}>
+                <button
+                  type="button"
+                  className="role-action-btn"
+                  onClick={handleUnassign}
+                  disabled={readOnly}
+                >
                   ← {t('unassignRole')}
                 </button>
               </div>
@@ -375,6 +411,7 @@ export default function UserDetailsForm({
                   size={6}
                   className="role-list"
                   value={assignedSelection}
+                  disabled={readOnly}
                   onChange={(e) =>
                     setAssignedSelection(
                       Array.from(e.target.selectedOptions, (option) => option.value as UserRole),
@@ -401,11 +438,18 @@ export default function UserDetailsForm({
 
           <div className="profile-actions">
             <button type="button" className="profile-cancel-btn" onClick={onCancel}>
-              {t('cancel')}
+              {readOnly ? t('close') : t('cancel')}
             </button>
-            <button type="submit" className="profile-submit" disabled={saving}>
-              {saving ? t('saving') : t('save')}
-            </button>
+            {readOnly && onSwitchToEdit ? (
+              <button type="button" className="profile-submit" onClick={onSwitchToEdit}>
+                {t('edit')}
+              </button>
+            ) : null}
+            {!readOnly ? (
+              <button type="submit" className="profile-submit" disabled={saving}>
+                {saving ? t('saving') : t('save')}
+              </button>
+            ) : null}
           </div>
         </form>
       </div>

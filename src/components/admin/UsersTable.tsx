@@ -8,14 +8,22 @@ import {
   type UserImportResult,
   type UserProfile,
 } from '../../api/profile';
-import { USER_ROLES, formatRoleLabels, getRoleLabelKey } from '../../config/roles';
+import {
+  USER_ROLES,
+  formatRoleLabels,
+  getRoleLabelKey,
+  isSuperAdminRole,
+  normalizeRoles,
+} from '../../config/roles';
 import type { UserRole } from '../../config/roles';
 import DeleteUserDialog, { parseDeleteError } from './DeleteUserDialog';
 import ImportUsersDialog from './ImportUsersDialog';
+import ResetUserPasswordDialog from './ResetUserPasswordDialog';
 import UserDetailsForm from './UserDetailsForm';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import type { UserStatus } from '../../types/user';
+import { getAuthUser } from '../../utils/auth';
 import '../../styles/projects.css';
 import '../../styles/profile.css';
 import '../../styles/dashboard.css';
@@ -23,11 +31,16 @@ import '../../styles/financials.css';
 
 const PAGE_SIZE = 20;
 
-type FormMode = 'closed' | 'create' | 'edit';
+type FormMode = 'closed' | 'create' | 'edit' | 'view';
 type SortDirection = 'asc' | 'desc';
 
 export default function UsersTable() {
   const { t } = useLanguage();
+  const actor = getAuthUser();
+  /** View / Edit / Reset password — Super Admin only. */
+  const isSuperAdmin = isSuperAdminRole(
+    normalizeRoles(actor?.roles ?? actor?.role),
+  );
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +52,7 @@ export default function UsersTable() {
   const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [resetTarget, setResetTarget] = useState<UserProfile | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
@@ -90,13 +104,23 @@ export default function UsersTable() {
   const resetPage = () => setPage(1);
 
   const handleOpenCreate = () => {
+    if (!isSuperAdmin) return;
     setSuccess('');
     setError('');
     setSelectedUserId(null);
     setFormMode('create');
   };
 
+  const handleOpenView = (userId: string) => {
+    if (!isSuperAdmin) return;
+    setSuccess('');
+    setError('');
+    setSelectedUserId(userId);
+    setFormMode('view');
+  };
+
   const handleOpenEdit = (userId: string) => {
+    if (!isSuperAdmin) return;
     setSuccess('');
     setError('');
     setSelectedUserId(userId);
@@ -111,6 +135,12 @@ export default function UsersTable() {
   const handleSaved = async (message: string) => {
     setFormMode('closed');
     setSelectedUserId(null);
+    setSuccess(message);
+    await loadUsers();
+  };
+
+  const handlePasswordResetDone = async (message: string) => {
+    setResetTarget(null);
     setSuccess(message);
     await loadUsers();
   };
@@ -178,35 +208,44 @@ export default function UsersTable() {
     await loadUsers();
   };
 
+  const showList = formMode === 'closed' || !isSuperAdmin;
+
   return (
     <div className="projects-page">
-      {formMode === 'closed' && (
+      {showList && (
         <div className="page-header projects-header customers-header">
           <div>
             <h1 className="page-title">{t('users')}</h1>
             <p className="page-subtitle">{t('usersSubtitle')}</p>
           </div>
-          <div className="customers-header-actions">
-            <button
-              type="button"
-              className="btn-primary users-import-btn"
-              onClick={() => setShowImport(true)}
-            >
-              {t('importFromExcel')}
-            </button>
-            <button type="button" className="btn-primary" onClick={handleOpenCreate}>
-              {t('addNew')}
-            </button>
-          </div>
+          {isSuperAdmin && (
+            <div className="customers-header-actions">
+              <button
+                type="button"
+                className="btn-primary users-import-btn"
+                onClick={() => setShowImport(true)}
+              >
+                {t('importFromExcel')}
+              </button>
+              <button type="button" className="btn-primary" onClick={handleOpenCreate}>
+                {t('addNew')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {formMode !== 'closed' && (
+      {!showList && (
         <UserDetailsForm
           mode={formMode}
           userId={selectedUserId ?? undefined}
           onCancel={handleCloseForm}
           onSaved={handleSaved}
+          onSwitchToEdit={
+            formMode === 'view' && selectedUserId
+              ? () => handleOpenEdit(selectedUserId)
+              : undefined
+          }
         />
       )}
 
@@ -220,6 +259,17 @@ export default function UsersTable() {
         />
       )}
 
+      {resetTarget && isSuperAdmin && (
+        <ResetUserPasswordDialog
+          userId={resetTarget.id}
+          userName={resetTarget.fullName}
+          onClose={() => setResetTarget(null)}
+          onReset={(message) => {
+            void handlePasswordResetDone(message);
+          }}
+        />
+      )}
+
       {showImport && (
         <ImportUsersDialog
           onClose={() => setShowImport(false)}
@@ -229,7 +279,7 @@ export default function UsersTable() {
         />
       )}
 
-      {formMode === 'closed' && (
+      {showList && (
       <div className="projects-panel">
         <div className="filters">
           <div className="filters-row">
@@ -345,9 +395,19 @@ export default function UsersTable() {
                         <td>{formatRoleLabels(row.roles, t)}</td>
                         <td className="actions-col">
                           <div className="row-actions">
-                            <button type="button" onClick={() => handleOpenEdit(row.id)}>
-                              {t('edit')}
-                            </button>
+                            {isSuperAdmin && (
+                              <>
+                                <button type="button" onClick={() => handleOpenView(row.id)}>
+                                  {t('view')}
+                                </button>
+                                <button type="button" onClick={() => handleOpenEdit(row.id)}>
+                                  {t('edit')}
+                                </button>
+                                <button type="button" onClick={() => setResetTarget(row)}>
+                                  {t('resetPassword')}
+                                </button>
+                              </>
+                            )}
                             <button type="button" onClick={() => handleDeleteRequest(row)}>
                               {t('delete')}
                             </button>

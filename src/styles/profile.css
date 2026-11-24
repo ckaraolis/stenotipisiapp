@@ -246,6 +246,16 @@
   cursor: not-allowed;
 }
 
+.reset-password-value {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  user-select: all;
+}
+
 .sort-header-btn {
   display: inline-flex;
   align-items: center;

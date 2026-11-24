@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import {
   changeUserPassword,
+  adminResetUserPassword,
   createUser,
   deleteUser,
   ensureDatabase,
@@ -412,6 +413,22 @@ function requireAdminUsers(req, res) {
     return null;
   }
   if (!hasPermission(user, 'administration.users')) {
+    res.status(403).json({ error: 'Forbidden.' });
+    return null;
+  }
+  return user;
+}
+
+/** Password reset for another user is Super Admin only. */
+function requireSuperAdminUsers(req, res) {
+  const user = requireAdminUsers(req, res);
+  if (!user) return null;
+  const roles = Array.isArray(user.roles)
+    ? user.roles
+    : user.role
+      ? [user.role]
+      : [];
+  if (!roles.includes('super_admin')) {
     res.status(403).json({ error: 'Forbidden.' });
     return null;
   }
@@ -4434,7 +4451,7 @@ app.get('/api/users/:id', (req, res) => {
 });
 
 app.post('/api/users', async (req, res) => {
-  const actor = requireAdminUsers(req, res);
+  const actor = requireSuperAdminUsers(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
 
@@ -4481,7 +4498,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 app.post('/api/users/import', (req, res) => {
-  const actor = requireAdminUsers(req, res);
+  const actor = requireSuperAdminUsers(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
 
@@ -4517,7 +4534,7 @@ app.post('/api/users/import', (req, res) => {
 });
 
 app.put('/api/users/:id', (req, res) => {
-  const actor = requireAdminUsers(req, res);
+  const actor = requireSuperAdminUsers(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
 
@@ -4566,6 +4583,42 @@ app.put('/api/users/:id', (req, res) => {
   });
 
   res.json(result.user);
+});
+
+app.post('/api/users/:id/reset-password', (req, res) => {
+  const actor = requireSuperAdminUsers(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const result = adminResetUserPassword(req.params.id);
+  if (result.errors) {
+    const status = result.errors.includes('userNotFound') ? 404 : 400;
+    res.status(status).json({ errors: result.errors });
+    return;
+  }
+
+  createNotification({
+    type: 'user_password_reset',
+    message: `Password was reset for ${result.user.fullName}.`,
+    targetUserId: result.user.id,
+    createdByUserId: actor.id,
+  });
+
+  recordAuditEntry({
+    actor,
+    module: 'administration',
+    entityName: 'user',
+    entityNumber: result.user.username || result.user.id,
+    entryType: 'updated',
+    entryDetails: {
+      fields: [{ field: 'Password', before: '', after: 'Reset (temporary)' }],
+    },
+  });
+
+  res.json({
+    user: result.user,
+    temporaryPassword: result.temporaryPassword,
+  });
 });
 
 app.patch('/api/users/:id/status', (req, res) => {

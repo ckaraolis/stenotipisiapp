@@ -199,6 +199,25 @@ export async function updateUser(
   return data as UserProfile;
 }
 
+export interface ResetUserPasswordResult {
+  user: UserProfile;
+  temporaryPassword: string;
+}
+
+export async function resetUserPassword(userId: string): Promise<ResetUserPasswordResult> {
+  const response = await fetch(`/api/users/${userId}/reset-password`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+
+  const data = (await response.json()) as ResetUserPasswordResult | { errors: string[] };
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
+  }
+
+  return data as ResetUserPasswordResult;
+}
+
 export async function updateUserStatus(
   userId: string,
   status: UserStatus,
