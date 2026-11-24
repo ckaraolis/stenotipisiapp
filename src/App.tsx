@@ -205,14 +205,7 @@ export default function App() {
             </PermissionRoute>
           }
         />
-        <Route
-          path="projects/district"
-          element={
-            <PermissionRoute>
-              <DistrictPage />
-            </PermissionRoute>
-          }
-        />
+        <Route path="projects/district" element={<Navigate to="/administration/districts" replace />} />
 
         <Route path="financials" element={<Navigate to="/financials/steno-rates" replace />} />
         <Route
@@ -310,6 +303,14 @@ export default function App() {
           element={
             <PermissionRoute>
               <UsersPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="administration/districts"
+          element={
+            <PermissionRoute>
+              <DistrictPage />
             </PermissionRoute>
           }
         />

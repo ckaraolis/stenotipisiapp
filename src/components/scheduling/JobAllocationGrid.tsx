@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { fetchJobMatrix } from '../../api/jobMatrix';
 import { confirmAllPendingJobs, matrixAllocateJob, matrixUnassignJob } from '../../api/jobs';
 import { fetchPublicHolidayRecords } from '../../api/publicHolidays';
+import { fetchDistrictOptions } from '../../api/districts';
 import { fetchCustomers, type CustomerOption } from '../../api/profile';
 import { jobStatusLabelKey } from '../../config/job';
+import type { DistrictOption } from '../../types/district';
 import {
   ALLOCATION_METRIC_COLUMNS,
   type MatrixMetricKey,
@@ -764,6 +766,7 @@ function UnassignedJobsPanel({
   onDrop: (event: DragEvent<HTMLElement>) => void;
 }) {
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
+  const [districts, setDistricts] = useState<DistrictOption[]>([]);
   const [customerFilter, setCustomerFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [jobFilter, setJobFilter] = useState('');
@@ -780,11 +783,18 @@ function UnassignedJobsPanel({
 
   useEffect(() => {
     let active = true;
-    fetchCustomers()
-      .then((data) => {
+    Promise.all([fetchCustomers(), fetchDistrictOptions()])
+      .then(([customerData, districtData]) => {
         if (!active) return;
         setCustomers(
-          [...data].sort((a, b) => {
+          [...customerData].sort((a, b) => {
+            const left = (a.alias || a.name).toLocaleLowerCase();
+            const right = (b.alias || b.name).toLocaleLowerCase();
+            return left.localeCompare(right);
+          }),
+        );
+        setDistricts(
+          [...districtData].sort((a, b) => {
             const left = (a.alias || a.name).toLocaleLowerCase();
             const right = (b.alias || b.name).toLocaleLowerCase();
             return left.localeCompare(right);
@@ -792,17 +802,15 @@ function UnassignedJobsPanel({
         );
       })
       .catch(() => {
-        if (active) setCustomers([]);
+        if (!active) return;
+        setCustomers([]);
+        setDistricts([]);
       });
     return () => {
       active = false;
     };
   }, []);
 
-  const districtOptions = useMemo(
-    () => [...new Set(jobs.map((job) => job.district).filter(Boolean))].sort(),
-    [jobs],
-  );
   const jobOptions = useMemo(
     () =>
       [...jobs]
@@ -814,7 +822,7 @@ function UnassignedJobsPanel({
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       if (customerFilter && job.customerId !== customerFilter) return false;
-      if (districtFilter && job.district !== districtFilter) return false;
+      if (districtFilter && job.districtId !== districtFilter) return false;
       if (jobFilter && job.id !== jobFilter) return false;
       if (dateFrom && job.date < dateFrom) return false;
       if (dateTo && job.date > dateTo) return false;
@@ -875,9 +883,9 @@ function UnassignedJobsPanel({
           <span>{t('district')}</span>
           <select value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
             <option value="">{t('allDistricts')}</option>
-            {districtOptions.map((district) => (
-              <option key={district} value={district}>
-                {district}
+            {districts.map((district) => (
+              <option key={district.id} value={district.id}>
+                {district.alias ? `${district.alias} – ${district.name}` : district.name}
               </option>
             ))}
           </select>

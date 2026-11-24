@@ -47,7 +47,7 @@ export default function DistrictsTable() {
 
   const sortedRows = useMemo(() => {
     return [...districts].sort((a, b) => {
-      const comparison = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+      const comparison = a.alias.localeCompare(b.alias, undefined, { sensitivity: 'base' });
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [districts, sortDirection]);
@@ -164,26 +164,30 @@ export default function DistrictsTable() {
                     <tr>
                       <th className="sorted-col">
                         <button type="button" className="sort-header-btn" onClick={toggleSort}>
-                          {t('districtName')}
+                          {t('districtAlias')}
                           <SortIcon direction={sortDirection} />
                         </button>
                       </th>
-                      <th>{t('districtAlias')}</th>
+                      <th>{t('districtEnglishName')}</th>
+                      <th>{t('districtGreekName')}</th>
+                      <th>{t('forScheduling')}</th>
                       <th className="actions-col">{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageRows.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="empty-row">
+                        <td colSpan={5} className="empty-row">
                           {t('noRecordsFound')}
                         </td>
                       </tr>
                     ) : (
                       pageRows.map((row) => (
                         <tr key={row.id}>
-                          <td>{row.name}</td>
                           <td>{row.alias}</td>
+                          <td>{row.name}</td>
+                          <td>{row.greekName || '—'}</td>
+                          <td>{row.forScheduling ? t('yes') : t('no')}</td>
                           <td className="actions-col">
                             <div className="row-actions">
                               <button type="button" onClick={() => handleOpenEdit(row.id)}>

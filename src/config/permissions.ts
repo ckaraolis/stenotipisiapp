@@ -213,7 +213,7 @@ export function canAccessProjectModule(
 export function getDefaultProjectsPath(
   roleOrRoles: string | readonly string[] | null | undefined,
 ): string {
-  const paths = ['/projects/list', '/projects/district', '/projects/customers'] as const;
+  const paths = ['/projects/list', '/projects/customers'] as const;
   for (const path of paths) {
     if (canAccessPath(roleOrRoles, path)) {
       return path;
@@ -475,7 +475,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/transcripts/analysis-report': 'transcripts.transcripts_analysis_report',
   '/projects/customers': 'projects.customers',
   '/projects/list': 'projects.projects',
-  '/projects/district': 'projects.district',
+  '/administration/districts': 'projects.district',
   '/financials/steno-rates': 'financials.steno_rates',
   '/financials/travelling-charges': 'financials.travelling_charges',
   '/financials/reconciliation': 'financials.reconciliation',
@@ -506,7 +506,7 @@ const DEFAULT_PATH_ORDER = [
   '/transcripts/analysis-report',
   '/projects/customers',
   '/projects/list',
-  '/projects/district',
+  '/administration/districts',
   '/financials/steno-rates',
   '/financials/travelling-charges',
   '/financials/reconciliation',
@@ -519,6 +519,7 @@ const DEFAULT_PATH_ORDER = [
   '/financials/travel-expense-list',
   '/financials/stenotypist-financials-report',
   '/administration/users',
+  '/administration/districts',
   '/administration/audit-trail',
   '/administration/account-management',
   '/administration/notifications',

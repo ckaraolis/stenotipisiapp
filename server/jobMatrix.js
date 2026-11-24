@@ -538,6 +538,7 @@ function buildUnassignedJobs(jobs) {
         id: job.id,
         customerId: publicJob.customerId || job.customerId || '',
         customerAlias: publicJob.customerAlias || publicJob.customerName || '—',
+        districtId: publicJob.districtId || job.districtId || '',
         district: publicJob.districtAlias || publicJob.districtName || publicJob.locationDetails || '—',
         projectField1: publicJob.projectField1 || '—',
         projectField2: publicJob.projectField2 || '—',

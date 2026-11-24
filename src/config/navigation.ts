@@ -30,7 +30,6 @@ export const transcriptsNavItems: readonly NavItem[] = [
 export const projectsNavItems: readonly NavItem[] = [
   { key: 'customers', path: '/projects/customers', permission: 'projects.customers' },
   { key: 'projectsList', path: '/projects/list', permission: 'projects.projects' },
-  { key: 'projectDistrict', path: '/projects/district', permission: 'projects.district' },
 ];
 
 export const financialsNavItems: readonly NavItem[] = [
@@ -77,6 +76,7 @@ export const financialsNavItems: readonly NavItem[] = [
 
 export const administrationNavItems: readonly NavItem[] = [
   { key: 'users', path: '/administration/users', permission: 'administration.users' },
+  { key: 'projectDistrict', path: '/administration/districts', permission: 'projects.district' },
   { key: 'auditTrail', path: '/administration/audit-trail', permission: 'administration.audit_trail' },
   {
     key: 'accountManagement',

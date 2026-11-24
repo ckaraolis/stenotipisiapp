@@ -2,24 +2,20 @@ import {
   ensureCollectionFile,
   readCollection,
   writeCollection,
-  collectionExists,
   DB_DIR,
 } from './collectionStore.js';
-import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
 
 const DISTRICTS_PATH = path.join(DB_DIR, 'districts.json');
-const PROJECTS_PATH = path.join(DB_DIR, 'projects.json');
 
 /** §4.1 — Initial district catalogue (name | alias). */
 export const DEFAULT_DISTRICTS = [
-  { id: 'dst-001', name: 'Nicosia', alias: 'NIC', order: 1 },
-  { id: 'dst-002', name: 'Limassol', alias: 'LIM', order: 2 },
-  { id: 'dst-003', name: 'Larnaca', alias: 'LCA', order: 3 },
-  { id: 'dst-004', name: 'Paphos', alias: 'PFO', order: 4 },
-  { id: 'dst-005', name: 'Famagusta', alias: 'FAM', order: 5 },
+  { id: 'dst-001', name: 'Nicosia', greekName: 'Λευκωσία', alias: 'NIC', order: 1 },
+  { id: 'dst-002', name: 'Limassol', greekName: 'Λεμεσός', alias: 'LIM', order: 2 },
+  { id: 'dst-003', name: 'Larnaca', greekName: 'Λάρνακα', alias: 'LCA', order: 3 },
+  { id: 'dst-004', name: 'Paphos', greekName: 'Πάφος', alias: 'PFO', order: 4 },
+  { id: 'dst-005', name: 'Famagusta', greekName: 'Αμμόχωστος', alias: 'FAM', order: 5 },
 ];
 
 const DISTRICT_ALIAS_BY_NAME = Object.fromEntries(
@@ -28,6 +24,10 @@ const DISTRICT_ALIAS_BY_NAME = Object.fromEntries(
 
 const DISTRICT_ALIAS_BY_ID = Object.fromEntries(
   DEFAULT_DISTRICTS.map((district) => [district.id, district.alias]),
+);
+
+const DISTRICT_GREEK_BY_ID = Object.fromEntries(
+  DEFAULT_DISTRICTS.map((district) => [district.id, district.greekName]),
 );
 
 function readDistrictsFile() {
@@ -53,6 +53,20 @@ function normalizeDistrictAlias(alias, fallbackName = '', fallbackId = '') {
   return byName ?? '';
 }
 
+function normalizeGreekName(greekName, fallbackId = '') {
+  if (typeof greekName === 'string' && greekName.trim()) {
+    return greekName.trim();
+  }
+  return DISTRICT_GREEK_BY_ID[fallbackId] ?? '';
+}
+
+function normalizeForScheduling(value, enabledFallback) {
+  if (typeof value === 'boolean') return value;
+  if (value === 'yes' || value === 'true' || value === 1 || value === '1') return true;
+  if (value === 'no' || value === 'false' || value === 0 || value === '0') return false;
+  return enabledFallback !== false;
+}
+
 function migrateDistrictRecord(district, index) {
   const now = new Date().toISOString();
   const name = typeof district.name === 'string' ? district.name.trim() : '';
@@ -61,8 +75,9 @@ function migrateDistrictRecord(district, index) {
   return {
     id,
     name,
+    greekName: normalizeGreekName(district.greekName ?? district.nameEl, id),
     alias: normalizeDistrictAlias(district.alias, name, id),
-    enabled: district.enabled !== false,
+    forScheduling: normalizeForScheduling(district.forScheduling, district.enabled),
     createdAt: district.createdAt ?? now,
     updatedAt: district.updatedAt ?? now,
     order: Number.isFinite(Number(district.order)) ? Number(district.order) : index + 1,
@@ -79,7 +94,7 @@ function seedDistrictsIfEmpty() {
   writeDistrictsFile({
     districts: DEFAULT_DISTRICTS.map((district) => ({
       ...district,
-      enabled: true,
+      forScheduling: true,
       createdAt: now,
       updatedAt: now,
     })),
@@ -111,11 +126,12 @@ export function ensureDistrictsDatabase() {
 export function listDistricts() {
   const data = readDistrictsFile();
   return (data.districts ?? [])
-    .filter((district) => district.enabled !== false)
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name))
+    .filter((district) => district.forScheduling !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.alias.localeCompare(b.alias))
     .map((district) => ({
       id: district.id,
       name: district.name,
+      greekName: district.greekName ?? '',
       alias: district.alias,
     }));
 }
@@ -126,13 +142,14 @@ export function listDistrictRecords() {
     .map((district) => ({
       id: district.id,
       name: district.name,
+      greekName: district.greekName ?? '',
       alias: district.alias,
-      enabled: district.enabled !== false,
+      forScheduling: district.forScheduling !== false,
       order: district.order ?? 0,
       createdAt: district.createdAt,
       updatedAt: district.updatedAt,
     }))
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.alias.localeCompare(b.alias));
 }
 
 export function findDistrictById(districtId) {
@@ -145,8 +162,9 @@ function toPublicDistrict(district) {
   return {
     id: district.id,
     name: district.name,
+    greekName: district.greekName ?? '',
     alias: district.alias,
-    enabled: district.enabled !== false,
+    forScheduling: district.forScheduling !== false,
     order: district.order ?? 0,
     createdAt: district.createdAt,
     updatedAt: district.updatedAt,
@@ -156,7 +174,9 @@ function toPublicDistrict(district) {
 function validateDistrictInput(input, { existingId = null } = {}) {
   const errors = [];
   const name = typeof input.name === 'string' ? input.name.trim() : '';
+  const greekName = typeof input.greekName === 'string' ? input.greekName.trim() : '';
   const alias = normalizeDistrictAlias(input.alias);
+  const forScheduling = normalizeForScheduling(input.forScheduling, true);
 
   if (!name) errors.push('districtNameRequired');
   if (!alias) errors.push('districtAliasRequired');
@@ -176,7 +196,7 @@ function validateDistrictInput(input, { existingId = null } = {}) {
     return { errors };
   }
 
-  return { value: { name, alias } };
+  return { value: { name, greekName, alias, forScheduling } };
 }
 
 export function findDistrictRecordById(districtId) {
@@ -200,8 +220,9 @@ export function createDistrict(input) {
   const district = {
     id: generateDistrictId(),
     name: validation.value.name,
+    greekName: validation.value.greekName,
     alias: validation.value.alias,
-    enabled: true,
+    forScheduling: validation.value.forScheduling,
     order: maxOrder + 1,
     createdAt: now,
     updatedAt: now,
@@ -227,7 +248,9 @@ export function updateDistrict(districtId, input) {
   const updated = {
     ...data.districts[index],
     name: validation.value.name,
+    greekName: validation.value.greekName,
     alias: validation.value.alias,
+    forScheduling: validation.value.forScheduling,
     updatedAt: new Date().toISOString(),
   };
 

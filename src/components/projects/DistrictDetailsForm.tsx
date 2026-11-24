@@ -13,13 +13,17 @@ interface DistrictDetailsFormProps {
 }
 
 type DistrictFormState = {
-  name: string;
   alias: string;
+  name: string;
+  greekName: string;
+  forScheduling: boolean;
 };
 
 const EMPTY_FORM: DistrictFormState = {
-  name: '',
   alias: '',
+  name: '',
+  greekName: '',
+  forScheduling: true,
 };
 
 function parseApiErrors(message: string, t: (key: TranslationKey) => string): string {
@@ -57,8 +61,10 @@ export default function DistrictDetailsForm({
       .then((district) => {
         if (!active) return;
         setForm({
-          name: district.name,
           alias: district.alias,
+          name: district.name,
+          greekName: district.greekName ?? '',
+          forScheduling: district.forScheduling !== false,
         });
       })
       .catch(() => {
@@ -74,14 +80,16 @@ export default function DistrictDetailsForm({
   }, [mode, districtId, t]);
 
   const validateClient = (): string | null => {
-    if (!form.name.trim()) return t('districtNameRequired');
     if (!form.alias.trim()) return t('districtAliasRequired');
+    if (!form.name.trim()) return t('districtNameRequired');
     return null;
   };
 
   const buildPayload = (): DistrictPayload => ({
-    name: form.name.trim(),
     alias: form.alias.trim().toUpperCase(),
+    name: form.name.trim(),
+    greekName: form.greekName.trim(),
+    forScheduling: form.forScheduling,
   });
 
   const handleSubmit = async (event: FormEvent) => {
@@ -132,16 +140,6 @@ export default function DistrictDetailsForm({
           {error && <div className="profile-alert profile-alert-error">{error}</div>}
 
           <div className="profile-grid">
-            <label className="profile-label" htmlFor="district-name">
-              {t('districtName')} *
-            </label>
-            <input
-              id="district-name"
-              className="profile-input"
-              value={form.name}
-              onChange={(event) => updateField('name', event.target.value)}
-            />
-
             <label className="profile-label" htmlFor="district-alias">
               {t('districtAlias')} *
             </label>
@@ -151,6 +149,39 @@ export default function DistrictDetailsForm({
               value={form.alias}
               onChange={(event) => updateField('alias', event.target.value.toUpperCase())}
             />
+
+            <label className="profile-label" htmlFor="district-name">
+              {t('districtEnglishName')} *
+            </label>
+            <input
+              id="district-name"
+              className="profile-input"
+              value={form.name}
+              onChange={(event) => updateField('name', event.target.value)}
+            />
+
+            <label className="profile-label" htmlFor="district-greek-name">
+              {t('districtGreekName')}
+            </label>
+            <input
+              id="district-greek-name"
+              className="profile-input"
+              value={form.greekName}
+              onChange={(event) => updateField('greekName', event.target.value)}
+            />
+
+            <label className="profile-label" htmlFor="district-for-scheduling">
+              {t('forScheduling')}
+            </label>
+            <select
+              id="district-for-scheduling"
+              className="profile-input"
+              value={form.forScheduling ? 'yes' : 'no'}
+              onChange={(event) => updateField('forScheduling', event.target.value === 'yes')}
+            >
+              <option value="yes">{t('yes')}</option>
+              <option value="no">{t('no')}</option>
+            </select>
           </div>
 
           <div className="profile-actions">
