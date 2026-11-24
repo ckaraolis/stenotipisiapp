@@ -75,11 +75,46 @@ export {
   getTranscriptListSubtitleKey,
 } from './transcriptList';
 
+export function formatTranscriptJobTime(date: string, time: string): string {
+  const iso = typeof date === 'string' ? date.trim() : '';
+  const clock = typeof time === 'string' ? time.trim() : '';
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (match) {
+    const shortDate = `${match[3]}/${match[2]}/${match[1].slice(2)}`;
+    return clock ? `${shortDate} ${clock}` : shortDate;
+  }
+  if (!iso && !clock) return '—';
+  return [iso, clock].filter(Boolean).join(' ');
+}
+
+export function formatTranscriptSlaLabel(
+  value: string,
+  t: (key: TranslationKey) => string,
+): string {
+  const text = value.trim();
+  if (!text) return '—';
+  const match = /^(\d+)\s*(day|days)?$/i.exec(text);
+  if (match) {
+    const count = Number(match[1]);
+    return `${count} ${count === 1 ? t('day') : t('days')}`;
+  }
+  return text;
+}
+
+export function isTranscriptApprovedPublication(transcript: TranscriptRecord): boolean {
+  return (
+    transcript.status === 'published' ||
+    transcript.jobStatus === 'published' ||
+    Boolean(transcript.files?.approvedTranscriptFile?.id)
+  );
+}
+
 export {
   canUseTranscriptEditorFilter,
   canUseTranscriptOwnerFilter,
   canUseTranscriptReviewerFilter,
   getTranscriptDownloadTarget,
   getTranscriptListInlineActions,
+  getTranscriptListPrimaryActions,
   type TranscriptListInlineAction,
 } from './transcriptListPermissions';

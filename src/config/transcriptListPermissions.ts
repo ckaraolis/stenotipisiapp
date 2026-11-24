@@ -13,7 +13,8 @@ export type TranscriptListInlineAction =
   | 'publish'
   | 'report'
   | 'files'
-  | 'download';
+  | 'download'
+  | 'permissions';
 
 function getAssignmentRoles(transcript: TranscriptRecord, actorId: string) {
   const roles: Array<'stenotypist' | 'editor' | 'reviewer'> = [];
@@ -112,6 +113,29 @@ export function getTranscriptListInlineActions(
     actions.push('download');
   }
 
+  if (canEditTranscriptDetails(roleOrRoles)) {
+    actions.push('permissions');
+  }
+
+  return actions;
+}
+
+/** Primary ASTRAEA action buttons shown in the list actions cell. */
+export function getTranscriptListPrimaryActions(
+  transcript: TranscriptRecord,
+  roleOrRoles: UserRole[] | UserRole | null | undefined,
+): Array<'edit' | 'files' | 'download' | 'permissions'> {
+  const actions: Array<'edit' | 'files' | 'download' | 'permissions'> = [];
+  if (canEditTranscriptDetails(roleOrRoles)) {
+    actions.push('edit');
+  }
+  actions.push('files');
+  if (getTranscriptDownloadTarget(transcript)) {
+    actions.push('download');
+  }
+  if (canEditTranscriptDetails(roleOrRoles)) {
+    actions.push('permissions');
+  }
   return actions;
 }
 

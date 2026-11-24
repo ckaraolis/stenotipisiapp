@@ -12,11 +12,15 @@ import {
 } from '../config/transcriptList';
 import {
   formatTranscriptEte,
+  formatTranscriptJobTime,
   formatTranscriptListDeadline,
   formatTranscriptListEditDuration,
   formatTranscriptOwnerLabels,
+  formatTranscriptSlaLabel,
   getTranscriptDownloadTarget,
   getTranscriptListInlineActions,
+  getTranscriptListPrimaryActions,
+  isTranscriptApprovedPublication,
   type TranscriptListInlineAction,
   type TranscriptListSortDirection,
   type TranscriptListSortKey,
@@ -241,6 +245,7 @@ export default function TranscriptsTable({
 
     switch (action) {
       case 'edit':
+      case 'permissions':
         setOverlayMode('edit');
         onFormOpenChange?.(true);
         return;
@@ -296,6 +301,8 @@ export default function TranscriptsTable({
         return t('files');
       case 'download':
         return t('download');
+      case 'permissions':
+        return t('permissions');
       default:
         return action;
     }
@@ -538,40 +545,54 @@ export default function TranscriptsTable({
               <SortableHeader label={t('status')} sortKey="jobStatus" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
               <SortableHeader label={t('customer')} sortKey="customerName" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
               <SortableHeader label={t('project')} sortKey="projectNumber" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
-              <SortableHeader label={t('stenotypist')} sortKey="stenotypistName" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
+              <th>{t('jobTime')}</th>
+              <SortableHeader label={t('st')} sortKey="stenotypistName" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
               <SortableHeader label={t('editor')} sortKey="editorName" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
               <SortableHeader label={t('reviewer')} sortKey="reviewerName" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
               <SortableHeader label={t('publisher')} sortKey="publisherName" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
-              <th>{t('expedite')}</th>
-              <th>{t('bypassApproval')}</th>
+              <th>{t('exp')}</th>
+              <th>{t('ba')}</th>
               <th>{t('jobEndTime')}</th>
-              <th>{t('serviceLevelAgreement')}</th>
-              <SortableHeader label={t('deadline')} sortKey="deadlineMinutes" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
-              <SortableHeader label={t('ete')} sortKey="eteMinutes" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
-              <th>{t('editDuration')}</th>
-              <th>{t('transcriptOwners')}</th>
+              <th>{t('sla')}</th>
+              <SortableHeader label={t('dueIn')} sortKey="deadlineMinutes" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
+              <SortableHeader label={t('eet')} sortKey="eteMinutes" sortBy={sortBy} sortDirection={sortDirection} onSort={handleSort} />
+              <th>{t('et')}</th>
+              <th>{t('acc')}</th>
+              <th>{t('to')}</th>
+              <th>{t('ap')}</th>
+              <th>{t('remarks')}</th>
+              <th>{t('evaluationStatus')}</th>
+              <th>{t('average')}</th>
               <th className="actions-col">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={17} className="empty-row">
+                <td colSpan={23} className="empty-row">
                   {t('loading')}
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={17} className="empty-row">
+                <td colSpan={23} className="empty-row">
                   {t('noTranscriptsFound')}
                 </td>
               </tr>
             ) : (
               rows.map((row) => {
-                const actions = getTranscriptListInlineActions(
+                const roleOrRoles = authUser?.roles ?? authUser?.role;
+                const primaryActions = getTranscriptListPrimaryActions(row, roleOrRoles);
+                const workflowActions = getTranscriptListInlineActions(
                   row,
-                  authUser?.roles ?? authUser?.role,
+                  roleOrRoles,
                   authUser?.id ?? '',
+                ).filter(
+                  (action) =>
+                    action === 'edited' ||
+                    action === 'reviewed' ||
+                    action === 'publish' ||
+                    action === 'report',
                 );
                 return (
                   <tr key={row.id}>
@@ -585,6 +606,7 @@ export default function TranscriptsTable({
                     </td>
                     <td>{row.customerName || '—'}</td>
                     <td className="project-cell">{row.projectNumber || '—'}</td>
+                    <td>{formatTranscriptJobTime(row.date, row.time)}</td>
                     <td>{row.stenotypistAlias || row.stenotypistName || '—'}</td>
                     <td>{row.editorName || '—'}</td>
                     <td>{row.reviewerName || '—'}</td>
@@ -592,26 +614,61 @@ export default function TranscriptsTable({
                     <td className="center">{row.expedite ? '✓' : ''}</td>
                     <td className="center">{row.bypassApproval ? '✓' : ''}</td>
                     <td>{row.jobEndTime || row.endTimeStenotypist || '—'}</td>
-                    <td>{row.serviceLevelAgreement || '—'}</td>
+                    <td>{formatTranscriptSlaLabel(row.serviceLevelAgreement || '', t)}</td>
                     <td>{formatTranscriptListDeadline(row, t)}</td>
                     <td>{formatTranscriptEte(row.pageCount)}</td>
-                    <td>{formatTranscriptListEditDuration(row)}</td>
+                    <td>{formatTranscriptListEditDuration(row) || '—'}</td>
+                    <td>—</td>
                     <td>{formatTranscriptOwnerLabels(row.transcriptOwnerLabels)}</td>
+                    <td className="center">{isTranscriptApprovedPublication(row) ? '✓' : ''}</td>
+                    <td className="remarks-cell">{row.specialNotes || '—'}</td>
+                    <td>{t('noEvaluation')}</td>
+                    <td>—</td>
                     <td className="actions-col">
-                      <div className="row-actions">
-                        {actions.map((action) => (
-                          <button
-                            key={`${row.id}-${action}`}
-                            type="button"
-                            disabled={action === 'download' && downloadingId === row.id}
-                            onClick={() => void handleAction(action, row)}
-                          >
-                            {action === 'download' && downloadingId === row.id
-                              ? t('downloading')
-                              : actionLabel(action)}
+                      <div className="transcript-actions-grid">
+                        {primaryActions.includes('edit') ? (
+                          <button type="button" onClick={() => void handleAction('edit', row)}>
+                            {t('edit')}
                           </button>
-                        ))}
+                        ) : null}
+                        {primaryActions.includes('files') ? (
+                          <button type="button" onClick={() => void handleAction('files', row)}>
+                            {t('files')}
+                          </button>
+                        ) : null}
+                        {primaryActions.includes('download') ? (
+                          <button
+                            type="button"
+                            className="transcript-action-wide"
+                            disabled={downloadingId === row.id}
+                            onClick={() => void handleAction('download', row)}
+                          >
+                            {downloadingId === row.id ? t('downloading') : t('download')}
+                          </button>
+                        ) : null}
+                        {primaryActions.includes('permissions') ? (
+                          <button
+                            type="button"
+                            className="transcript-action-wide"
+                            onClick={() => void handleAction('permissions', row)}
+                          >
+                            {t('permissions')}
+                          </button>
+                        ) : null}
                       </div>
+                      {workflowActions.length > 0 ? (
+                        <div className="transcript-workflow-actions">
+                          {workflowActions.map((action) => (
+                            <button
+                              key={`${row.id}-${action}`}
+                              type="button"
+                              onClick={() => void handleAction(action, row)}
+                            >
+                              {actionLabel(action)}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 );
