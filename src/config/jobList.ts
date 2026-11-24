@@ -49,6 +49,13 @@ export function formatJobStenotypistLabel(job: JobRecord): string {
   return job.stenotypistName || job.stenotypistUsername || '—';
 }
 
+export function formatJobOwnerLabel(job: JobRecord): string {
+  if (job.ownerUsername && job.ownerName) {
+    return `${job.ownerUsername} – ${job.ownerName}`;
+  }
+  return job.ownerName || job.ownerUsername || '—';
+}
+
 export function getDefaultJobDateRange(jobs: JobRecord[]): { from: string; to: string } {
   const eligible = jobs.filter((job) => job.status !== 'published');
   if (eligible.length === 0) {

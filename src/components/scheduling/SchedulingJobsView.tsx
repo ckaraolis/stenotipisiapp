@@ -11,6 +11,7 @@ import {
   JOB_LIST_PAGE_SIZE,
   filterJobListRows,
   formatJobCustomerLabel,
+  formatJobOwnerLabel,
   formatJobProjectLabel,
   formatJobStenotypistLabel,
   getDefaultJobDateRange,
@@ -322,7 +323,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
     <div className="scheduling-page">
       <div className="page-header scheduling-header">
         <div>
-          <h1 className="page-title">{t('jobs')}</h1>
+          <h1 className="page-title">{t('jobsSteno')}</h1>
           <p className="page-subtitle">{t(subtitleByType[jobType])}</p>
         </div>
         {formMode === 'closed' && (
@@ -518,29 +519,31 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
               <thead>
                 <tr>
                   <th>{t('jobNumber')}</th>
+                  <th>{t('owner')}</th>
                   <th>{t('customer')}</th>
                   <th>{t('project')}</th>
-                  <th>{t('jobPhase')}</th>
-                  <th>{t('status')}</th>
-                  <th>{t('district')}</th>
-                  <th>{t('locationDetails')}</th>
                   <th>{t('date')}</th>
                   <th>{t('time')}</th>
                   <th>{t('stenotypist')}</th>
+                  <th>{t('district')}</th>
+                  <th>{t('jobPhase')}</th>
+                  <th>{t('status')}</th>
                   <th>{t('expedite')}</th>
+                  <th>{t('remarks')}</th>
+                  <th>{t('refJob')}</th>
                   <th>{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading || !dateRangeInitialized ? (
                   <tr>
-                    <td colSpan={12} className="empty-row">
+                    <td colSpan={14} className="empty-row">
                       {t('loading')}
                     </td>
                   </tr>
                 ) : pagedRows.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="empty-row">
+                    <td colSpan={14} className="empty-row">
                       {t('noJobsFound')}
                     </td>
                   </tr>
@@ -559,25 +562,27 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
                     return (
                       <tr key={row.id}>
                         <td>{row.jobNumber}</td>
+                        <td>{formatJobOwnerLabel(row)}</td>
                         <td>{formatJobCustomerLabel(row)}</td>
                         <td className="project-cell">{formatJobProjectLabel(row)}</td>
-                        <td>{phase ? t(jobPhaseLabelKey(phase)) : '—'}</td>
-                        <td>
-                          <span className={`status-pill status-${row.status}`}>
-                            {t(jobStatusLabelKey(row.status))}
-                          </span>
-                        </td>
+                        <td>{formatDateDisplay(row.date)}</td>
+                        <td>{row.time}</td>
+                        <td>{formatJobStenotypistLabel(row)}</td>
                         <td>
                           {formatDistrictLabel({
                             districtName: row.districtName,
                             districtAlias: row.districtAlias,
                           })}
                         </td>
-                        <td>{row.locationDetails || '—'}</td>
-                        <td>{formatDateDisplay(row.date)}</td>
-                        <td>{row.time}</td>
-                        <td>{formatJobStenotypistLabel(row)}</td>
+                        <td>{phase ? t(jobPhaseLabelKey(phase)) : '—'}</td>
+                        <td>
+                          <span className={`status-pill status-${row.status}`}>
+                            {t(jobStatusLabelKey(row.status))}
+                          </span>
+                        </td>
                         <td className="center">{row.expedite ? '✓' : ''}</td>
+                        <td>{row.remarks || '—'}</td>
+                        <td>—</td>
                         <td>
                           <div className="scheduling-inline-actions">
                             {inlineActions.map((action) => (

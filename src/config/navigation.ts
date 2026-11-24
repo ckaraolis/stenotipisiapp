@@ -14,12 +14,8 @@ export const dashboardNavItem: NavItem = {
 };
 
 export const schedulingNavItems: readonly NavItem[] = [
-  { key: 'jobs', path: '/scheduling/jobs-steno', permission: 'scheduling.jobs' },
+  { key: 'jobsSteno', path: '/scheduling/jobs-steno', permission: 'scheduling.jobs' },
   { key: 'jobAllocation', path: '/scheduling/job-allocation', permission: 'scheduling.job_allocation' },
-  { key: 'stenotypistLeave', path: '/scheduling/stenotypist-leave', permission: 'scheduling.stenotypist_leave' },
-  { key: 'publicHolidays', path: '/scheduling/public-holidays', permission: 'scheduling.public_holidays' },
-  { key: 'travellingTime', path: '/scheduling/travelling-time', permission: 'scheduling.travelling_time' },
-  { key: 'schedulingReports', path: '/scheduling/reports', permission: 'scheduling.scheduling_reports' },
 ];
 
 export const transcriptsNavItems: readonly NavItem[] = [

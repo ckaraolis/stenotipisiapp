@@ -1,28 +1,29 @@
 /**
  * Job Matrix per Stenotypist (§4.9)
- * Fixed layout — not responsive. Target viewport: 950 × 600 px.
+ * Fills the available dashboard content area.
  */
 
 .allocation-page.job-matrix-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  height: calc(100vh - var(--topbar-height) - 56px);
+  min-height: 480px;
 }
 
 .allocation-header {
   margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .job-matrix-workspace {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  width: 950px;
-  height: 600px;
-  min-width: 950px;
-  max-width: 950px;
-  min-height: 600px;
-  max-height: 600px;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
