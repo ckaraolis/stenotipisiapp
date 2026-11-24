@@ -4,12 +4,7 @@ import { confirmAllPendingJobs, matrixAllocateJob, matrixUnassignJob } from '../
 import { fetchPublicHolidayRecords } from '../../api/publicHolidays';
 import { jobStatusLabelKey } from '../../config/job';
 import {
-  JOB_MATRIX_HEIGHT_PX,
-  JOB_MATRIX_WIDTH_PX,
-  MATRIX_METRIC_KEYS,
-  SCHEDULE_PANEL_MIN_WIDTH_PX,
-  SCHEDULE_WEEKDAY_COLUMN_WIDTH_PX,
-  SCHEDULE_WEEKEND_COLUMN_WIDTH_PX,
+  ALLOCATION_METRIC_COLUMNS,
   type MatrixMetricKey,
 } from '../../config/jobMatrix';
 import {
@@ -51,6 +46,7 @@ import JobDetailsForm from './JobDetailsForm';
 import { parseJobActionError } from './JobRejectDialog';
 import StenotypistInfoPanel from './StenotypistInfoPanel';
 import StenotypistLeaveDetailsForm from './StenotypistLeaveDetailsForm';
+import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/job-allocation.css';
 import '../../styles/profile.css';
 
@@ -61,18 +57,6 @@ type MatrixFormMode =
   | 'createLeave'
   | 'editJob'
   | 'editLeave';
-
-const metricLabelKeys: Record<MatrixMetricKey, TranslationKey> = {
-  m1: 'colM1',
-  m2: 'colM2',
-  m3: 'colM3',
-  m4: 'colM4',
-  m5: 'colM5',
-  m6: 'colM6',
-  m7: 'colM7',
-  m8: 'colM8',
-  m9: 'colM9',
-};
 
 export default function JobAllocationGrid() {
   const { language, t } = useLanguage();
@@ -347,10 +331,7 @@ export default function JobAllocationGrid() {
       ) : null}
 
       {formMode === 'closed' ? (
-        <div
-          className="job-matrix-workspace"
-          style={{ width: JOB_MATRIX_WIDTH_PX, height: JOB_MATRIX_HEIGHT_PX }}
-        >
+        <div className="job-matrix-workspace">
           <div className="job-matrix-toolbar">
             <section className="job-matrix-actions" aria-label={t('jobMatrixActions')}>
               <button type="button" className="btn-primary" onClick={() => setFormMode('createJob')}>
@@ -414,13 +395,14 @@ export default function JobAllocationGrid() {
                     <thead>
                       <tr>
                         <th className="col-st">{t('st')}</th>
-                        <th className="col-info">{t('stenotypistInfo')}</th>
-                        {MATRIX_METRIC_KEYS.map((key, index) => (
+                        <th className="col-role">{t('role')}</th>
+                        <th className="col-info">{t('info')}</th>
+                        {ALLOCATION_METRIC_COLUMNS.map((column, index) => (
                           <th
-                            key={key}
-                            className={`metric-col${index === MATRIX_METRIC_KEYS.length - 1 ? ' col-metric-boundary' : ''}`}
+                            key={column.key}
+                            className={`metric-col${index === ALLOCATION_METRIC_COLUMNS.length - 1 ? ' col-metric-boundary' : ''}`}
                           >
-                            {t(metricLabelKeys[key])}
+                            {t(column.labelKey)}
                           </th>
                         ))}
                       </tr>
@@ -428,7 +410,7 @@ export default function JobAllocationGrid() {
                     <tbody>
                       {stenotypists.length === 0 ? (
                         <tr>
-                          <td colSpan={2 + MATRIX_METRIC_KEYS.length} className="empty-row">
+                          <td colSpan={3 + ALLOCATION_METRIC_COLUMNS.length} className="empty-row">
                             {loadingMatrix ? t('loading') : t('noAllocationRows')}
                           </td>
                         </tr>
@@ -436,22 +418,28 @@ export default function JobAllocationGrid() {
                         stenotypists.map((row) => (
                           <tr key={row.id}>
                             <td className="col-st staff-code">{row.alias}</td>
+                            <td className="col-role" title={t('roleSteno')}>
+                              <span className="role-icon" aria-label={t('roleSteno')}>
+                                <KeyboardIcon />
+                              </span>
+                            </td>
                             <td className="col-info">
                               <button
                                 type="button"
                                 className="info-btn"
-                                aria-label={t('stenotypistInfo')}
+                                aria-label={t('info')}
                                 onClick={() => setInfoPanelStenotypist(row.info)}
                               >
-                                <PlayIcon />
+                                <InfoIcon />
                               </button>
                             </td>
-                            {MATRIX_METRIC_KEYS.map((key, index) => (
+                            {ALLOCATION_METRIC_COLUMNS.map((column, index) => (
                               <MetricCell
-                                key={key}
-                                metricKey={key}
+                                key={column.key}
+                                columnKey={column.key}
+                                source={column.source}
                                 metrics={row.metrics}
-                                isBoundary={index === MATRIX_METRIC_KEYS.length - 1}
+                                isBoundary={index === ALLOCATION_METRIC_COLUMNS.length - 1}
                               />
                             ))}
                           </tr>
@@ -463,17 +451,8 @@ export default function JobAllocationGrid() {
               </section>
 
               <section className="schedule-panel" aria-label={t('schedulePanel')}>
-                <div
-                  className="schedule-panel-scroll"
-                  style={{
-                    ['--schedule-weekday-width' as string]: `${SCHEDULE_WEEKDAY_COLUMN_WIDTH_PX}px`,
-                    ['--schedule-weekend-width' as string]: `${SCHEDULE_WEEKEND_COLUMN_WIDTH_PX}px`,
-                  }}
-                >
-                  <table
-                    className="allocation-table job-matrix-table schedule-panel-table"
-                    style={{ minWidth: SCHEDULE_PANEL_MIN_WIDTH_PX }}
-                  >
+                <div className="schedule-panel-scroll">
+                  <table className="allocation-table job-matrix-table schedule-panel-table">
                     <thead>
                       <tr>
                         {scheduleDays.map((day, columnIndex) => {
@@ -530,7 +509,9 @@ export default function JobAllocationGrid() {
               nextWorkingDayKey={nextWorkingDayKey}
               dropTarget={dropTarget}
               matrixActionLoading={matrixActionLoading}
+              loadingMatrix={loadingMatrix}
               t={t}
+              onRefresh={() => void loadMatrix()}
               onEditJob={handleEditJob}
               onDragOver={handleUnassignedDragOver}
               onDragLeave={handleUnassignedDragLeave}
@@ -544,20 +525,22 @@ export default function JobAllocationGrid() {
 }
 
 function MetricCell({
-  metricKey,
+  columnKey,
+  source,
   metrics,
   isBoundary,
 }: {
-  metricKey: MatrixMetricKey;
+  columnKey: string;
+  source: MatrixMetricKey | null;
   metrics: JobMatrixMetrics;
   isBoundary: boolean;
 }) {
-  const value = metrics[metricKey];
+  const value = source ? metrics[source] : '';
   const className = [
     'metric-col',
     isBoundary ? 'col-metric-boundary' : '',
-    metricKey === 'm1' && (value === 'OUT' || value === 'LEA') ? 'metric-code' : '',
-    metricKey === 'm8' && metrics.m8Late ? 'metric-late' : '',
+    columnKey === 'ly' && (value === 'OUT' || value === 'LEA') ? 'metric-code' : '',
+    columnKey === 'ctd' && metrics.m8Late ? 'metric-late' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -748,12 +731,20 @@ function MatrixCellCard({
   );
 }
 
+function addDaysToDateKey(dateKey: string, days: number): string {
+  const date = parseMatrixDateKey(dateKey);
+  date.setDate(date.getDate() + days);
+  return formatAllocationDateKey(date);
+}
+
 function UnassignedJobsPanel({
   jobs,
   nextWorkingDayKey,
   dropTarget,
   matrixActionLoading,
+  loadingMatrix,
   t,
+  onRefresh,
   onEditJob,
   onDragOver,
   onDragLeave,
@@ -763,40 +754,54 @@ function UnassignedJobsPanel({
   nextWorkingDayKey: string;
   dropTarget: string | null;
   matrixActionLoading: boolean;
+  loadingMatrix: boolean;
   t: (key: TranslationKey) => string;
+  onRefresh: () => void;
   onEditJob: (jobId: string) => void;
   onDragOver: (event: DragEvent<HTMLElement>) => void;
   onDragLeave: () => void;
   onDrop: (event: DragEvent<HTMLElement>) => void;
 }) {
   const [customerFilter, setCustomerFilter] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState(nextWorkingDayKey);
-  const dateFilterUserSet = useRef(false);
+  const [districtFilter, setDistrictFilter] = useState('');
+  const [jobFilter, setJobFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState(nextWorkingDayKey);
+  const [dateTo, setDateTo] = useState(() => addDaysToDateKey(nextWorkingDayKey, 7));
+  const dateRangeUserSet = useRef(false);
 
   useEffect(() => {
-    if (!dateFilterUserSet.current) {
-      setDateFilter(nextWorkingDayKey);
+    if (!dateRangeUserSet.current) {
+      setDateFrom(nextWorkingDayKey);
+      setDateTo(addDaysToDateKey(nextWorkingDayKey, 7));
     }
   }, [nextWorkingDayKey]);
 
   const customerOptions = useMemo(
-    () => [...new Set(jobs.map((job) => job.customerAlias))].sort(),
+    () => [...new Set(jobs.map((job) => job.customerAlias).filter(Boolean))].sort(),
     [jobs],
   );
-  const locationOptions = useMemo(
-    () => [...new Set(jobs.map((job) => job.district))].sort(),
+  const districtOptions = useMemo(
+    () => [...new Set(jobs.map((job) => job.district).filter(Boolean))].sort(),
+    [jobs],
+  );
+  const jobOptions = useMemo(
+    () =>
+      [...jobs]
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .map((job) => ({ id: job.id, label: job.title })),
     [jobs],
   );
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       if (customerFilter && job.customerAlias !== customerFilter) return false;
-      if (locationFilter && job.district !== locationFilter) return false;
-      if (dateFilter && job.date !== dateFilter) return false;
+      if (districtFilter && job.district !== districtFilter) return false;
+      if (jobFilter && job.id !== jobFilter) return false;
+      if (dateFrom && job.date < dateFrom) return false;
+      if (dateTo && job.date > dateTo) return false;
       return true;
     });
-  }, [jobs, customerFilter, locationFilter, dateFilter]);
+  }, [jobs, customerFilter, districtFilter, jobFilter, dateFrom, dateTo]);
 
   return (
     <section
@@ -811,9 +816,32 @@ function UnassignedJobsPanel({
       onDragLeave={onDragLeave}
       onDrop={(event) => void onDrop(event)}
     >
-      <h2 className="unassigned-jobs-title">{t('unassignedJobs')}</h2>
+      <div className="pending-jobs-toolbar">
+        <button
+          type="button"
+          className="pending-jobs-refresh"
+          aria-label={t('refresh')}
+          title={t('refresh')}
+          disabled={loadingMatrix}
+          onClick={onRefresh}
+        >
+          <RefreshIcon />
+        </button>
+      </div>
+
+      <div className="pending-jobs-actions">
+        <button type="button" className="btn-availability">
+          {t('availability')}
+        </button>
+        <button type="button" className="btn-matrix-out">
+          {t('matrixOut')}
+        </button>
+      </div>
+
+      <h2 className="unassigned-jobs-title">{t('pendingJobs')}</h2>
+
       <div className="unassigned-jobs-filters">
-        <label className="unassigned-filter-field">
+        <label className="unassigned-filter-field unassigned-filter-field-bare">
           <span>{t('customer')}</span>
           <select value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}>
             <option value="">{t('allCustomers')}</option>
@@ -824,32 +852,55 @@ function UnassignedJobsPanel({
             ))}
           </select>
         </label>
-        <label className="unassigned-filter-field">
-          <span>{t('location')}</span>
-          <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
-            <option value="">{t('allLocations')}</option>
-            {locationOptions.map((location) => (
-              <option key={location} value={location}>
-                {location}
+        <label className="unassigned-filter-field unassigned-filter-field-bare">
+          <span>{t('district')}</span>
+          <select value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
+            <option value="">{t('allDistricts')}</option>
+            {districtOptions.map((district) => (
+              <option key={district} value={district}>
+                {district}
               </option>
             ))}
           </select>
         </label>
-        <label className="unassigned-filter-field">
-          <span>{t('date')}</span>
+        <label className="unassigned-filter-field unassigned-filter-field-bare">
+          <span>{t('jobs')}</span>
+          <select value={jobFilter} onChange={(e) => setJobFilter(e.target.value)}>
+            <option value="">{t('allJobs')}</option>
+            {jobOptions.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="unassigned-filter-field unassigned-filter-date">
+          <span>{t('dateFrom')}</span>
           <input
             type="date"
-            value={dateFilter}
+            value={dateFrom}
             onChange={(e) => {
-              dateFilterUserSet.current = true;
-              setDateFilter(e.target.value);
+              dateRangeUserSet.current = true;
+              setDateFrom(e.target.value);
+            }}
+          />
+        </label>
+        <label className="unassigned-filter-field unassigned-filter-date">
+          <span>{t('dateTo')}</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => {
+              dateRangeUserSet.current = true;
+              setDateTo(e.target.value);
             }}
           />
         </label>
       </div>
+
       <div className="unassigned-jobs-list">
         {filteredJobs.length === 0 ? (
-          <p className="unassigned-jobs-empty">{t('noUnassignedJobs')}</p>
+          <p className="unassigned-jobs-empty">{t('noPendingJobs')}</p>
         ) : (
           filteredJobs.map((job) => (
             <UnassignedJobCard
@@ -875,6 +926,12 @@ function UnassignedJobCard({
   onEditJob: (jobId: string) => void;
 }) {
   const isDraggable = !disabled && MATRIX_DRAGGABLE_JOB_STATUSES.has(job.jobStatus);
+  const primaryLine = [job.customerAlias, job.district, `${formatDateDisplay(job.date)} ${job.time}`]
+    .filter(Boolean)
+    .join(' - ');
+  const secondaryLine = [job.projectField1, job.projectField2, job.projectField3]
+    .filter(Boolean)
+    .join(' - ');
 
   return (
     <button
@@ -895,20 +952,32 @@ function UnassignedJobCard({
       }}
       title={job.title}
     >
-      <div className="allocation-job-field">{job.customerAlias}</div>
-      <div className="allocation-job-field">{job.district}</div>
-      <div className="allocation-job-field">{job.projectField1}</div>
-      <div className="allocation-job-field">{job.projectField2}</div>
-      <div className="allocation-job-field">{job.projectField3}</div>
-      <div className="allocation-job-time">{job.time}</div>
+      <div className="unassigned-job-primary">{primaryLine}</div>
+      {secondaryLine ? <div className="unassigned-job-secondary">{secondaryLine}</div> : null}
     </button>
   );
 }
 
-function PlayIcon() {
+function KeyboardIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M8 5v14l11-7z" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" />
+    </svg>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
     </svg>
   );
 }

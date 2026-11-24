@@ -2,14 +2,13 @@
 export const JOB_MATRIX_WIDTH_PX = 950;
 export const JOB_MATRIX_HEIGHT_PX = 600;
 
-/** Schedule panel column widths (§4.9.2.5). */
+/** Schedule panel: seven equal day columns fill available width. */
 export const SCHEDULE_WEEKDAY_COLUMN_WIDTH_PX = 100;
-export const SCHEDULE_WEEKEND_COLUMN_WIDTH_PX = 60;
-export const SCHEDULE_PANEL_MIN_WIDTH_PX =
-  SCHEDULE_WEEKDAY_COLUMN_WIDTH_PX * 5 + SCHEDULE_WEEKEND_COLUMN_WIDTH_PX * 2;
+export const SCHEDULE_WEEKEND_COLUMN_WIDTH_PX = 100;
+export const SCHEDULE_PANEL_MIN_WIDTH_PX = 0;
 
 export const JOB_MATRIX_UNASSIGNED_PANEL_WIDTH_PX = 220;
-export const JOB_MATRIX_STENOTYPIST_PANEL_WIDTH_PX = 240;
+export const JOB_MATRIX_STENOTYPIST_PANEL_WIDTH_PX = 520;
 
 /** Client-defined characters per transcript page for M2. */
 export const CHARACTERS_PER_PAGE_CONSTANT = 2000;
@@ -36,3 +35,27 @@ export const MATRIX_METRIC_KEYS = [
 ] as const;
 
 export type MatrixMetricKey = (typeof MATRIX_METRIC_KEYS)[number];
+
+/**
+ * ASTRAEA stenotypist-list columns for the Job Matrix.
+ * Values are sourced from computed m1–m9 metrics where a mapping exists.
+ */
+export const ALLOCATION_METRIC_COLUMNS = [
+  { key: 'ly', labelKey: 'colLy', source: 'm1' },
+  { key: 'py', labelKey: 'colPy', source: 'm2' },
+  { key: 'pya', labelKey: 'colPya', source: null },
+  { key: 'by', labelKey: 'colBy', source: 'm3' },
+  { key: 'b14', labelKey: 'colB14', source: 'm4' },
+  { key: 'bm', labelKey: 'colBm', source: 'm5' },
+  { key: 'am', labelKey: 'colAm', source: 'm6' },
+  { key: 'ctd', labelKey: 'colCtd', source: 'm8' },
+  { key: 'pp', labelKey: 'colPp', source: 'm7' },
+  { key: 'pch', labelKey: 'colPch', source: null },
+  { key: 'pap', labelKey: 'colPap', source: null },
+  { key: 'dl', labelKey: 'colDl', source: null },
+  { key: 'ncd', labelKey: 'colNcd', source: null },
+  { key: 'dla', labelKey: 'colDla', source: null },
+  { key: 't14', labelKey: 'colT14', source: 'm9' },
+] as const;
+
+export type AllocationMetricColumnKey = (typeof ALLOCATION_METRIC_COLUMNS)[number]['key'];
