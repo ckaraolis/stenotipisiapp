@@ -3,6 +3,7 @@ import {
   ensureCollectionFile,
   readCollection,
   writeCollection,
+  writeCollectionAsync,
 } from './collectionStore.js';
 import { findCustomerById, listCustomerFieldValues, listCustomerRecords } from './customers.js';
 import { findUserByUsername, listUsers } from './db.js';
@@ -458,11 +459,63 @@ function normalizeImportRow(raw = {}) {
   };
 }
 
+function buildUserLookup() {
+  const byId = new Map();
+  const byUsername = new Map();
+  for (const user of listUsers()) {
+    byId.set(user.id, user);
+    if (user.username) {
+      byUsername.set(String(user.username).trim().toLowerCase(), user);
+    }
+  }
+  return { byId, byUsername };
+}
+
+function resolveUserIdsFromLabelsWithLookup(labels, lookup) {
+  const ids = [];
+  const missing = [];
+  for (const label of normalizeUserIds(labels)) {
+    const byId = lookup.byId.get(label);
+    if (byId) {
+      ids.push(byId.id);
+      continue;
+    }
+    const byUsername = lookup.byUsername.get(label.trim().toLowerCase());
+    if (byUsername) {
+      ids.push(byUsername.id);
+      continue;
+    }
+    missing.push(label);
+  }
+  return { userIds: [...new Set(ids)], missing };
+}
+
+function findCustomerForImportWithList(customerNameOrAlias, customers) {
+  const needle = normalizeCompare(customerNameOrAlias);
+  if (!needle) return null;
+  const exact =
+    customers.find((customer) => normalizeCompare(customer.name) === needle) ||
+    customers.find((customer) => normalizeCompare(customer.alias) === needle);
+  if (exact) return exact;
+  if (needle.length < 6) return null;
+  return (
+    customers.find((customer) => {
+      const name = normalizeCompare(customer.name);
+      return name.startsWith(needle) || needle.startsWith(name);
+    }) || null
+  );
+}
+
+function mappingKey(customerId, fieldValue, validityFrom) {
+  return `${customerId}::${normalizeCompare(fieldValue)}::${validityFrom}`;
+}
+
 /**
  * Import mappings from Excel (ASTRAEA Customer Fields To Users export).
  * Matching key: customer + fieldValue + validityFrom.
+ * Mutates in memory and persists once so bulk imports do not time out / race.
  */
-export function importCustomerFieldUserMappings(rows) {
+export async function importCustomerFieldUserMappings(rows) {
   const list = Array.isArray(rows) ? rows : [];
   const summary = {
     created: 0,
@@ -470,6 +523,26 @@ export function importCustomerFieldUserMappings(rows) {
     skipped: 0,
     errors: [],
   };
+
+  const customers = listCustomerRecords();
+  const userLookup = buildUserLookup();
+  const fieldValueIdCache = new Map();
+  const resolveFieldValueId = (customerId, fieldValue) => {
+    const cacheKey = `${customerId}::${normalizeCompare(fieldValue)}`;
+    if (fieldValueIdCache.has(cacheKey)) return fieldValueIdCache.get(cacheKey);
+    const id = findFieldValueId(customerId, fieldValue);
+    fieldValueIdCache.set(cacheKey, id);
+    return id;
+  };
+
+  const data = readMappingsFile();
+  const mappings = Array.isArray(data.mappings) ? [...data.mappings] : [];
+  const indexByKey = new Map();
+  mappings.forEach((item, index) => {
+    indexByKey.set(mappingKey(item.customerId, item.fieldValue, item.validityFrom), index);
+  });
+
+  const now = new Date().toISOString();
 
   list.forEach((rawRow, index) => {
     const rowNumber = index + 2;
@@ -479,7 +552,7 @@ export function importCustomerFieldUserMappings(rows) {
       return;
     }
 
-    const customer = findCustomerForImport(row.customer);
+    const customer = findCustomerForImportWithList(row.customer, customers);
     if (!customer) {
       summary.errors.push({
         row: rowNumber,
@@ -506,7 +579,7 @@ export function importCustomerFieldUserMappings(rows) {
       return;
     }
 
-    const resolvedUsers = resolveUserIdsFromLabels(row.users);
+    const resolvedUsers = resolveUserIdsFromLabelsWithLookup(row.users, userLookup);
     if (resolvedUsers.missing.length > 0 || resolvedUsers.userIds.length === 0) {
       summary.errors.push({
         row: rowNumber,
@@ -517,49 +590,42 @@ export function importCustomerFieldUserMappings(rows) {
       return;
     }
 
-    const payload = {
-      customerId: customer.id,
-      fieldName: row.fieldName || customer.field2Name || '',
-      fieldValue: row.fieldValue,
-      userIds: resolvedUsers.userIds,
-      validityFrom,
-    };
+    const fieldValue = row.fieldValue;
+    const key = mappingKey(customer.id, fieldValue, validityFrom);
+    const existingIndex = indexByKey.get(key);
 
-    const data = readMappingsFile();
-    const existing = (data.mappings ?? []).find(
-      (item) =>
-        item.customerId === customer.id &&
-        normalizeCompare(item.fieldValue) === normalizeCompare(row.fieldValue) &&
-        item.validityFrom === validityFrom,
-    );
-
-    if (existing) {
-      const result = updateCustomerFieldUserMapping(existing.id, payload);
-      if (result.errors) {
-        summary.errors.push({
-          row: rowNumber,
-          message: result.errors[0],
-          detail: row.fieldValue,
-        });
-        summary.skipped += 1;
-        return;
-      }
+    if (existingIndex !== undefined) {
+      const current = mappings[existingIndex];
+      mappings[existingIndex] = {
+        ...current,
+        customerId: customer.id,
+        fieldName: row.fieldName || customer.field2Name || current.fieldName || '',
+        fieldValue,
+        fieldValueId: resolveFieldValueId(customer.id, fieldValue),
+        userIds: resolvedUsers.userIds,
+        validityFrom,
+        updatedAt: now,
+      };
       summary.updated += 1;
       return;
     }
 
-    const result = createCustomerFieldUserMapping(payload);
-    if (result.errors) {
-      summary.errors.push({
-        row: rowNumber,
-        message: result.errors[0],
-        detail: row.fieldValue,
-      });
-      summary.skipped += 1;
-      return;
-    }
+    const mapping = {
+      id: generateMappingId(),
+      customerId: customer.id,
+      fieldName: row.fieldName || customer.field2Name || '',
+      fieldValue,
+      fieldValueId: resolveFieldValueId(customer.id, fieldValue),
+      userIds: resolvedUsers.userIds,
+      validityFrom,
+      createdAt: now,
+      updatedAt: now,
+    };
+    indexByKey.set(key, mappings.length);
+    mappings.push(mapping);
     summary.created += 1;
   });
 
+  await writeCollectionAsync('customerFieldsToUsers', { mappings });
   return summary;
 }

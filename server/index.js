@@ -1804,7 +1804,7 @@ app.put('/api/customer-fields-to-users/records/:id', (req, res) => {
   res.json(result.mapping);
 });
 
-app.post('/api/customer-fields-to-users/import', (req, res) => {
+app.post('/api/customer-fields-to-users/import', async (req, res) => {
   const actor = requireProjectsCustomerFields(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
@@ -1820,8 +1820,13 @@ app.post('/api/customer-fields-to-users/import', (req, res) => {
     return;
   }
 
-  const summary = importCustomerFieldUserMappings(rows);
-  res.json(summary);
+  try {
+    const summary = await importCustomerFieldUserMappings(rows);
+    res.json(summary);
+  } catch (error) {
+    console.error('[customer-fields-to-users/import] Failed:', error);
+    res.status(500).json({ errors: ['customerFieldUserImportError'] });
+  }
 });
 
 app.delete('/api/customer-fields-to-users/records/:id', (req, res) => {

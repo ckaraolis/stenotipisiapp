@@ -102,7 +102,18 @@ export async function importCustomerFieldUserRows(
     headers: authHeaders(),
     body: JSON.stringify({ rows }),
   });
-  const data = (await response.json()) as CustomerFieldUserImportResult | { errors: string[] };
+  const raw = await response.text();
+  let data: CustomerFieldUserImportResult | { errors: string[] };
+  try {
+    data = JSON.parse(raw) as CustomerFieldUserImportResult | { errors: string[] };
+  } catch {
+    throw new Error(
+      JSON.stringify({
+        errors: ['customerFieldUserImportError'],
+        detail: raw.slice(0, 200) || `HTTP ${response.status}`,
+      }),
+    );
+  }
   if (!response.ok) {
     throw new Error(JSON.stringify(data));
   }
