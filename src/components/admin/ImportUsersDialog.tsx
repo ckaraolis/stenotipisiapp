@@ -11,16 +11,14 @@ interface ImportUsersDialogProps {
   onImported: (summary: UserImportResult) => void;
 }
 
+/** Minimal columns for test imports; Email / phones can be filled later via Edit. */
 const TEMPLATE_HEADERS = [
-  'Username',
   'Full Name',
-  'Email',
-  'Roles',
-  'Status',
+  'Username',
   'Customer',
-  'Contact Phone',
-  'Mobile Phone',
   'Language',
+  'Status',
+  'Role',
 ];
 
 function parseImportError(message: string, t: (key: TranslationKey) => string): string {
@@ -46,8 +44,8 @@ export default function ImportUsersDialog({ onClose, onImported }: ImportUsersDi
   const handleDownloadTemplate = () => {
     const worksheet = XLSX.utils.aoa_to_sheet([
       TEMPLATE_HEADERS,
-      ['ΜΑΚ', 'Μάριος Κοφτερός', '', 'stenotypist', 'Active', '', '', '', 'el'],
-      ['ΤΑΛΑ', 'Ν. Ταλαρίδου', '', 'stenotypist', 'Active', '', '', '', 'el'],
+      ['Μάριος Κοφτερός', 'ΜΑΚ', '', 'el', 'Active', 'stenotypist'],
+      ['Ν. Ταλαρίδου', 'ΤΑΛΑ', '', 'el', 'Active', 'stenotypist'],
     ]);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');

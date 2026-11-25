@@ -1469,7 +1469,7 @@ export const translations = {
     usersSubtitle: 'View user accounts, roles, and status.',
     importUsersTitle: 'Import Users from Excel',
     importUsersHint:
-      'Upload an Excel export from the old system. Matching is done by Username/Alias. Missing email becomes username@imported.local. Default role is stenotypist. Enrollment emails are not sent during import.',
+      'Minimal columns for testing: Full Name, Username, Customer, Language, Status, Role. Email and phones are optional — missing email becomes username@imported.local so you can fill details later. Matching uses Username. Default role is stenotypist (or transcript_owner when a customer is set). Enrollment emails are not sent.',
     userImportRowsReady: '{count} rows ready',
     userImportEmptyFile: 'The selected file has no user rows.',
     userImportParseError: 'Could not read the Excel file.',
@@ -3149,7 +3149,7 @@ export const translations = {
     usersSubtitle: 'Προβολή λογαριασμών χρηστών, ρόλων και κατάστασης.',
     importUsersTitle: 'Εισαγωγή Χρηστών από Excel',
     importUsersHint:
-      'Ανεβάστε αρχείο Excel από το παλιό σύστημα. Η αντιστοίχιση γίνεται με Username/Ψευδώνυμο. Αν λείπει email γίνεται username@imported.local. Προεπιλεγμένος ρόλος: stenotypist. Δεν αποστέλλονται email εγγραφής κατά την εισαγωγή.',
+      'Ελάχιστες στήλες για δοκιμή: Full Name, Username, Customer, Language, Status, Role. Email και τηλέφωνα είναι προαιρετικά — αν λείπει email γίνεται username@imported.local ώστε να συμπληρώσετε αργότερα. Η αντιστοίχιση γίνεται με Username. Προεπιλεγμένος ρόλος: stenotypist (ή transcript_owner αν υπάρχει πελάτης). Δεν αποστέλλονται email εγγραφής.',
     userImportRowsReady: '{count} γραμμές έτοιμες',
     userImportEmptyFile: 'Το επιλεγμένο αρχείο δεν έχει γραμμές χρηστών.',
     userImportParseError: 'Αδυναμία ανάγνωσης του αρχείου Excel.',

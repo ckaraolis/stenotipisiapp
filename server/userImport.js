@@ -127,10 +127,12 @@ function normalizeImportRow(raw = {}) {
 }
 
 /**
- * Import users from Excel (ASTRAEA-style exports).
+ * Import users from Excel (ASTRAEA-style / minimal test sheets).
+ * Required: Username. Useful columns: Full Name, Customer, Language, Status, Role.
  * Matching key: username/alias (case-insensitive).
- * Missing email becomes {username}@imported.local. Default role: stenotypist
- * (or transcript_owner when a customer is set). Enrollment emails are not sent.
+ * Missing email becomes {username}@imported.local so Email/phones can be filled later.
+ * Default role: stenotypist (or transcript_owner when a customer is set).
+ * Enrollment emails are not sent.
  */
 export function importUsers(rows) {
   const list = Array.isArray(rows) ? rows : [];
