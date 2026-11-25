@@ -1,4 +1,5 @@
 import { listCustomerRecords } from './customers.js';
+import { writeCollectionAsync } from './collectionStore.js';
 import {
   createUser,
   findUserByUsername,
@@ -133,8 +134,10 @@ function normalizeImportRow(raw = {}) {
  * Missing email becomes {username}@imported.local so Email/phones can be filled later.
  * Default role: stenotypist (or transcript_owner when a customer is set).
  * Enrollment emails are not sent.
+ *
+ * Persists once at the end so bulk imports cannot lose rows to concurrent Supabase upserts.
  */
-export function importUsers(rows) {
+export async function importUsers(rows) {
   const list = Array.isArray(rows) ? rows : [];
   const summary = {
     created: 0,
@@ -143,6 +146,8 @@ export function importUsers(rows) {
     errors: [],
   };
 
+  // Apply creates/updates through the normal APIs (updates in-memory cache each time),
+  // then force a single awaited persist of the final users collection.
   list.forEach((rawRow, index) => {
     const rowNumber = index + 2;
     const row = normalizeImportRow(rawRow);
@@ -233,6 +238,12 @@ export function importUsers(rows) {
     }
     summary.created += 1;
   });
+
+  // One final awaited upsert of whatever is now in the users cache.
+  // read via findUserByUsername path already wrote cache; re-read and persist async.
+  const { readCollection } = await import('./collectionStore.js');
+  const usersData = readCollection('users', { users: [] });
+  await writeCollectionAsync('users', usersData);
 
   return summary;
 }

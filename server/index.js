@@ -4497,7 +4497,7 @@ app.post('/api/users', async (req, res) => {
   res.status(201).json(result.user);
 });
 
-app.post('/api/users/import', (req, res) => {
+app.post('/api/users/import', async (req, res) => {
   const actor = requireSuperAdminUsers(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
@@ -4513,7 +4513,14 @@ app.post('/api/users/import', (req, res) => {
     return;
   }
 
-  const summary = importUsers(rows);
+  let summary;
+  try {
+    summary = await importUsers(rows);
+  } catch (error) {
+    console.error('[users/import] Failed to persist imported users:', error);
+    res.status(500).json({ errors: ['userImportError'] });
+    return;
+  }
 
   recordAuditEntry({
     actor,

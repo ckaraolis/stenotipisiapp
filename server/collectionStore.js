@@ -13,6 +13,10 @@ export const DB_DIR = isVercelRuntime()
 const cache = new Map();
 /** @type {Set<string>} */
 const pendingPersists = new Set();
+/** @type {Map<string, number>} */
+const persistGenerations = new Map();
+/** @type {Map<string, Promise<void>>} */
+const persistChains = new Map();
 let hydrated = false;
 let hydratePromise = null;
 
@@ -62,8 +66,45 @@ export async function hydrateFromSupabase({ force = false } = {}) {
 export function resetCollectionCache() {
   cache.clear();
   pendingPersists.clear();
+  persistGenerations.clear();
+  persistChains.clear();
   hydrated = false;
   hydratePromise = null;
+}
+
+/**
+ * Queue a persist that always writes the latest cache snapshot.
+ * Prevents older in-flight upserts from overwriting newer bulk imports.
+ */
+function enqueuePersist(collectionName) {
+  const generation = (persistGenerations.get(collectionName) ?? 0) + 1;
+  persistGenerations.set(collectionName, generation);
+  pendingPersists.add(collectionName);
+
+  const previous = persistChains.get(collectionName) ?? Promise.resolve();
+  const next = previous
+    .catch(() => {
+      // Keep the chain alive after a failed persist.
+    })
+    .then(async () => {
+      // Drain until this generation is the latest and successfully written.
+      while (pendingPersists.has(collectionName)) {
+        const generationAtStart = persistGenerations.get(collectionName) ?? 0;
+        const payload = cache.get(collectionName);
+        if (payload === undefined) {
+          pendingPersists.delete(collectionName);
+          return;
+        }
+        await persistCollection(collectionName, payload);
+        if ((persistGenerations.get(collectionName) ?? 0) === generationAtStart) {
+          pendingPersists.delete(collectionName);
+          return;
+        }
+      }
+    });
+
+  persistChains.set(collectionName, next);
+  return next;
 }
 
 function localPathFor(collectionName) {
@@ -111,15 +152,10 @@ export function writeCollection(collectionName, data) {
 
   if (useRemoteStore()) {
     cache.set(collectionName, payload);
-    pendingPersists.add(collectionName);
-    // Fire-and-forget; request middleware awaits flushPendingWrites().
-    void persistCollection(collectionName, payload)
-      .then(() => {
-        pendingPersists.delete(collectionName);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    // Serialize remote upserts so bulk imports cannot be overwritten by stale writes.
+    void enqueuePersist(collectionName).catch((error) => {
+      console.error(error);
+    });
     return;
   }
 
@@ -131,8 +167,7 @@ export async function writeCollectionAsync(collectionName, data) {
   const payload = clone(data);
   if (useRemoteStore()) {
     cache.set(collectionName, payload);
-    await persistCollection(collectionName, payload);
-    pendingPersists.delete(collectionName);
+    await enqueuePersist(collectionName);
     return;
   }
   writeCollection(collectionName, payload);
@@ -144,6 +179,11 @@ export async function flushPendingWrites() {
     const names = [...pendingPersists];
     tasks.push(
       ...names.map(async (name) => {
+        const chain = persistChains.get(name);
+        if (chain) {
+          await chain;
+          return;
+        }
         const payload = cache.get(name);
         if (payload === undefined) {
           pendingPersists.delete(name);
