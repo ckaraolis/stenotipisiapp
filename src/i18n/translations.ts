@@ -254,7 +254,7 @@ export const translations = {
     roleCustomer: 'Customer',
     roleStenotypist: 'Stenotypist',
     roleStenographer: 'Stenographer',
-    roleTranscriptOwner: 'TRANSCRIPT OWNER',
+    roleTranscriptOwner: 'Transcript Owner',
     roleReconciliator: 'Reconciliator',
     roleAccountant: 'Accountant',
     roleDistrictAdmin: 'District Admin',
