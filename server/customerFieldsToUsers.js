@@ -74,8 +74,8 @@ function ymdFromParts(year, month, day) {
 
 function dateObjectToIso(value) {
   if (!(value instanceof Date) || Number.isNaN(value.getTime())) return '';
-  // Prefer UTC calendar day (Excel/cellDates usually stores UTC midnight).
-  return ymdFromParts(value.getUTCFullYear(), value.getUTCMonth() + 1, value.getUTCDate());
+  // Excel dates from SheetJS are timezone-shifted; use local calendar day.
+  return ymdFromParts(value.getFullYear(), value.getMonth() + 1, value.getDate());
 }
 
 function normalizeValidityFrom(value) {
@@ -415,6 +415,10 @@ function normalizeImportRow(raw = {}) {
       'Valid From',
       'ValidFrom',
       'validityFrom',
+      // ASTRAEA export typo seen in Customer_Fields_to_Users.xlsx
+      'Vality From',
+      'VALITY FROM',
+      'ValityFrom',
       'Validity Date',
       'Valid From Date',
       'Applicable Date From',
@@ -427,15 +431,18 @@ function normalizeImportRow(raw = {}) {
     );
     if (direct !== undefined) return direct;
 
-    // Soft match: any header that looks like a validity/from date column.
+    // Soft match: any header that looks like a validity/from date column
+    // (includes the ASTRAEA "VALITY FROM" typo).
     const soft = entries.find(([header, value]) => {
       if (!isPresentImportValue(value)) return false;
       const key = headerKey(header);
       return (
         key.includes('validityfrom') ||
         key.includes('validfrom') ||
+        key.includes('valityfrom') ||
         key.includes('applicabledatefrom') ||
         (key.includes('validity') && key.includes('date')) ||
+        (key.includes('vality') && key.includes('from')) ||
         (key.includes('ισχυ') && key.includes('απο'))
       );
     });

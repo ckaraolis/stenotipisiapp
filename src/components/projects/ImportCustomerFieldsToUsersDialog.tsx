@@ -58,35 +58,25 @@ export default function ImportCustomerFieldsToUsersDialog({
 
     try {
       const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+      // cellDates:false + dateNF keeps Excel calendar days as DD/MM/YYYY (avoids TZ shifts).
+      const workbook = XLSX.read(buffer, { type: 'array', cellDates: false });
       const sheetName = workbook.SheetNames[0];
       if (!sheetName) {
         setError(t('customerFieldUserImportEmptyFile'));
         return;
       }
       const sheet = workbook.Sheets[sheetName];
-      // Keep raw cell values (Date / Excel serial) so Validity From is not lost to locale formatting.
-      const parsed = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      const parsed = XLSX.utils.sheet_to_json<CustomerFieldUserImportRow>(sheet, {
         defval: '',
-        raw: true,
+        raw: false,
+        dateNF: 'dd/mm/yyyy',
       });
       if (parsed.length === 0) {
         setError(t('customerFieldUserImportEmptyFile'));
         return;
       }
-      const rowsForImport = parsed.map((row) => {
-        const next: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(row)) {
-          if (value instanceof Date && !Number.isNaN(value.getTime())) {
-            next[key] = value.toISOString().slice(0, 10);
-          } else {
-            next[key] = value;
-          }
-        }
-        return next as CustomerFieldUserImportRow;
-      });
       setFileName(file.name);
-      setRows(rowsForImport);
+      setRows(parsed);
     } catch {
       setError(t('customerFieldUserImportParseError'));
     }
