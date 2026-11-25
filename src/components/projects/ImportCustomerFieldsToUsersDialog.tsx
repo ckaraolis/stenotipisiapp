@@ -65,16 +65,28 @@ export default function ImportCustomerFieldsToUsersDialog({
         return;
       }
       const sheet = workbook.Sheets[sheetName];
-      const parsed = XLSX.utils.sheet_to_json<CustomerFieldUserImportRow>(sheet, {
+      // Keep raw cell values (Date / Excel serial) so Validity From is not lost to locale formatting.
+      const parsed = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
         defval: '',
-        raw: false,
+        raw: true,
       });
       if (parsed.length === 0) {
         setError(t('customerFieldUserImportEmptyFile'));
         return;
       }
+      const rowsForImport = parsed.map((row) => {
+        const next: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(row)) {
+          if (value instanceof Date && !Number.isNaN(value.getTime())) {
+            next[key] = value.toISOString().slice(0, 10);
+          } else {
+            next[key] = value;
+          }
+        }
+        return next as CustomerFieldUserImportRow;
+      });
       setFileName(file.name);
-      setRows(parsed);
+      setRows(rowsForImport);
     } catch {
       setError(t('customerFieldUserImportParseError'));
     }

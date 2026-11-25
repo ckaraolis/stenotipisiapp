@@ -55,9 +55,32 @@ function excelSerialToIso(serial) {
   return date.toISOString().slice(0, 10);
 }
 
+function ymdFromParts(year, month, day) {
+  const y = Number(year);
+  const m = Number(month);
+  const d = Number(day);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '';
+  if (m < 1 || m > 12 || d < 1 || d > 31) return '';
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (
+    date.getUTCFullYear() !== y ||
+    date.getUTCMonth() !== m - 1 ||
+    date.getUTCDate() !== d
+  ) {
+    return '';
+  }
+  return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+function dateObjectToIso(value) {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return '';
+  // Prefer UTC calendar day (Excel/cellDates usually stores UTC midnight).
+  return ymdFromParts(value.getUTCFullYear(), value.getUTCMonth() + 1, value.getUTCDate());
+}
+
 function normalizeValidityFrom(value) {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
+  if (value instanceof Date) {
+    return dateObjectToIso(value);
   }
   if (typeof value === 'number' && Number.isFinite(value)) {
     const fromSerial = excelSerialToIso(value);
@@ -73,16 +96,19 @@ function normalizeValidityFrom(value) {
   }
 
   const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
-  if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+  if (ymd) {
+    const iso = ymdFromParts(ymd[1], ymd[2], ymd[3]);
+    if (iso) return iso;
+  }
 
-  const dmy = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})(?:\s|$|T)/.exec(`${text} `);
-  if (dmy) {
-    const day = dmy[1].padStart(2, '0');
-    const month = dmy[2].padStart(2, '0');
-    const year = expandTwoDigitYear(dmy[3]);
-    if (year && Number(month) >= 1 && Number(month) <= 12 && Number(day) >= 1 && Number(day) <= 31) {
-      return `${year}-${month}-${day}`;
-    }
+  // DD/MM/YYYY (Cyprus/EU) first; fall back to MM/DD/YYYY for US-formatted Excel exports.
+  const slash = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})(?:\s|$|T)/.exec(`${text} `);
+  if (slash) {
+    const year = expandTwoDigitYear(slash[3]);
+    const dmy = ymdFromParts(year, slash[2], slash[1]);
+    if (dmy) return dmy;
+    const mdy = ymdFromParts(year, slash[1], slash[2]);
+    if (mdy) return mdy;
   }
 
   return '';
@@ -352,32 +378,76 @@ function findCustomerForImport(customerNameOrAlias) {
   );
 }
 
+function headerKey(value) {
+  return String(value ?? '')
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '');
+}
+
+function isPresentImportValue(value) {
+  if (value === undefined || value === null) return false;
+  if (value instanceof Date) return !Number.isNaN(value.getTime());
+  if (typeof value === 'number') return Number.isFinite(value);
+  return String(value).trim() !== '';
+}
+
 function normalizeImportRow(raw = {}) {
+  const entries = Object.entries(raw ?? {});
+
   const get = (...keys) => {
     for (const key of keys) {
-      if (raw[key] !== undefined && raw[key] !== null && String(raw[key]).trim() !== '') {
-        return raw[key];
-      }
+      if (isPresentImportValue(raw[key])) return raw[key];
     }
-    const entries = Object.entries(raw);
     for (const key of keys) {
-      const needle = String(key).trim().toLowerCase().replace(/[\s_]+/g, '');
-      const match = entries.find(
-        ([header]) => String(header).trim().toLowerCase().replace(/[\s_]+/g, '') === needle,
-      );
-      if (match && match[1] !== undefined && match[1] !== null && String(match[1]).trim() !== '') {
-        return match[1];
-      }
+      const needle = headerKey(key);
+      const match = entries.find(([header]) => headerKey(header) === needle);
+      if (match && isPresentImportValue(match[1])) return match[1];
     }
     return undefined;
   };
 
+  const getValidityFrom = () => {
+    const direct = get(
+      'Validity From',
+      'ValidityFrom',
+      'Valid From',
+      'ValidFrom',
+      'validityFrom',
+      'Validity Date',
+      'Valid From Date',
+      'Applicable Date From',
+      'ApplicableDateFrom',
+      'From Date',
+      'Date From',
+      'Date',
+      'Ισχύς Από',
+      'Ισχύει Από',
+    );
+    if (direct !== undefined) return direct;
+
+    // Soft match: any header that looks like a validity/from date column.
+    const soft = entries.find(([header, value]) => {
+      if (!isPresentImportValue(value)) return false;
+      const key = headerKey(header);
+      return (
+        key.includes('validityfrom') ||
+        key.includes('validfrom') ||
+        key.includes('applicabledatefrom') ||
+        (key.includes('validity') && key.includes('date')) ||
+        (key.includes('ισχυ') && key.includes('απο'))
+      );
+    });
+    return soft?.[1];
+  };
+
   return {
-    customer: normalizeText(get('Customer', 'Customer Name', 'customer', 'customerName')),
-    fieldName: normalizeText(get('Field Name', 'FieldName', 'fieldName', 'Field')),
-    fieldValue: normalizeText(get('Field Value', 'FieldValue', 'fieldValue', 'Value')),
-    users: normalizeText(get('Users', 'User', 'users', 'User Alias', 'Aliases')),
-    validityFrom: get('Validity From', 'ValidityFrom', 'Valid From', 'validityFrom', 'Date'),
+    customer: normalizeText(get('Customer', 'Customer Name', 'customer', 'customerName', 'Πελάτης')),
+    fieldName: normalizeText(get('Field Name', 'FieldName', 'fieldName', 'Field', 'Όνομα Πεδίου')),
+    fieldValue: normalizeText(get('Field Value', 'FieldValue', 'fieldValue', 'Value', 'Τιμή Πεδίου')),
+    users: normalizeText(get('Users', 'User', 'users', 'User Alias', 'Aliases', 'Χρήστες')),
+    validityFrom: getValidityFrom(),
   };
 }
 

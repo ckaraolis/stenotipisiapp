@@ -975,7 +975,7 @@ export const translations = {
     deleteCustomerFieldUserMessage: 'Are you sure you want to delete {name}?',
     importCustomerFieldsToUsersTitle: 'Import Customer Fields to Users from Excel',
     importCustomerFieldsToUsersHint:
-      'Upload an Excel export from the old system. Matching is done by Customer + Field Value + Validity From. Users are matched by username/alias.',
+      'Upload an Excel export from the old system. Matching is done by Customer + Field Value + Validity From. Dates can be DD/MM/YYYY, MM/DD/YYYY, or Excel date cells. Users are matched by username/alias.',
     customerFieldUserImportRowsReady: '{count} rows ready',
     customerFieldUserImportEmptyFile: 'The selected file has no mapping rows.',
     customerFieldUserImportParseError: 'Could not read the Excel file.',
@@ -2645,7 +2645,7 @@ export const translations = {
     deleteCustomerFieldUserMessage: 'Είστε βέβαιοι ότι θέλετε να διαγράψετε το {name};',
     importCustomerFieldsToUsersTitle: 'Εισαγωγή Πεδίων Πελάτη σε Χρήστες από Excel',
     importCustomerFieldsToUsersHint:
-      'Ανεβάστε αρχείο Excel από το παλιό σύστημα. Η αντιστοίχιση γίνεται με Πελάτη + Τιμή Πεδίου + Ισχύς Από. Οι χρήστες αντιστοιχίζονται με ψευδώνυμο.',
+      'Ανεβάστε αρχείο Excel από το παλιό σύστημα. Η αντιστοίχιση γίνεται με Πελάτη + Τιμή Πεδίου + Ισχύς Από. Οι ημερομηνίες μπορεί να είναι ΗΗ/ΜΜ/ΕΕΕΕ, ΜΜ/ΗΗ/ΕΕΕΕ ή κελιά ημερομηνίας Excel. Οι χρήστες αντιστοιχίζονται με ψευδώνυμο.',
     customerFieldUserImportRowsReady: '{count} γραμμές έτοιμες',
     customerFieldUserImportEmptyFile: 'Το επιλεγμένο αρχείο δεν έχει γραμμές αντιστοίχισης.',
     customerFieldUserImportParseError: 'Αδυναμία ανάγνωσης του αρχείου Excel.',
