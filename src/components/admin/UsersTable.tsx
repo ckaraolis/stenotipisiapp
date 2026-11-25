@@ -285,18 +285,15 @@ export default function UsersTable() {
           <div className="filters-row">
             <label className="filter-select">
               <select
-                value={customerFilter}
+                value={statusFilter}
                 onChange={(e) => {
-                  setCustomerFilter(e.target.value);
+                  setStatusFilter(e.target.value as UserStatus | '');
                   resetPage();
                 }}
               >
-                <option value="">{t('allCustomers')}</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
+                <option value="">{t('allStatuses')}</option>
+                <option value="active">{t('statusActive')}</option>
+                <option value="inactive">{t('statusInactive')}</option>
               </select>
             </label>
 
@@ -319,15 +316,18 @@ export default function UsersTable() {
 
             <label className="filter-select">
               <select
-                value={statusFilter}
+                value={customerFilter}
                 onChange={(e) => {
-                  setStatusFilter(e.target.value as UserStatus | '');
+                  setCustomerFilter(e.target.value);
                   resetPage();
                 }}
               >
-                <option value="">{t('allStatuses')}</option>
-                <option value="active">{t('statusActive')}</option>
-                <option value="inactive">{t('statusInactive')}</option>
+                <option value="">{t('allCustomers')}</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
