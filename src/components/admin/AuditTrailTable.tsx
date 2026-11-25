@@ -23,6 +23,9 @@ import type {
 import { useLanguage } from '../../i18n/LanguageContext';
 import AuditTrailDetailsForm from './AuditTrailDetailsForm';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 type DateRangePreset = 'today' | 'custom';
 
@@ -183,8 +186,7 @@ export default function AuditTrailTable() {
             <>
               <label className="filter-field">
                 <span>{t('dateFrom')}</span>
-                <input
-                  type="date"
+                <DateInput
                   value={dateFrom}
                   onChange={(event) => {
                     setDateFrom(event.target.value);
@@ -194,8 +196,7 @@ export default function AuditTrailTable() {
               </label>
               <label className="filter-field">
                 <span>{t('dateTo')}</span>
-                <input
-                  type="date"
+                <DateInput
                   value={dateTo}
                   onChange={(event) => {
                     setDateTo(event.target.value);

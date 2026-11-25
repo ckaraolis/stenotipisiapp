@@ -11,6 +11,9 @@ import type { TravellingTimePayload } from '../../types/travellingTime';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface TravellingTimeDetailsFormProps {
   mode: 'create' | 'edit';
@@ -238,9 +241,8 @@ export default function TravellingTimeDetailsForm({
             <label className="profile-label" htmlFor="travelling-time-validity-from">
               {t('validityFrom')} *
             </label>
-            <input
+            <DateInput
               id="travelling-time-validity-from"
-              type="date"
               className="profile-input"
               value={form.validityFrom}
               onChange={(event) => updateField('validityFrom', event.target.value)}

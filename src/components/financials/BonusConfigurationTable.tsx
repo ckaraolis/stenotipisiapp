@@ -19,6 +19,9 @@ import { formatDateDisplay } from '../../utils/dateFormat';
 import BonusConfigurationForm from './BonusConfigurationForm';
 import DeleteBonusConfigurationDialog from './DeleteBonusConfigurationDialog';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 20;
 
@@ -185,8 +188,7 @@ export default function BonusConfigurationTable() {
             </label>
             <label className="filter-select">
               <span>{t('applicableDateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={applicableDateFrom}
                 onChange={(event) => {
                   setApplicableDateFrom(event.target.value);
@@ -196,8 +198,7 @@ export default function BonusConfigurationTable() {
             </label>
             <label className="filter-select">
               <span>{t('applicableDateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={applicableDateTo}
                 onChange={(event) => {
                   setApplicableDateTo(event.target.value);

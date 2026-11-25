@@ -3,6 +3,9 @@ import { mockAudioRemuneration } from '../../data/mockFinancials';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 10;
 
@@ -44,11 +47,11 @@ export default function AudioRemunerationTable() {
             <FilterSelect label={t('allAudioTranscribers')} />
             <label className="date-field">
               <span>{t('dateFrom')}</span>
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <DateInput value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </label>
             <label className="date-field">
               <span>{t('dateTo')}</span>
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <DateInput value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </label>
             <div className="filters-actions">
               <input

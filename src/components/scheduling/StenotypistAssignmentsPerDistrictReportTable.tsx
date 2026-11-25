@@ -13,6 +13,9 @@ import '../../styles/projects.css';
 import '../../styles/profile.css';
 import '../../styles/financials.css';
 import '../../styles/scheduling-reports.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 50;
 
@@ -126,8 +129,7 @@ export default function StenotypistAssignmentsPerDistrictReportTable() {
         <div className="filters-row">
           <label className="filter-select">
             <span>{t('dateFrom')}</span>
-            <input
-              type="date"
+            <DateInput
               value={dateFrom}
               onChange={(event) => {
                 setDateFrom(event.target.value);
@@ -137,8 +139,7 @@ export default function StenotypistAssignmentsPerDistrictReportTable() {
           </label>
           <label className="filter-select">
             <span>{t('dateTo')}</span>
-            <input
-              type="date"
+            <DateInput
               value={dateTo}
               onChange={(event) => {
                 setDateTo(event.target.value);

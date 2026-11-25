@@ -8,6 +8,9 @@ import type { PublicHolidayPayload } from '../../types/publicHoliday';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface PublicHolidayDetailsFormProps {
   mode: 'create' | 'edit';
@@ -154,9 +157,8 @@ export default function PublicHolidayDetailsForm({
             <label className="profile-label" htmlFor="public-holiday-date">
               {t('holidayDate')} *
             </label>
-            <input
+            <DateInput
               id="public-holiday-date"
-              type="date"
               className="profile-input"
               value={form.date}
               onChange={(event) => updateField('date', event.target.value)}

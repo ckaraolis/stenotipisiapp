@@ -14,6 +14,9 @@ import { formatDateDisplay } from '../../utils/dateFormat';
 import DeletePenaltyConfigurationDialog from './DeletePenaltyConfigurationDialog';
 import PenaltyConfigurationForm from './PenaltyConfigurationForm';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 20;
 
@@ -143,8 +146,7 @@ export default function PenaltyConfigurationTable() {
           <div className="filters-row">
             <label className="filter-select">
               <span>{t('applicableDateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={applicableDateFrom}
                 onChange={(event) => {
                   setApplicableDateFrom(event.target.value);
@@ -155,8 +157,7 @@ export default function PenaltyConfigurationTable() {
             </label>
             <label className="filter-select">
               <span>{t('applicableDateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={applicableDateTo}
                 onChange={(event) => {
                   setApplicableDateTo(event.target.value);

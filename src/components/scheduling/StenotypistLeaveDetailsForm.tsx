@@ -21,6 +21,9 @@ import { formatDateTimeDisplay } from '../../utils/dateFormat';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface StenotypistLeaveDetailsFormProps {
   mode: 'create' | 'edit';
@@ -250,9 +253,8 @@ export default function StenotypistLeaveDetailsForm({
             <label className="profile-label" htmlFor="leave-date-from">
               {t('dateFrom')} *
             </label>
-            <input
+            <DateInput
               id="leave-date-from"
-              type="date"
               className="profile-input"
               value={form.dateFrom}
               onChange={(event) => updateField('dateFrom', event.target.value)}
@@ -261,9 +263,8 @@ export default function StenotypistLeaveDetailsForm({
             <label className="profile-label" htmlFor="leave-date-to">
               {t('dateTo')} *
             </label>
-            <input
+            <DateInput
               id="leave-date-to"
-              type="date"
               className="profile-input"
               value={form.dateTo}
               onChange={(event) => updateField('dateTo', event.target.value)}

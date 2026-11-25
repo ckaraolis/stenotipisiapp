@@ -12,6 +12,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/dashboard.css';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 function formatRatio(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
@@ -87,8 +90,7 @@ export default function TranscriptsAnalysisReportTable() {
           </label>
           <label className="filter-field">
             <span className="sr-only">{t('dateFrom')}</span>
-            <input
-              type="date"
+            <DateInput
               className="filter-input"
               value={dateFrom}
               onChange={(event) => setDateFrom(event.target.value)}
@@ -96,8 +98,7 @@ export default function TranscriptsAnalysisReportTable() {
           </label>
           <label className="filter-field">
             <span className="sr-only">{t('dateTo')}</span>
-            <input
-              type="date"
+            <DateInput
               className="filter-input"
               value={dateTo}
               onChange={(event) => setDateTo(event.target.value)}

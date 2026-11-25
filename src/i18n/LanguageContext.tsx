@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { translations, type Language, type TranslationKey } from './translations';
 
 interface LanguageContextValue {
@@ -16,6 +16,11 @@ function getInitialLanguage(): Language {
   return stored === 'el' ? 'el' : 'en';
 }
 
+function documentLangFor(language: Language): string {
+  // Day-first locales for native controls / screen readers (Cyprus / EU).
+  return language === 'el' ? 'el-GR' : 'en-GB';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
 
@@ -23,6 +28,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
     localStorage.setItem(STORAGE_KEY, lang);
   };
+
+  useEffect(() => {
+    document.documentElement.lang = documentLangFor(language);
+  }, [language]);
 
   const value = useMemo(
     () => ({

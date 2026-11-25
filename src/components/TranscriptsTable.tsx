@@ -40,6 +40,9 @@ import PublishTranscriptDialog from './transcripts/PublishTranscriptDialog';
 import SubmitEditedTranscriptWorkflow from './transcripts/SubmitEditedTranscriptWorkflow';
 import SubmitReviewedTranscriptWorkflow from './transcripts/SubmitReviewedTranscriptWorkflow';
 import TranscriptReportDialog from './transcripts/TranscriptReportDialog';
+import DateInput from './common/DateInput';
+
+
 
 const PAGE_SIZE = 20;
 const AUTO_REFRESH_MS = 60_000;
@@ -456,8 +459,7 @@ export default function TranscriptsTable({
         <div className="filters-row">
           <label className="date-field">
             <span>{t('dateFrom')}</span>
-            <input
-              type="date"
+            <DateInput
               value={dateFrom}
               onChange={(event) => {
                 setDateFrom(event.target.value);
@@ -467,8 +469,7 @@ export default function TranscriptsTable({
           </label>
           <label className="date-field">
             <span>{t('dateTo')}</span>
-            <input
-              type="date"
+            <DateInput
               value={dateTo}
               onChange={(event) => {
                 setDateTo(event.target.value);

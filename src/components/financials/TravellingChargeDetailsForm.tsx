@@ -17,6 +17,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
 import '../../styles/workflow-wizard.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface TravellingChargeDetailsFormProps {
   mode: 'create' | 'edit';
@@ -240,9 +243,8 @@ export default function TravellingChargeDetailsForm({
             <label className="profile-label" htmlFor="travelling-charge-validity-from">
               {t('validFrom')} *
             </label>
-            <input
+            <DateInput
               id="travelling-charge-validity-from"
-              type="date"
               className="profile-input"
               value={form.validityFrom}
               onChange={(event) =>

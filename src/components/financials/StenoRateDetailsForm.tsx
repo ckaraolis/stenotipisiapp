@@ -11,6 +11,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface StenoRateDetailsFormProps {
   mode: 'create' | 'edit';
@@ -439,9 +442,8 @@ export default function StenoRateDetailsForm({
               <label className="profile-label" htmlFor="steno-rate-validity">
                 {t('validityFrom')}
               </label>
-              <input
+              <DateInput
                 id="steno-rate-validity"
-                type="date"
                 className="profile-input"
                 value={form.validityFrom}
                 onChange={(event) => updateField('validityFrom', event.target.value)}

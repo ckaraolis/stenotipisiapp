@@ -4,6 +4,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface FinancialRatesTableProps {
   titleKey: TranslationKey;
@@ -43,11 +46,11 @@ export default function FinancialRatesTable({
             <FilterSelect label={t('allCustomers')} />
             <label className="date-field">
               <span>{t('dateFrom')}</span>
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <DateInput value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </label>
             <label className="date-field">
               <span>{t('dateTo')}</span>
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <DateInput value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </label>
             <div className="filters-actions">
               <input

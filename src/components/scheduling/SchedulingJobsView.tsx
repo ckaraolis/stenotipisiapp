@@ -37,6 +37,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/scheduling.css';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface SchedulingJobsViewProps {
   jobType: 'steno' | 'audio' | 'caption';
@@ -406,8 +409,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
             <div className="filters-row">
               <label className="date-field">
                 <span>{t('dateFrom')}</span>
-                <input
-                  type="date"
+                <DateInput
                   value={dateFrom}
                   onChange={(e) => {
                     setDateFrom(e.target.value);
@@ -417,8 +419,7 @@ export default function SchedulingJobsView({ jobType }: SchedulingJobsViewProps)
               </label>
               <label className="date-field">
                 <span>{t('dateTo')}</span>
-                <input
-                  type="date"
+                <DateInput
                   value={dateTo}
                   onChange={(e) => {
                     setDateTo(e.target.value);

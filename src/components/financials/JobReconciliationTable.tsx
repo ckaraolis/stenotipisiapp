@@ -27,6 +27,9 @@ import { canAccessJobReconciliationModule } from '../../config/permissions';
 import { useLanguage } from '../../i18n/LanguageContext';
 import JobReconciliationForm from './JobReconciliationForm';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 50;
 
@@ -168,8 +171,7 @@ export default function JobReconciliationTable() {
           <div className="filters-row">
             <label className="filter-select">
               <span>{t('dateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateFrom}
                 onChange={(event) => {
                   setDateFrom(event.target.value);
@@ -179,8 +181,7 @@ export default function JobReconciliationTable() {
             </label>
             <label className="filter-select">
               <span>{t('dateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateTo}
                 onChange={(event) => {
                   setDateTo(event.target.value);

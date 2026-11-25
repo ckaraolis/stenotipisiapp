@@ -52,6 +52,9 @@ import StenotypistLeaveDetailsForm from './StenotypistLeaveDetailsForm';
 import { formatDateDisplay } from '../../utils/dateFormat';
 import '../../styles/job-allocation.css';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 type MatrixFormMode =
   | 'closed'
@@ -388,8 +391,7 @@ export default function JobAllocationGrid() {
               </button>
               <label className="allocation-calendar-label">
                 <span className="allocation-calendar-text">{t('calendar')}</span>
-                <input
-                  type="date"
+                <DateInput
                   className="allocation-date-picker"
                   value={centerDateKey}
                   onChange={(e) => {
@@ -931,8 +933,7 @@ function UnassignedJobsPanel({
         </label>
         <label className="unassigned-filter-field unassigned-filter-date">
           <span>{t('dateFrom')}</span>
-          <input
-            type="date"
+          <DateInput
             value={dateFrom}
             onChange={(e) => {
               dateRangeUserSet.current = true;
@@ -942,8 +943,7 @@ function UnassignedJobsPanel({
         </label>
         <label className="unassigned-filter-field unassigned-filter-date">
           <span>{t('dateTo')}</span>
-          <input
-            type="date"
+          <DateInput
             value={dateTo}
             onChange={(e) => {
               dateRangeUserSet.current = true;

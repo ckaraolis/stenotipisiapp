@@ -23,6 +23,9 @@ import type { ProformaProcessGroup, ProformaProcessItemType } from '../../types/
 import type { JobStatus } from '../../types/job';
 import { useLanguage } from '../../i18n/LanguageContext';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PROCESS_JOB_STATUSES: readonly JobStatus[] = ['published', 'reconciled'];
 
@@ -198,16 +201,14 @@ export default function ProformaProcessTable() {
           <div className="filters-row">
             <label className="filter-select">
               <span>{t('dateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateFrom}
                 onChange={(event) => setDateFrom(event.target.value)}
               />
             </label>
             <label className="filter-select">
               <span>{t('dateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateTo}
                 onChange={(event) => setDateTo(event.target.value)}
               />

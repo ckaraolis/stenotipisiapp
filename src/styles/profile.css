@@ -538,3 +538,54 @@
     padding: 20px;
   }
 }
+
+.date-input {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-width: 11rem;
+}
+
+.date-input-text {
+  width: 100%;
+  padding-right: 2rem;
+}
+
+.date-input-native {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border: 0;
+  padding: 0;
+}
+
+.date-input-picker-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.date-input-picker-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.date-input-picker-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

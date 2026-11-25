@@ -15,6 +15,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
 import '../../styles/workflow-wizard.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface PenaltyConfigurationFormProps {
   mode: 'create' | 'edit';
@@ -198,9 +201,8 @@ export default function PenaltyConfigurationForm({
               <label className="profile-label" htmlFor="penalty-valid-from">
                 {t('validFrom')} *
               </label>
-              <input
+              <DateInput
                 id="penalty-valid-from"
-                type="date"
                 className="profile-input"
                 value={form.validFrom}
                 onChange={(event) => {

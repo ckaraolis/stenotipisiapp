@@ -15,6 +15,9 @@ import type {
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface CustomerFieldUserDetailsFormProps {
   mode: 'create' | 'edit';
@@ -258,9 +261,8 @@ export default function CustomerFieldUserDetailsForm({
             <label className="profile-label" htmlFor="cfu-validity-from">
               {t('validityFrom')} *
             </label>
-            <input
+            <DateInput
               id="cfu-validity-from"
-              type="date"
               className="profile-input"
               value={form.validityFrom}
               onChange={(event) => updateField('validityFrom', event.target.value)}

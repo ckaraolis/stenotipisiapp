@@ -22,6 +22,9 @@ import { formatDateDisplay } from '../../utils/dateFormat';
 import DeleteTravelExpenseDialog from './DeleteTravelExpenseDialog';
 import TravelExpenseConfigurationForm from './TravelExpenseConfigurationForm';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 20;
 
@@ -180,8 +183,7 @@ export default function TravelExpenseConfigurationTable() {
           <div className="filters-row">
             <label className="filter-select">
               <span>{t('applicableDateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={applicableDateFrom}
                 onChange={(event) => {
                   setApplicableDateFrom(event.target.value);
@@ -192,8 +194,7 @@ export default function TravelExpenseConfigurationTable() {
             </label>
             <label className="filter-select">
               <span>{t('applicableDateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={applicableDateTo}
                 onChange={(event) => {
                   setApplicableDateTo(event.target.value);

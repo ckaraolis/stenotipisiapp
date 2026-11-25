@@ -14,6 +14,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import ProformaItemsView from './ProformaItemsView';
 import VoidProformaDialog from './VoidProformaDialog';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 50;
 
@@ -137,8 +140,7 @@ export default function ProformasTable({ embedded = false }: ProformasTableProps
           <div className="filters-row">
             <label className="filter-select">
               <span>{t('dateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateFrom}
                 onChange={(event) => {
                   setDateFrom(event.target.value);
@@ -148,8 +150,7 @@ export default function ProformasTable({ embedded = false }: ProformasTableProps
             </label>
             <label className="filter-select">
               <span>{t('dateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateTo}
                 onChange={(event) => {
                   setDateTo(event.target.value);

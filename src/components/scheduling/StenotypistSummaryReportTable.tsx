@@ -21,6 +21,9 @@ import {
 } from '../../utils/jobMatrixDates';
 import '../../styles/scheduling-reports.css';
 import '../../styles/job-allocation.css';
+import DateInput from '../common/DateInput';
+
+
 
 const metricLabelKeys: Record<MatrixMetricKey, TranslationKey> = {
   m1: 'colM1',
@@ -99,8 +102,7 @@ export default function StenotypistSummaryReportTable() {
           </button>
           <label className="report-date-label">
             <span className="sr-only">{t('reportReferenceDate')}</span>
-            <input
-              type="date"
+            <DateInput
               className="report-date-input"
               value={centerDateKey}
               onChange={(event) => {

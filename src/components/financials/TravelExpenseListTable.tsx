@@ -25,6 +25,9 @@ import type {
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getAuthUser } from '../../utils/auth';
 import '../../styles/financials.css';
+import DateInput from '../common/DateInput';
+
+
 
 type DateRangePreset = 'previousMonth' | 'custom';
 
@@ -178,8 +181,7 @@ export default function TravelExpenseListTable() {
             <>
               <label className="filter-field">
                 <span>{t('dateFrom')}</span>
-                <input
-                  type="date"
+                <DateInput
                   value={dateFrom}
                   onChange={(event) => {
                     setDateFrom(event.target.value);
@@ -189,8 +191,7 @@ export default function TravelExpenseListTable() {
               </label>
               <label className="filter-field">
                 <span>{t('dateTo')}</span>
-                <input
-                  type="date"
+                <DateInput
                   value={dateTo}
                   onChange={(event) => {
                     setDateTo(event.target.value);

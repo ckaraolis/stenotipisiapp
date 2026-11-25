@@ -35,6 +35,9 @@ import { getAuthUser } from '../../utils/auth';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface JobDetailsFormProps {
   mode: 'create' | 'edit';
@@ -523,9 +526,8 @@ export default function JobDetailsForm({
             <label className="profile-label" htmlFor="job-date">
               {t('date')} *
             </label>
-            <input
+            <DateInput
               id="job-date"
-              type="date"
               className="profile-input"
               value={form.date}
               onChange={(event) => updateField('date', event.target.value)}

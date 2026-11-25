@@ -11,6 +11,9 @@ import StenoRateDetailsForm from './StenoRateDetailsForm';
 import '../../styles/financials.css';
 import '../../styles/profile.css';
 import '../../styles/projects.css';
+import DateInput from '../common/DateInput';
+
+
 
 const PAGE_SIZE = 20;
 
@@ -294,8 +297,7 @@ export default function StenoRatesTable() {
             </label>
             <label className="date-field">
               <span>{t('dateFrom')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateFrom}
                 onChange={(event) => {
                   setDateFrom(event.target.value);
@@ -305,8 +307,7 @@ export default function StenoRatesTable() {
             </label>
             <label className="date-field">
               <span>{t('dateTo')}</span>
-              <input
-                type="date"
+              <DateInput
                 value={dateTo}
                 onChange={(event) => {
                   setDateTo(event.target.value);

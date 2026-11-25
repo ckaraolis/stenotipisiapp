@@ -16,6 +16,9 @@ import type { TravelExpenseConfigurationPayload } from '../../types/travelExpens
 import { useLanguage } from '../../i18n/LanguageContext';
 import '../../styles/profile.css';
 import '../../styles/workflow-wizard.css';
+import DateInput from '../common/DateInput';
+
+
 
 interface TravelExpenseConfigurationFormProps {
   mode: 'create' | 'edit';
@@ -221,9 +224,8 @@ export default function TravelExpenseConfigurationForm({
               <label className="profile-label" htmlFor="travel-expense-valid-from">
                 {t('validFrom')} *
               </label>
-              <input
+              <DateInput
                 id="travel-expense-valid-from"
-                type="date"
                 className="profile-input"
                 value={form.validFrom}
                 onChange={(event) => {
