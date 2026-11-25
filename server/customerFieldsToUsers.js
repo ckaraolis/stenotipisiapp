@@ -187,23 +187,49 @@ export function ensureCustomerFieldsToUsersDatabase() {
   migrateCustomerFieldsToUsers();
 }
 
-function resolveCustomerName(customerId) {
+function buildCustomerNameLookup() {
+  const byId = new Map();
+  // Read raw customers once — avoid findCustomerById per mapping row.
+  const data = readCollection('customers', { customers: [] });
+  for (const customer of data.customers ?? []) {
+    if (customer?.id) byId.set(customer.id, customer.name ?? '');
+  }
+  return byId;
+}
+
+function buildUsernameLookup() {
+  const byId = new Map();
+  // Read raw users once — listUsers()/toPublicUser is far too heavy for list rendering.
+  const data = readCollection('users', { users: [] });
+  for (const user of data.users ?? []) {
+    if (user?.id) byId.set(user.id, user.username ?? user.alias ?? '');
+  }
+  return byId;
+}
+
+function resolveCustomerName(customerId, customerNames = null) {
+  if (customerNames) return customerNames.get(customerId) ?? '';
   return findCustomerById(customerId)?.name ?? '';
 }
 
-function resolveUserAliases(userIds) {
+function resolveUserAliases(userIds, usernamesById = null) {
+  if (usernamesById) {
+    return (userIds ?? [])
+      .map((id) => usernamesById.get(id) ?? '')
+      .filter(Boolean);
+  }
   const users = listUsers();
-  return userIds
+  return (userIds ?? [])
     .map((id) => users.find((user) => user.id === id)?.username ?? '')
     .filter(Boolean);
 }
 
-function toPublicMapping(row) {
-  const userAliases = resolveUserAliases(row.userIds ?? []);
+function toPublicMapping(row, lookups = null) {
+  const userAliases = resolveUserAliases(row.userIds ?? [], lookups?.usernamesById ?? null);
   return {
     id: row.id,
     customerId: row.customerId,
-    customerName: resolveCustomerName(row.customerId),
+    customerName: resolveCustomerName(row.customerId, lookups?.customerNames ?? null),
     fieldName: row.fieldName ?? '',
     fieldValue: row.fieldValue ?? '',
     fieldValueId: row.fieldValueId ?? null,
@@ -218,8 +244,13 @@ function toPublicMapping(row) {
 
 export function listCustomerFieldUserMappings() {
   const data = readMappingsFile();
+  // Build lookups once — toPublicMapping used to call listUsers()/findCustomerById per row.
+  const lookups = {
+    customerNames: buildCustomerNameLookup(),
+    usernamesById: buildUsernameLookup(),
+  };
   return (data.mappings ?? [])
-    .map((row) => toPublicMapping(row))
+    .map((row) => toPublicMapping(row, lookups))
     .sort((a, b) => {
       const customerCompare = a.customerName.localeCompare(b.customerName, undefined, {
         sensitivity: 'base',
