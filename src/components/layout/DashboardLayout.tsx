@@ -10,6 +10,8 @@ import {
   isTranscriptsPath,
   isProjectsPath,
   isFinancialsPath,
+  isInvoicingPath,
+  isReportsPath,
   isAdministrationPath,
   type NavItem,
 } from '../../config/navigation';
@@ -28,6 +30,8 @@ const groupPathChecks: Record<NavGroupKey, (pathname: string) => boolean> = {
   transcripts: isTranscriptsPath,
   projects: isProjectsPath,
   financials: isFinancialsPath,
+  invoicing: isInvoicingPath,
+  reports: isReportsPath,
   administration: isAdministrationPath,
 };
 
@@ -87,6 +91,8 @@ export default function DashboardLayout() {
     transcripts: isTranscriptsPath(location.pathname),
     projects: isProjectsPath(location.pathname),
     financials: isFinancialsPath(location.pathname),
+    invoicing: isInvoicingPath(location.pathname),
+    reports: isReportsPath(location.pathname),
     administration: isAdministrationPath(location.pathname),
   });
   const user = getAuthUser();
@@ -101,6 +107,8 @@ export default function DashboardLayout() {
       transcripts: current.transcripts || isTranscriptsPath(location.pathname),
       projects: current.projects || isProjectsPath(location.pathname),
       financials: current.financials || isFinancialsPath(location.pathname),
+      invoicing: current.invoicing || isInvoicingPath(location.pathname),
+      reports: current.reports || isReportsPath(location.pathname),
       administration: current.administration || isAdministrationPath(location.pathname),
     }));
   }, [location.pathname]);
@@ -116,11 +124,15 @@ export default function DashboardLayout() {
         ? `${t('projects')} / ${t(labelKey ?? 'projects')}`
         : isFinancialsPath(location.pathname)
           ? `${t('financials')} / ${t(labelKey ?? 'financials')}`
-          : isAdministrationPath(location.pathname)
-            ? `${t('administration')} / ${t(labelKey ?? 'administration')}`
-            : labelKey
-              ? t(labelKey)
-              : t('appName');
+          : isInvoicingPath(location.pathname)
+            ? `${t('invoicing')} / ${t(labelKey ?? 'invoicing')}`
+            : isReportsPath(location.pathname)
+              ? `${t('reports')} / ${t(labelKey ?? 'reports')}`
+              : isAdministrationPath(location.pathname)
+                ? `${t('administration')} / ${t(labelKey ?? 'administration')}`
+                : labelKey
+                  ? t(labelKey)
+                  : t('appName');
 
   const handleLogout = () => {
     void signOut().then(() => {
@@ -283,6 +295,8 @@ const navIcons: Record<string, ReactNode> = {
   transcripts: <DocumentIcon />,
   projects: <FolderIcon />,
   financials: <ChartIcon />,
+  invoicing: <InvoiceIcon />,
+  reports: <ReportIcon />,
   administration: <SettingsIcon />,
   myProfile: <UserIcon />,
   aboutApp: <InfoIcon />,
@@ -346,6 +360,23 @@ function ChartIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <path d="M3 13h2v8H3v-8zm4-6h2v14H7V7zm4-4h2v18h-2V3zm4 8h2v10h-2V11zm4-6h2v16h-2V5z" />
+    </svg>
+  );
+}
+
+function InvoiceIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3H5c-1.1 0-2 .9-2 2v16l3.5-2 2.5 2 2.5-2 2.5 2 2.5-2 2.5 2 3.5-2V5c0-1.1-.9-2-2-2zm-2 12H7v-2h10v2zm0-4H7V9h10v2zm0-4H7V5h10v2z" />
+    </svg>
+  );
+}
+
+function ReportIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+      <path d="M9 13h2v5H9zm4-3h2v8h-2z" />
     </svg>
   );
 }

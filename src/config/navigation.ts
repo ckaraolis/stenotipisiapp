@@ -33,12 +33,27 @@ export const projectsNavItems: readonly NavItem[] = [
   },
 ];
 
+/** Financials module: rates and bonus/penalty configuration only. */
 export const financialsNavItems: readonly NavItem[] = [
   {
     key: 'stenoRates',
     path: '/financials/steno-rates',
     permission: 'financials.steno_rates',
   },
+  {
+    key: 'bonusConfiguration',
+    path: '/financials/stenotypist-bonus',
+    permission: 'financials.stenotypist_bonus',
+  },
+  {
+    key: 'penaltyConfiguration',
+    path: '/financials/stenotypist-penalty',
+    permission: 'financials.stenotypist_penalty',
+  },
+];
+
+/** Invoicing module: charges, proformas, and expense/bonus lists. */
+export const invoicingNavItems: readonly NavItem[] = [
   {
     key: 'travellingCharges',
     path: '/financials/travelling-charges',
@@ -47,16 +62,10 @@ export const financialsNavItems: readonly NavItem[] = [
   { key: 'reconciliation', path: '/financials/reconciliation', permission: 'financials.reconciliation' },
   { key: 'proformas', path: '/financials/proformas', permission: 'financials.proformas' },
   {
-    key: 'bonusConfiguration',
-    path: '/financials/stenotypist-bonus',
-    permission: 'financials.stenotypist_bonus',
-  },
-  {
     key: 'bonusesList',
     path: '/financials/stenotypist-bonuses',
     permission: 'financials.stenotypist_bonuses',
   },
-  { key: 'penaltyConfiguration', path: '/financials/stenotypist-penalty', permission: 'financials.stenotypist_penalty' },
   {
     key: 'penaltiesList',
     path: '/financials/stenotypist-penalties',
@@ -68,6 +77,10 @@ export const financialsNavItems: readonly NavItem[] = [
     path: '/financials/travel-expense-list',
     permission: 'financials.travel_expense_list',
   },
+];
+
+/** Reports module: financial (and related) reports. */
+export const reportsNavItems: readonly NavItem[] = [
   {
     key: 'stenotypistFinancialsReport',
     path: '/financials/stenotypist-financials-report',
@@ -97,6 +110,12 @@ export const mainNavGroups = [
   { key: 'transcripts' as const, path: '/transcripts/steno', children: transcriptsNavItems },
   { key: 'projects' as const, path: '/projects/list', children: projectsNavItems },
   { key: 'financials' as const, path: '/financials/steno-rates', children: financialsNavItems },
+  { key: 'invoicing' as const, path: '/financials/travelling-charges', children: invoicingNavItems },
+  {
+    key: 'reports' as const,
+    path: '/financials/stenotypist-financials-report',
+    children: reportsNavItems,
+  },
   { key: 'administration' as const, path: '/administration/users', children: administrationNavItems },
 ];
 
@@ -147,8 +166,13 @@ export function getPathLabelKey(pathname: string): NavKey | null {
   }
 
   if (pathname.startsWith('/financials/')) {
-    const match = financialsNavItems.find((item) => item.path === pathname);
-    return match?.key ?? 'financials';
+    const financialMatch = financialsNavItems.find((item) => item.path === pathname);
+    if (financialMatch) return financialMatch.key;
+    const invoicingMatch = invoicingNavItems.find((item) => item.path === pathname);
+    if (invoicingMatch) return invoicingMatch.key;
+    const reportsMatch = reportsNavItems.find((item) => item.path === pathname);
+    if (reportsMatch) return reportsMatch.key;
+    return 'financials';
   }
 
   if (pathname.startsWith('/administration/')) {
@@ -173,7 +197,15 @@ export function isProjectsPath(pathname: string): boolean {
 }
 
 export function isFinancialsPath(pathname: string): boolean {
-  return pathname.startsWith('/financials');
+  return financialsNavItems.some((item) => item.path === pathname);
+}
+
+export function isInvoicingPath(pathname: string): boolean {
+  return invoicingNavItems.some((item) => item.path === pathname);
+}
+
+export function isReportsPath(pathname: string): boolean {
+  return reportsNavItems.some((item) => item.path === pathname);
 }
 
 export function isAdministrationPath(pathname: string): boolean {
