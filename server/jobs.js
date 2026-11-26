@@ -469,7 +469,9 @@ function assertCrossCuttingAction(job, actor, actionId) {
 
 export function listJobStenotypistCandidates() {
   return listUsers()
-    .filter((user) => user.status === 'active' && hasStenotypistEquivalentRole(user))
+    .filter(
+      (user) => user.status === 'active' && normalizeRoles(user).includes('stenotypist'),
+    )
     .map((user) => ({
       id: user.id,
       fullName: user.fullName,
