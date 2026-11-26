@@ -1125,6 +1125,18 @@ export const translations = {
     bonusConfigurationCreatedSuccess: 'Bonus configuration saved successfully.',
     bonusConfigurationUpdatedSuccess: 'Bonus configuration updated successfully.',
     bonusConfigurationSaveError: 'Could not save bonus configuration.',
+    importBonusConfigurationsTitle: 'Import Bonus Configurations',
+    importBonusConfigurationsHint:
+      'Upload an Excel file with Stenotypist, H1, H2, H1B€, H2B€, and Validity From columns. T1, TF%, and PPHF are ignored.',
+    bonusConfigurationImportRowsRequired: 'Import rows are required.',
+    bonusConfigurationImportEmptyFile: 'The selected file has no importable rows.',
+    bonusConfigurationImportParseError: 'Could not read the Excel file.',
+    bonusConfigurationImportError: 'Could not import bonus configurations.',
+    bonusConfigurationImportRowsReady: '{count} rows ready to import.',
+    bonusConfigurationImportSuccess:
+      'Import finished: {created} created, {updated} updated, {skipped} skipped.',
+    bonusConfigurationImportSkipReasons: 'Skipped details: {reasons}',
+    bonusConfigurationImportRowEmpty: 'Row is empty.',
     bonusPerExtraHourEur: 'Bonus Per Extra Hour [€]',
     deleteBonusConfigurationTitle: 'Delete Bonus Configuration',
     deleteBonusConfigurationMessage:
@@ -2854,6 +2866,18 @@ export const translations = {
     bonusConfigurationCreatedSuccess: 'Η ρύθμιση bonus αποθηκεύτηκε επιτυχώς.',
     bonusConfigurationUpdatedSuccess: 'Η ρύθμιση bonus ενημερώθηκε επιτυχώς.',
     bonusConfigurationSaveError: 'Δεν ήταν δυνατή η αποθήκευση της ρύθμισης bonus.',
+    importBonusConfigurationsTitle: 'Εισαγωγή Ρυθμίσεων Bonus',
+    importBonusConfigurationsHint:
+      'Ανεβάστε αρχείο Excel με στήλες Stenotypist, H1, H2, H1B€, H2B€ και Validity From. Τα T1, TF% και PPHF αγνοούνται.',
+    bonusConfigurationImportRowsRequired: 'Απαιτούνται γραμμές εισαγωγής.',
+    bonusConfigurationImportEmptyFile: 'Το επιλεγμένο αρχείο δεν έχει γραμμές για εισαγωγή.',
+    bonusConfigurationImportParseError: 'Δεν ήταν δυνατή η ανάγνωση του αρχείου Excel.',
+    bonusConfigurationImportError: 'Δεν ήταν δυνατή η εισαγωγή ρυθμίσεων bonus.',
+    bonusConfigurationImportRowsReady: '{count} γραμμές έτοιμες για εισαγωγή.',
+    bonusConfigurationImportSuccess:
+      'Η εισαγωγή ολοκληρώθηκε: {created} νέες, {updated} ενημερώσεις, {skipped} παραλείφθηκαν.',
+    bonusConfigurationImportSkipReasons: 'Λεπτομέρειες παραλείψεων: {reasons}',
+    bonusConfigurationImportRowEmpty: 'Η γραμμή είναι κενή.',
     bonusPerExtraHourEur: 'Bonus Ανά Επιπλέον Ώρα [€]',
     deleteBonusConfigurationTitle: 'Διαγραφή Ρύθμισης Bonus',
     deleteBonusConfigurationMessage:

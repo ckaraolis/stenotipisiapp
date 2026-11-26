@@ -34,3 +34,18 @@ export interface StenotypistBonusConfigurationFilters {
   dateFrom?: string;
   dateTo?: string;
 }
+
+export type StenotypistBonusImportRow = Record<string, unknown>;
+
+export interface StenotypistBonusImportError {
+  row: number;
+  message: string;
+  detail?: string;
+}
+
+export interface StenotypistBonusImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: StenotypistBonusImportError[];
+}

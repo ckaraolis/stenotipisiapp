@@ -10,34 +10,31 @@ import {
   formatBonusHours,
   parseBonusConfigurationDeleteError,
 } from '../../config/stenotypistBonus';
+import { downloadBonusConfigurationsImportTemplate } from '../../config/stenotypistBonusImport';
 import { formatRoleLabels, getRoleLabelKey, STENOTYPIST_EQUIVALENT_ROLES } from '../../config/roles';
 import type {
   StenotypistBonusCandidate,
   StenotypistBonusConfigurationRecord,
+  StenotypistBonusImportResult,
 } from '../../types/stenotypistBonus';
 import { useLanguage } from '../../i18n/LanguageContext';
+import type { TranslationKey } from '../../i18n/translations';
 import { formatDateDisplay } from '../../utils/dateFormat';
 import BonusConfigurationForm from './BonusConfigurationForm';
 import DeleteBonusConfigurationDialog from './DeleteBonusConfigurationDialog';
+import ImportBonusConfigurationsDialog from './ImportBonusConfigurationsDialog';
 import '../../styles/financials.css';
 import '../../styles/profile.css';
+import '../../styles/projects.css';
+import '../../styles/dashboard.css';
 import DateInput from '../common/DateInput';
 
 const PAGE_SIZE = 20;
 
 type FormMode = 'closed' | 'create' | 'edit';
 
-function getTodayDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 export default function BonusConfigurationTable() {
   const { t } = useLanguage();
-  const today = getTodayDate();
 
   const [configurations, setConfigurations] = useState<StenotypistBonusConfigurationRecord[]>([]);
   const [stenotypists, setStenotypists] = useState<StenotypistBonusCandidate[]>([]);
@@ -46,17 +43,21 @@ export default function BonusConfigurationTable() {
   const [success, setSuccess] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [stenotypistUserId, setStenotypistUserId] = useState('');
-  const [applicableDateFrom, setApplicableDateFrom] = useState(today);
-  const [applicableDateTo, setApplicableDateTo] = useState(today);
+  // Empty by default so imported historical configurations remain visible.
+  const [applicableDateFrom, setApplicableDateFrom] = useState('');
+  const [applicableDateTo, setApplicableDateTo] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [formMode, setFormMode] = useState<FormMode>('closed');
   const [selectedConfigurationId, setSelectedConfigurationId] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StenotypistBonusConfigurationRecord | null>(
     null,
   );
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  const resetPage = () => setPage(1);
 
   const loadConfigurations = useCallback(async () => {
     setLoading(true);
@@ -130,6 +131,32 @@ export default function BonusConfigurationTable() {
     void loadConfigurations();
   };
 
+  const handleImported = (summary: StenotypistBonusImportResult) => {
+    setShowImport(false);
+    let message = t('bonusConfigurationImportSuccess')
+      .replace('{created}', String(summary.created))
+      .replace('{updated}', String(summary.updated))
+      .replace('{skipped}', String(summary.skipped));
+    if (summary.errors?.length) {
+      const samples = summary.errors
+        .slice(0, 3)
+        .map((item) => {
+          const reason = t(item.message as TranslationKey);
+          return `row ${item.row}: ${reason === item.message ? item.message : reason}${
+            item.detail ? ` (${item.detail})` : ''
+          }`;
+        })
+        .join('; ');
+      message = `${message} ${t('bonusConfigurationImportSkipReasons').replace(
+        '{reasons}',
+        samples,
+      )}`;
+    }
+    setSuccess(message);
+    setError('');
+    void loadConfigurations();
+  };
+
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -148,22 +175,34 @@ export default function BonusConfigurationTable() {
 
   return (
     <div className="financials-page">
-      <div className="page-header financials-header">
+      <div className="page-header financials-header customers-header">
         <div>
           <h1 className="page-title">{t('bonusConfiguration')}</h1>
           <p className="page-subtitle">{t('stenotypistBonusSubtitle')}</p>
         </div>
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() => {
-            setFormMode('create');
-            setSelectedConfigurationId(null);
-            setSuccess('');
-          }}
-        >
-          {t('addNew')}
-        </button>
+        <div className="customers-header-actions">
+          <button
+            type="button"
+            className="profile-cancel-btn"
+            onClick={downloadBonusConfigurationsImportTemplate}
+          >
+            {t('downloadImportTemplate')}
+          </button>
+          <button type="button" className="profile-cancel-btn" onClick={() => setShowImport(true)}>
+            {t('importFromExcel')}
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setFormMode('create');
+              setSelectedConfigurationId(null);
+              setSuccess('');
+            }}
+          >
+            {t('addNew')}
+          </button>
+        </div>
       </div>
 
       <div className="financials-panel">
@@ -178,7 +217,7 @@ export default function BonusConfigurationTable() {
                 value={roleFilter}
                 onChange={(event) => {
                   setRoleFilter(event.target.value);
-                  setPage(1);
+                  resetPage();
                 }}
               >
                 <option value="">{t('allRoles')}</option>
@@ -195,7 +234,7 @@ export default function BonusConfigurationTable() {
                 value={stenotypistUserId}
                 onChange={(event) => {
                   setStenotypistUserId(event.target.value);
-                  setPage(1);
+                  resetPage();
                 }}
               >
                 <option value="">{t('allStenotypists')}</option>
@@ -209,71 +248,72 @@ export default function BonusConfigurationTable() {
                 ))}
               </select>
             </label>
-            <label className="filter-select">
+            <label className="date-field">
               <span>{t('dateFrom')}</span>
               <DateInput
                 value={applicableDateFrom}
                 onChange={(event) => {
                   setApplicableDateFrom(event.target.value);
-                  setPage(1);
+                  resetPage();
                 }}
               />
             </label>
-            <label className="filter-select">
+            <label className="date-field">
               <span>{t('dateTo')}</span>
               <DateInput
                 value={applicableDateTo}
                 onChange={(event) => {
                   setApplicableDateTo(event.target.value);
-                  setPage(1);
+                  resetPage();
                 }}
               />
             </label>
-            <div className="financials-search">
+            <div className="filters-actions">
               <input
                 type="search"
-                className="profile-input"
-                value={searchQuery}
+                className="search-input"
                 placeholder={t('search')}
+                value={searchQuery}
                 onChange={(event) => {
                   setSearchQuery(event.target.value);
-                  setPage(1);
+                  resetPage();
                 }}
               />
               <button
                 type="button"
-                className="btn-primary financials-refresh-btn"
-                onClick={() => void loadConfigurations()}
-                title={t('refresh')}
+                className="refresh-btn"
                 aria-label={t('refresh')}
+                onClick={() => void loadConfigurations()}
               >
-                ⟳
+                <RefreshIcon />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="table-wrap">
+        <div className="table-wrapper financials-table-wrapper">
           {loading ? (
-            <p>{t('loading')}</p>
+            <div className="profile-message">{t('loading')}</div>
           ) : (
-            <table className="data-table">
+            <table className="financials-table">
               <thead>
                 <tr>
-                  <th>{t('stenotypist')}</th>
+                  <th className="sorted-col">{t('stenotypist')}</th>
                   <th>{t('roles')}</th>
                   <th>{t('bonusH1')}</th>
                   <th>{t('bonusH2')}</th>
                   <th>{t('bonusH1BEur')}</th>
                   <th>{t('bonusH2BEur')}</th>
                   <th>{t('validityFrom')}</th>
-                  <th>{t('actions')}</th>
+                  <th className="actions-col">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={8}>{t('noRecordsFound')}</td>
+                    <td colSpan={8} className="empty-row">
+                      {t('noRecordsFound')}
+                    </td>
                   </tr>
                 ) : (
                   pageRows.map((row) => (
@@ -290,28 +330,28 @@ export default function BonusConfigurationTable() {
                       <td>{formatBonusCurrency(row.h1BonusEur)}</td>
                       <td>{formatBonusCurrency(row.h2BonusEur)}</td>
                       <td>{formatDateDisplay(row.validFrom)}</td>
-                      <td className="table-actions">
-                        <button
-                          type="button"
-                          className="btn-link"
-                          onClick={() => {
-                            setFormMode('edit');
-                            setSelectedConfigurationId(row.id);
-                            setSuccess('');
-                          }}
-                        >
-                          {t('edit')}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-link"
-                          onClick={() => {
-                            setDeleteTarget(row);
-                            setDeleteError('');
-                          }}
-                        >
-                          {t('delete')}
-                        </button>
+                      <td className="actions-col">
+                        <div className="row-actions">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormMode('edit');
+                              setSelectedConfigurationId(row.id);
+                              setSuccess('');
+                            }}
+                          >
+                            {t('edit')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteTarget(row);
+                              setDeleteError('');
+                            }}
+                          >
+                            {t('delete')}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -364,6 +404,13 @@ export default function BonusConfigurationTable() {
         />
       ) : null}
 
+      {showImport ? (
+        <ImportBonusConfigurationsDialog
+          onClose={() => setShowImport(false)}
+          onImported={handleImported}
+        />
+      ) : null}
+
       {deleteTarget ? (
         <DeleteBonusConfigurationDialog
           configuration={deleteTarget}
@@ -377,5 +424,13 @@ export default function BonusConfigurationTable() {
         />
       ) : null}
     </div>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+    </svg>
   );
 }

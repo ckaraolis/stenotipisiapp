@@ -203,6 +203,7 @@ import {
   createBonusConfigurationRecord,
   deleteBonusConfigurationRecord,
   findBonusConfigurationRecordById,
+  importBonusConfigurations,
   listBonusConfigurationRecords,
   listBonusStenotypistCandidates,
   updateBonusConfigurationRecord,
@@ -2543,6 +2544,47 @@ app.get('/api/financials/stenotypist-bonus/:id', (req, res) => {
   }
 
   res.json(result.configuration);
+});
+
+app.post('/api/financials/stenotypist-bonus/import', (req, res) => {
+  const actor = requireFinancialsStenotypistBonus(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.configurations)
+      ? req.body.configurations
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['bonusConfigurationImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importBonusConfigurations(rows, actor);
+  if (summary?.errors && summary.created === undefined) {
+    const status = summary.errors.includes('forbidden') ? 403 : 400;
+    res.status(status).json({ errors: summary.errors });
+    return;
+  }
+
+  recordAuditEntry({
+    actor,
+    module: 'financials',
+    entityName: 'stenotypist_bonus',
+    entityNumber: 'import',
+    entryType: 'updated',
+    entryDetails: {
+      fields: [
+        { field: 'created', before: '', after: String(summary.created ?? 0) },
+        { field: 'updated', before: '', after: String(summary.updated ?? 0) },
+        { field: 'skipped', before: '', after: String(summary.skipped ?? 0) },
+      ],
+    },
+  });
+
+  res.json(summary);
 });
 
 app.post('/api/financials/stenotypist-bonus', (req, res) => {

@@ -504,3 +504,234 @@ export function listBonusStenotypistCandidates(actor) {
     }))
     .sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: 'base' }));
 }
+
+function normalizeImportText(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'string') return value.replace(/^\uFEFF/, '').trim();
+  return String(value).replace(/^\uFEFF/, '').trim();
+}
+
+function normalizeImportMatchKey(value) {
+  return normalizeImportText(value)
+    .toLocaleLowerCase('el-GR')
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function excelSerialToIso(serial) {
+  const numeric = Number(serial);
+  if (!Number.isFinite(numeric) || numeric < 20000 || numeric > 80000) return '';
+  const utcDays = Math.floor(numeric);
+  const date = new Date(Date.UTC(1899, 11, 30) + utcDays * 86400000);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+function expandTwoDigitYear(yearText) {
+  const year = Number.parseInt(yearText, 10);
+  if (!Number.isFinite(year)) return '';
+  if (yearText.length === 4) return String(year);
+  return String(year >= 70 ? 1900 + year : 2000 + year);
+}
+
+function normalizeImportValidityFrom(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const fromSerial = excelSerialToIso(value);
+    if (fromSerial) return fromSerial;
+  }
+
+  const text = normalizeImportText(value);
+  if (!text) return '';
+
+  if (/^\d{5}(?:\.\d+)?$/.test(text)) {
+    const fromSerial = excelSerialToIso(text);
+    if (fromSerial) return fromSerial;
+  }
+
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+  if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+
+  const dmy = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})(?:\s|$|T)/.exec(`${text} `);
+  if (dmy) {
+    const day = dmy[1].padStart(2, '0');
+    const month = dmy[2].padStart(2, '0');
+    const year = expandTwoDigitYear(dmy[3]);
+    if (year && Number(month) >= 1 && Number(month) <= 12 && Number(day) >= 1 && Number(day) <= 31) {
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  return '';
+}
+
+function getImportField(row, keys) {
+  if (!row || typeof row !== 'object') return '';
+  const entries = Object.entries(row);
+  for (const key of keys) {
+    const needle = normalizeImportMatchKey(key);
+    const match = entries.find(([header]) => normalizeImportMatchKey(header) === needle);
+    if (match) return match[1];
+  }
+  return '';
+}
+
+function normalizeBonusImportRow(raw) {
+  return {
+    stenotypist: normalizeImportText(
+      getImportField(raw, [
+        'Stenotypist',
+        'Stenotypist Name',
+        'Full Name',
+        'Name',
+        'Alias',
+        'Username',
+      ]),
+    ),
+    h1: getImportField(raw, ['H1', 'Hours 1', 'Hours1', 'Base Hours']),
+    h2: getImportField(raw, ['H2', 'Hours 2', 'Hours2']),
+    h1BonusEur: getImportField(raw, [
+      'H1B€',
+      'H1B',
+      'H1B Eur',
+      'Bonus Per Extra Hour 1',
+      'Bonus Per Extra Hour',
+    ]),
+    h2BonusEur: getImportField(raw, [
+      'H2B€',
+      'H2B',
+      'H2B Eur',
+      'Bonus Per Extra Hour 2',
+    ]),
+    validFrom: getImportField(raw, ['Validity From', 'Valid From', 'ValidityFrom', 'ValidFrom']),
+  };
+}
+
+function findStenotypistForImport(label) {
+  const raw = normalizeImportText(label);
+  if (!raw) return null;
+
+  const paren = /^(.+?)\s*\(([^)]+)\)\s*$/.exec(raw);
+  const namePart = normalizeImportMatchKey(paren ? paren[1] : raw);
+  const usernamePart = normalizeImportMatchKey(paren ? paren[2] : '');
+  const candidates = listUsers().filter(
+    (user) => user.status === 'active' && normalizeRoles(user).includes('stenotypist'),
+  );
+
+  if (usernamePart) {
+    const byUsername = candidates.find(
+      (user) => normalizeImportMatchKey(user.username) === usernamePart,
+    );
+    if (byUsername) return byUsername;
+  }
+
+  const byExactUsername = candidates.find(
+    (user) => normalizeImportMatchKey(user.username) === namePart,
+  );
+  if (byExactUsername) return byExactUsername;
+
+  const byFullName = candidates.find(
+    (user) => normalizeImportMatchKey(user.fullName) === namePart,
+  );
+  if (byFullName) return byFullName;
+
+  return null;
+}
+
+/**
+ * Import bonus configurations from Excel rows.
+ * Match key: stenotypist + validityFrom. T1 / TF% / PPHF columns are ignored.
+ */
+export function importBonusConfigurations(rows, actor) {
+  const denied = assertBonusConfigurationAccess(actor);
+  if (denied) return denied;
+
+  const list = Array.isArray(rows) ? rows : [];
+  const summary = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: [],
+  };
+
+  list.forEach((raw, index) => {
+    const rowNumber = index + 2;
+    const row = normalizeBonusImportRow(raw);
+    if (
+      !row.stenotypist &&
+      !normalizeImportText(row.validFrom) &&
+      !normalizeImportText(row.h1) &&
+      !normalizeImportText(row.h2)
+    ) {
+      summary.skipped += 1;
+      summary.errors.push({ row: rowNumber, message: 'bonusConfigurationImportRowEmpty' });
+      return;
+    }
+
+    const stenotypist = findStenotypistForImport(row.stenotypist);
+    if (!stenotypist) {
+      summary.skipped += 1;
+      summary.errors.push({
+        row: rowNumber,
+        message: 'bonusConfigurationStenotypistInvalid',
+        detail: row.stenotypist,
+      });
+      return;
+    }
+
+    const validFrom = normalizeImportValidityFrom(row.validFrom);
+    if (!validFrom) {
+      summary.skipped += 1;
+      summary.errors.push({
+        row: rowNumber,
+        message: 'bonusConfigurationValidFromRequired',
+        detail: normalizeImportText(row.validFrom),
+      });
+      return;
+    }
+
+    const payload = {
+      stenotypistUserId: stenotypist.id,
+      h1: row.h1,
+      h2: row.h2,
+      h1BonusEur: row.h1BonusEur,
+      h2BonusEur: row.h2BonusEur,
+      validFrom,
+    };
+
+    const existing = (readBonusConfigurationsFile().configurations ?? [])
+      .map(migrateBonusConfigurationRecord)
+      .find(
+        (configuration) =>
+          configuration.stenotypistUserId === stenotypist.id &&
+          configuration.validFrom === validFrom,
+      );
+
+    if (existing) {
+      const result = updateBonusConfigurationRecord(existing.id, payload, actor);
+      if (result.errors) {
+        summary.skipped += 1;
+        summary.errors.push({ row: rowNumber, message: result.errors[0] });
+        return;
+      }
+      summary.updated += 1;
+      return;
+    }
+
+    const result = createBonusConfigurationRecord(payload, actor);
+    if (result.errors) {
+      summary.skipped += 1;
+      summary.errors.push({ row: rowNumber, message: result.errors[0] });
+      return;
+    }
+    summary.created += 1;
+  });
+
+  return summary;
+}

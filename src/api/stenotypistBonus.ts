@@ -4,6 +4,8 @@ import type {
   StenotypistBonusConfigurationFilters,
   StenotypistBonusConfigurationPayload,
   StenotypistBonusConfigurationRecord,
+  StenotypistBonusImportResult,
+  StenotypistBonusImportRow,
 } from '../types/stenotypistBonus';
 
 async function bonusRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -87,4 +89,13 @@ export async function deleteBonusConfiguration(
       method: 'DELETE',
     },
   );
+}
+
+export async function importBonusConfigurationRows(
+  rows: StenotypistBonusImportRow[],
+): Promise<StenotypistBonusImportResult> {
+  return bonusRequest<StenotypistBonusImportResult>('/api/financials/stenotypist-bonus/import', {
+    method: 'POST',
+    body: JSON.stringify({ rows }),
+  });
 }
