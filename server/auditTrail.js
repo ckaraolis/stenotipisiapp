@@ -576,8 +576,10 @@ export function getStenotypistBonusAuditFieldMap(configuration) {
       configuration.stenotypistUsername ||
       configuration.stenotypistUserId ||
       '',
-    'Base Hours': configuration.baseHours ?? '',
-    'Bonus Per Extra Hour': configuration.bonusPerExtraHour ?? '',
+    H1: configuration.h1 ?? configuration.baseHours ?? '',
+    H2: configuration.h2 ?? '',
+    'H1B€': configuration.h1BonusEur ?? configuration.bonusPerExtraHour ?? '',
+    'H2B€': configuration.h2BonusEur ?? '',
     'Valid From': configuration.validFrom ?? '',
   };
 }

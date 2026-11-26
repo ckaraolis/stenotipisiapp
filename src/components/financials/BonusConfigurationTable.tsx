@@ -5,11 +5,12 @@ import {
   fetchBonusStenotypistCandidates,
 } from '../../api/stenotypistBonus';
 import {
-  formatBonusBaseHours,
   formatBonusConfigurationStenotypistLabel,
-  formatBonusPerExtraHour,
+  formatBonusCurrency,
+  formatBonusHours,
   parseBonusConfigurationDeleteError,
 } from '../../config/stenotypistBonus';
+import { formatRoleLabels, getRoleLabelKey, STENOTYPIST_EQUIVALENT_ROLES } from '../../config/roles';
 import type {
   StenotypistBonusCandidate,
   StenotypistBonusConfigurationRecord,
@@ -19,9 +20,8 @@ import { formatDateDisplay } from '../../utils/dateFormat';
 import BonusConfigurationForm from './BonusConfigurationForm';
 import DeleteBonusConfigurationDialog from './DeleteBonusConfigurationDialog';
 import '../../styles/financials.css';
+import '../../styles/profile.css';
 import DateInput from '../common/DateInput';
-
-
 
 const PAGE_SIZE = 20;
 
@@ -44,9 +44,11 @@ export default function BonusConfigurationTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [stenotypistUserId, setStenotypistUserId] = useState('');
   const [applicableDateFrom, setApplicableDateFrom] = useState(today);
   const [applicableDateTo, setApplicableDateTo] = useState(today);
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [formMode, setFormMode] = useState<FormMode>('closed');
   const [selectedConfigurationId, setSelectedConfigurationId] = useState<string | null>(null);
@@ -91,21 +93,39 @@ export default function BonusConfigurationTable() {
     void loadConfigurations();
   }, [loadConfigurations]);
 
-  const sortedRows = useMemo(
-    () => [...configurations].sort((a, b) => b.validFrom.localeCompare(a.validFrom)),
-    [configurations],
-  );
+  const filteredRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return [...configurations]
+      .filter((row) => {
+        if (roleFilter && !(row.stenotypistRoles ?? []).includes(roleFilter)) return false;
+        if (!query) return true;
+        const label = formatBonusConfigurationStenotypistLabel(
+          row.stenotypistFullName,
+          row.stenotypistUsername,
+        ).toLowerCase();
+        return label.includes(query);
+      })
+      .sort((a, b) => {
+        const nameCmp = a.stenotypistFullName.localeCompare(b.stenotypistFullName, undefined, {
+          sensitivity: 'base',
+        });
+        if (nameCmp !== 0) return nameCmp;
+        return b.validFrom.localeCompare(a.validFrom);
+      });
+  }, [configurations, roleFilter, searchQuery]);
 
-  const totalEntries = sortedRows.length;
+  const totalEntries = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalEntries / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageStart = totalEntries === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const pageEnd = totalEntries === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, totalEntries);
-  const pageRows = sortedRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const handleSaved = (message: string) => {
-    setFormMode('closed');
-    setSelectedConfigurationId(null);
+  const handleSaved = (message: string, options?: { keepOpen?: boolean }) => {
+    if (!options?.keepOpen) {
+      setFormMode('closed');
+      setSelectedConfigurationId(null);
+    }
     setSuccess(message);
     void loadConfigurations();
   };
@@ -125,20 +145,6 @@ export default function BonusConfigurationTable() {
       setDeleting(false);
     }
   };
-
-  if (formMode !== 'closed') {
-    return (
-      <BonusConfigurationForm
-        mode={formMode}
-        configurationId={selectedConfigurationId ?? undefined}
-        onCancel={() => {
-          setFormMode('closed');
-          setSelectedConfigurationId(null);
-        }}
-        onSaved={handleSaved}
-      />
-    );
-  }
 
   return (
     <div className="financials-page">
@@ -167,6 +173,23 @@ export default function BonusConfigurationTable() {
         <div className="filters">
           <div className="filters-row">
             <label className="filter-select">
+              <span>{t('roles')}</span>
+              <select
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">{t('allRoles')}</option>
+                {STENOTYPIST_EQUIVALENT_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {t(getRoleLabelKey(role))}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="filter-select">
               <span>{t('stenotypist')}</span>
               <select
                 value={stenotypistUserId}
@@ -187,7 +210,7 @@ export default function BonusConfigurationTable() {
               </select>
             </label>
             <label className="filter-select">
-              <span>{t('applicableDateFrom')}</span>
+              <span>{t('dateFrom')}</span>
               <DateInput
                 value={applicableDateFrom}
                 onChange={(event) => {
@@ -197,7 +220,7 @@ export default function BonusConfigurationTable() {
               />
             </label>
             <label className="filter-select">
-              <span>{t('applicableDateTo')}</span>
+              <span>{t('dateTo')}</span>
               <DateInput
                 value={applicableDateTo}
                 onChange={(event) => {
@@ -206,6 +229,27 @@ export default function BonusConfigurationTable() {
                 }}
               />
             </label>
+            <div className="financials-search">
+              <input
+                type="search"
+                className="profile-input"
+                value={searchQuery}
+                placeholder={t('search')}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setPage(1);
+                }}
+              />
+              <button
+                type="button"
+                className="btn-primary financials-refresh-btn"
+                onClick={() => void loadConfigurations()}
+                title={t('refresh')}
+                aria-label={t('refresh')}
+              >
+                ⟳
+              </button>
+            </div>
           </div>
         </div>
 
@@ -217,16 +261,19 @@ export default function BonusConfigurationTable() {
               <thead>
                 <tr>
                   <th>{t('stenotypist')}</th>
-                  <th>{t('infoBaseHours')}</th>
-                  <th>{t('bonusPerExtraHourEur')}</th>
-                  <th>{t('validFrom')}</th>
+                  <th>{t('roles')}</th>
+                  <th>{t('bonusH1')}</th>
+                  <th>{t('bonusH2')}</th>
+                  <th>{t('bonusH1BEur')}</th>
+                  <th>{t('bonusH2BEur')}</th>
+                  <th>{t('validityFrom')}</th>
                   <th>{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={5}>{t('noRecordsFound')}</td>
+                    <td colSpan={8}>{t('noRecordsFound')}</td>
                   </tr>
                 ) : (
                   pageRows.map((row) => (
@@ -237,8 +284,11 @@ export default function BonusConfigurationTable() {
                           row.stenotypistUsername,
                         )}
                       </td>
-                      <td>{formatBonusBaseHours(row.baseHours)}</td>
-                      <td>{formatBonusPerExtraHour(row.bonusPerExtraHour)}</td>
+                      <td>{formatRoleLabels(row.stenotypistRoles ?? [], t) || '—'}</td>
+                      <td>{formatBonusHours(row.h1)}</td>
+                      <td>{formatBonusHours(row.h2)}</td>
+                      <td>{formatBonusCurrency(row.h1BonusEur)}</td>
+                      <td>{formatBonusCurrency(row.h2BonusEur)}</td>
                       <td>{formatDateDisplay(row.validFrom)}</td>
                       <td className="table-actions">
                         <button
@@ -301,6 +351,18 @@ export default function BonusConfigurationTable() {
           </div>
         </div>
       </div>
+
+      {formMode !== 'closed' ? (
+        <BonusConfigurationForm
+          mode={formMode}
+          configurationId={selectedConfigurationId ?? undefined}
+          onCancel={() => {
+            setFormMode('closed');
+            setSelectedConfigurationId(null);
+          }}
+          onSaved={handleSaved}
+        />
+      ) : null}
 
       {deleteTarget ? (
         <DeleteBonusConfigurationDialog

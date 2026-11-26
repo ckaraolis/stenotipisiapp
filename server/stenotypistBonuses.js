@@ -2,7 +2,10 @@ import { findUserById, listUsers } from './db.js';
 import { listJobRecords } from './jobs.js';
 import { hasPermission } from './permissions.js';
 import { normalizeRoles } from './roles.js';
-import { resolveBonusConfigurationForStenotypist } from './stenotypistBonus.js';
+import {
+  computeStenotypistBonusAmount,
+  resolveBonusConfigurationForStenotypist,
+} from './stenotypistBonus.js';
 
 function parseTimeToMinutes(time) {
   const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(typeof time === 'string' ? time.trim() : '');
@@ -108,10 +111,7 @@ export function buildMonthlyBonusRows({ actor = null, stenotypistUserId = '', da
     const monthEnd = lastDayOfMonth(group.year, group.month);
     const settings = resolveBonusConfigurationForStenotypist(group.stenotypistUserId, monthEnd);
     const totalHours = roundHours(group.totalHours);
-    const baseHours = settings.baseHours;
-    const extraHours = roundHours(Math.max(0, totalHours - baseHours));
-    const bonusPerExtraHour = settings.bonusPerExtraHour;
-    const bonus = roundMoney(extraHours * bonusPerExtraHour);
+    const computed = computeStenotypistBonusAmount(totalHours, settings);
     const stenotypist = toPublicStenotypist(group.stenotypistUserId);
 
     rows.push({
@@ -122,10 +122,10 @@ export function buildMonthlyBonusRows({ actor = null, stenotypistUserId = '', da
       stenotypistFullName: stenotypist.fullName,
       stenotypistUsername: stenotypist.username,
       totalHours,
-      baseHours,
-      extraHours,
-      bonusPerExtraHour,
-      bonus,
+      baseHours: computed.baseHours,
+      extraHours: computed.extraHours,
+      bonusPerExtraHour: computed.bonusPerExtraHour,
+      bonus: roundMoney(computed.bonus),
     });
   }
 

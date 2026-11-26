@@ -10,7 +10,10 @@ import { listPublicHolidayRecords } from './publicHolidays.js';
 import { validateAttachmentFileName } from './jobSubmissionAttachmentFiles.js';
 import { listTravellingTimeRecords } from './travellingTimes.js';
 import { findUserById } from './db.js';
-import { resolveBonusConfigurationForStenotypist } from './stenotypistBonus.js';
+import {
+  computeStenotypistBonusAmount,
+  resolveBonusConfigurationForStenotypist,
+} from './stenotypistBonus.js';
 import {
   getTranscriptDelayHoursBeyondSla,
   isTranscriptSubmittedLate,
@@ -526,10 +529,11 @@ export function getStenotypistInfoPanel(stenotypistUserId, { period, centerDate 
     .filter((job) => job.date >= monthStartKey && job.date <= anchorDateKey)
     .reduce((total, job) => total + getBilledHours(job), 0);
   const bonusSettings = resolveBonusConfigurationForStenotypist(stenotypistUserId, anchorDateKey);
-  const baseHours = bonusSettings.baseHours;
-  const extraHours = Math.max(0, monthBillableHours - baseHours);
-  const bonusPerExtraHour = bonusSettings.bonusPerExtraHour;
-  const bonus = extraHours * bonusPerExtraHour;
+  const computedBonus = computeStenotypistBonusAmount(monthBillableHours, bonusSettings);
+  const baseHours = computedBonus.baseHours;
+  const extraHours = computedBonus.extraHours;
+  const bonusPerExtraHour = computedBonus.bonusPerExtraHour;
+  const bonus = computedBonus.bonus;
 
   const personalDictionaryEntries = userJobs
     .map((job) => {
