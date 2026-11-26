@@ -510,7 +510,7 @@ function buildScheduleForStenotypist(userId, jobs, leaves, scheduleDayKeys) {
 }
 
 function findAssetByStenotypistId(stenotypistId) {
-  const data = readJson('stenotypistAssets.json', { assets: [] });
+  const data = readCollection('stenotypistAssets', { assets: [] });
   return data.assets?.find((asset) => asset.stenotypistId === stenotypistId) ?? null;
 }
 
@@ -589,12 +589,15 @@ export function getJobMatrix(centerDateInput) {
   const candidates = listJobStenotypistCandidates();
   const stenotypists = candidates.map((candidate) => {
     const user = findUserById(candidate.id);
+    const username = (candidate.username || '').trim();
     return {
       id: candidate.id,
-      alias: candidate.username,
+      alias: username || candidate.fullName || '—',
       fullName: candidate.fullName,
       metrics: computeMetrics(candidate.id, metricContext),
-      info: buildStenotypistInfo(user ?? { id: candidate.id, username: candidate.username }),
+      info: buildStenotypistInfo(
+        user ?? { id: candidate.id, username, fullName: candidate.fullName },
+      ),
       schedule: buildScheduleForStenotypist(candidate.id, jobs, leaves, scheduleDayKeys),
     };
   });

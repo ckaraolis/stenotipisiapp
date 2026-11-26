@@ -475,7 +475,11 @@ export function listJobStenotypistCandidates() {
       fullName: user.fullName,
       username: user.username,
     }))
-    .sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: 'base' }));
+    .sort((a, b) => {
+      const left = (a.username || a.fullName || '').trim();
+      const right = (b.username || b.fullName || '').trim();
+      return left.localeCompare(right, undefined, { sensitivity: 'base' });
+    });
 }
 
 function toPublicUser(userId) {
