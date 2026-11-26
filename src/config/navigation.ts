@@ -52,15 +52,19 @@ export const financialsNavItems: readonly NavItem[] = [
   },
 ];
 
-/** Invoicing module: charges, proformas, and expense/bonus lists. */
+/** Invoicing module: ASTRAEA Invoicing For Steno equivalents (reconciliation + proformas). */
 export const invoicingNavItems: readonly NavItem[] = [
+  { key: 'reconciliation', path: '/financials/reconciliation', permission: 'financials.reconciliation' },
+  { key: 'proformas', path: '/financials/proformas', permission: 'financials.proformas' },
+];
+
+/** Reports module: charges, bonus/penalty lists, travel expenses, and financial reports. */
+export const reportsNavItems: readonly NavItem[] = [
   {
     key: 'travellingCharges',
     path: '/financials/travelling-charges',
     permission: 'financials.travelling_charges',
   },
-  { key: 'reconciliation', path: '/financials/reconciliation', permission: 'financials.reconciliation' },
-  { key: 'proformas', path: '/financials/proformas', permission: 'financials.proformas' },
   {
     key: 'bonusesList',
     path: '/financials/stenotypist-bonuses',
@@ -77,10 +81,6 @@ export const invoicingNavItems: readonly NavItem[] = [
     path: '/financials/travel-expense-list',
     permission: 'financials.travel_expense_list',
   },
-];
-
-/** Reports module: financial (and related) reports. */
-export const reportsNavItems: readonly NavItem[] = [
   {
     key: 'stenotypistFinancialsReport',
     path: '/financials/stenotypist-financials-report',
@@ -110,10 +110,10 @@ export const mainNavGroups = [
   { key: 'transcripts' as const, path: '/transcripts/steno', children: transcriptsNavItems },
   { key: 'projects' as const, path: '/projects/list', children: projectsNavItems },
   { key: 'financials' as const, path: '/financials/steno-rates', children: financialsNavItems },
-  { key: 'invoicing' as const, path: '/financials/travelling-charges', children: invoicingNavItems },
+  { key: 'invoicing' as const, path: '/financials/reconciliation', children: invoicingNavItems },
   {
     key: 'reports' as const,
-    path: '/financials/stenotypist-financials-report',
+    path: '/financials/travelling-charges',
     children: reportsNavItems,
   },
   { key: 'administration' as const, path: '/administration/users', children: administrationNavItems },
