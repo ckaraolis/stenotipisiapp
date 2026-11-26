@@ -1,3 +1,4 @@
+import { formatPenaltyConfigurationStenotypistLabel } from '../../config/stenotypistPenalty';
 import type { StenotypistPenaltyConfigurationRecord } from '../../types/stenotypistPenalty';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { formatDateDisplay } from '../../utils/dateFormat';
@@ -31,10 +32,15 @@ export default function DeletePenaltyConfigurationDialog({
       >
         <h2 id="delete-penalty-configuration-title">{t('deletePenaltyConfigurationTitle')}</h2>
         <p>
-          {t('deletePenaltyConfigurationMessage').replace(
-            '{validFrom}',
-            formatDateDisplay(configuration.validFrom),
-          )}
+          {t('deletePenaltyConfigurationMessage')
+            .replace(
+              '{stenotypist}',
+              formatPenaltyConfigurationStenotypistLabel(
+                configuration.stenotypistFullName,
+                configuration.stenotypistUsername,
+              ),
+            )
+            .replace('{validFrom}', formatDateDisplay(configuration.validFrom))}
         </p>
         {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
         <div className="dialog-actions">

@@ -1206,20 +1206,39 @@ export const translations = {
     penaltyExtraPerHourEur: 'Extra Penalty Per Hour [€]',
     penaltyConfigurationLoadError: 'Could not load penalty configuration records.',
     penaltyConfigurationNotFound: 'Penalty configuration record not found.',
+    penaltyConfigurationStenotypistRequired: 'Stenotypist is required.',
+    penaltyConfigurationStenotypistInvalid: 'Stenotypist is invalid.',
     penaltyConfigurationGracePeriodInvalid: 'Grace period must be a positive whole number of hours.',
     penaltyConfigurationBasePenaltyInvalid: 'Base penalty must be a positive number.',
     penaltyConfigurationExtraPenaltyPerHourInvalid: 'Extra penalty per hour must be a positive number.',
+    penaltyConfigurationTargetHoursInvalid:
+      'Target hours before deadline must be a positive whole number.',
+    penaltyConfigurationPenaltyPerHourLateInvalid:
+      'Penalty per hour late must be a positive number.',
     penaltyConfigurationValidFromRequired: 'Valid from date is required.',
     penaltyConfigurationValidFromDuplicate:
-      'A penalty configuration already exists with the same valid from date.',
+      'A penalty configuration already exists for this stenotypist with the same valid from date.',
+    addNewPenaltyConfiguration: 'Add New Penalty Configuration',
     penaltyConfigurationCreateTitle: 'Penalty Configuration',
     penaltyConfigurationEditTitle: 'Edit Penalty Configuration',
     penaltyConfigurationCreatedSuccess: 'Penalty configuration saved successfully.',
     penaltyConfigurationUpdatedSuccess: 'Penalty configuration updated successfully.',
     penaltyConfigurationSaveError: 'Could not save penalty configuration.',
+    importPenaltyConfigurationsTitle: 'Import Penalty Configurations',
+    importPenaltyConfigurationsHint:
+      'Upload an Excel file with Stenotypist, Target Hours Before Deadline, Penalty Per Hour Late, and Validity From columns.',
+    penaltyConfigurationImportRowsRequired: 'Import rows are required.',
+    penaltyConfigurationImportEmptyFile: 'The selected file has no importable rows.',
+    penaltyConfigurationImportParseError: 'Could not read the Excel file.',
+    penaltyConfigurationImportError: 'Could not import penalty configurations.',
+    penaltyConfigurationImportRowsReady: '{count} rows ready to import.',
+    penaltyConfigurationImportSuccess:
+      'Import finished: {created} created, {updated} updated, {skipped} skipped.',
+    penaltyConfigurationImportSkipReasons: 'Skipped details: {reasons}',
+    penaltyConfigurationImportRowEmpty: 'Row is empty.',
     deletePenaltyConfigurationTitle: 'Delete Penalty Configuration',
     deletePenaltyConfigurationMessage:
-      'Are you sure you want to delete the penalty configuration (valid from {validFrom})?',
+      'Are you sure you want to delete the penalty configuration for {stenotypist} (valid from {validFrom})?',
     penaltyConfigurationDeletedSuccess: 'Penalty configuration deleted successfully.',
     penaltyConfigurationDeleteError: 'Could not delete penalty configuration.',
     penaltyConfigurationReferencedByJob:
@@ -2907,22 +2926,41 @@ export const translations = {
     penaltyExtraPerHourEur: 'Επιπλέον Ποινή Ανά Ώρα [€]',
     penaltyConfigurationLoadError: 'Δεν ήταν δυνατή η φόρτωση εγγραφών ρύθμισης ποινών.',
     penaltyConfigurationNotFound: 'Η εγγραφή ρύθμισης ποινών δεν βρέθηκε.',
+    penaltyConfigurationStenotypistRequired: 'Ο στενογράφος είναι υποχρεωτικός.',
+    penaltyConfigurationStenotypistInvalid: 'Ο στενογράφος δεν είναι έγκυρος.',
     penaltyConfigurationGracePeriodInvalid:
       'Η περίοδος χάριτος πρέπει να είναι θετικός ακέραιος αριθμός ωρών.',
     penaltyConfigurationBasePenaltyInvalid: 'Η βασική ποινή πρέπει να είναι θετικός αριθμός.',
     penaltyConfigurationExtraPenaltyPerHourInvalid:
       'Η επιπλέον ποινή ανά ώρα πρέπει να είναι θετικός αριθμός.',
+    penaltyConfigurationTargetHoursInvalid:
+      'Οι ώρες-στόχος πριν την προθεσμία πρέπει να είναι θετικός ακέραιος αριθμός.',
+    penaltyConfigurationPenaltyPerHourLateInvalid:
+      'Η ποινή ανά ώρα καθυστέρησης πρέπει να είναι θετικός αριθμός.',
     penaltyConfigurationValidFromRequired: 'Η ημερομηνία ισχύος από είναι υποχρεωτική.',
     penaltyConfigurationValidFromDuplicate:
-      'Υπάρχει ήδη ρύθμιση ποινής με την ίδια ημερομηνία ισχύος από.',
+      'Υπάρχει ήδη ρύθμιση ποινής για αυτόν τον στενογράφο με την ίδια ημερομηνία ισχύος από.',
+    addNewPenaltyConfiguration: 'Προσθήκη Νέας Ρύθμισης Ποινών',
     penaltyConfigurationCreateTitle: 'Ρύθμιση Ποινών',
     penaltyConfigurationEditTitle: 'Επεξεργασία Ρύθμισης Ποινών',
     penaltyConfigurationCreatedSuccess: 'Η ρύθμιση ποινών αποθηκεύτηκε επιτυχώς.',
     penaltyConfigurationUpdatedSuccess: 'Η ρύθμιση ποινών ενημερώθηκε επιτυχώς.',
     penaltyConfigurationSaveError: 'Δεν ήταν δυνατή η αποθήκευση της ρύθμισης ποινών.',
+    importPenaltyConfigurationsTitle: 'Εισαγωγή Ρυθμίσεων Ποινών',
+    importPenaltyConfigurationsHint:
+      'Ανεβάστε αρχείο Excel με στήλες Stenotypist, Target Hours Before Deadline, Penalty Per Hour Late και Validity From.',
+    penaltyConfigurationImportRowsRequired: 'Απαιτούνται γραμμές εισαγωγής.',
+    penaltyConfigurationImportEmptyFile: 'Το επιλεγμένο αρχείο δεν έχει γραμμές για εισαγωγή.',
+    penaltyConfigurationImportParseError: 'Δεν ήταν δυνατή η ανάγνωση του αρχείου Excel.',
+    penaltyConfigurationImportError: 'Δεν ήταν δυνατή η εισαγωγή ρυθμίσεων ποινών.',
+    penaltyConfigurationImportRowsReady: '{count} γραμμές έτοιμες για εισαγωγή.',
+    penaltyConfigurationImportSuccess:
+      'Η εισαγωγή ολοκληρώθηκε: {created} νέες, {updated} ενημερώσεις, {skipped} παραλείφθηκαν.',
+    penaltyConfigurationImportSkipReasons: 'Λεπτομέρειες παραλείψεων: {reasons}',
+    penaltyConfigurationImportRowEmpty: 'Η γραμμή είναι κενή.',
     deletePenaltyConfigurationTitle: 'Διαγραφή Ρύθμισης Ποινών',
     deletePenaltyConfigurationMessage:
-      'Είστε βέβαιοι ότι θέλετε να διαγράψετε τη ρύθμιση ποινών (ισχύς από {validFrom});',
+      'Είστε βέβαιοι ότι θέλετε να διαγράψετε τη ρύθμιση ποινών για {stenotypist} (ισχύς από {validFrom});',
     penaltyConfigurationDeletedSuccess: 'Η ρύθμιση ποινών διαγράφηκε επιτυχώς.',
     penaltyConfigurationDeleteError: 'Δεν ήταν δυνατή η διαγραφή της ρύθμισης ποινών.',
     penaltyConfigurationReferencedByJob:

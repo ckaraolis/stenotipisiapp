@@ -2,41 +2,38 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   createPenaltyConfiguration,
   fetchPenaltyConfigurationById,
+  fetchPenaltyStenotypistCandidates,
   updatePenaltyConfiguration,
 } from '../../api/stenotypistPenalty';
 import {
-  DEFAULT_PENALTY_BASE_AMOUNT,
-  DEFAULT_PENALTY_EXTRA_PER_HOUR,
-  DEFAULT_PENALTY_GRACE_PERIOD_HOURS,
+  formatPenaltyConfigurationStenotypistLabel,
   parsePenaltyConfigurationError,
 } from '../../config/stenotypistPenalty';
 import type { StenotypistPenaltyConfigurationPayload } from '../../types/stenotypistPenalty';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import '../../styles/profile.css';
-import '../../styles/workflow-wizard.css';
+import '../../styles/financials.css';
 import DateInput from '../common/DateInput';
-
-
 
 interface PenaltyConfigurationFormProps {
   mode: 'create' | 'edit';
   configurationId?: string;
   onCancel: () => void;
-  onSaved: (message: string) => void;
+  onSaved: (message: string, options?: { keepOpen?: boolean }) => void;
 }
 
 type PenaltyFormState = {
-  gracePeriodHours: string;
-  basePenalty: string;
-  extraPenaltyPerHour: string;
+  stenotypistUserId: string;
+  targetHoursBeforeDeadline: string;
+  penaltyPerHourLate: string;
   validFrom: string;
 };
 
 const EMPTY_FORM: PenaltyFormState = {
-  gracePeriodHours: String(DEFAULT_PENALTY_GRACE_PERIOD_HOURS),
-  basePenalty: String(DEFAULT_PENALTY_BASE_AMOUNT),
-  extraPenaltyPerHour: String(DEFAULT_PENALTY_EXTRA_PER_HOUR),
+  stenotypistUserId: '',
+  targetHoursBeforeDeadline: '0',
+  penaltyPerHourLate: '0',
   validFrom: '',
 };
 
@@ -51,10 +48,27 @@ export default function PenaltyConfigurationForm({
   onSaved,
 }: PenaltyConfigurationFormProps) {
   const { t } = useLanguage();
+  const [stenotypists, setStenotypists] = useState<
+    Awaited<ReturnType<typeof fetchPenaltyStenotypistCandidates>>
+  >([]);
   const [loading, setLoading] = useState(mode === 'edit');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState<PenaltyFormState>(EMPTY_FORM);
+
+  useEffect(() => {
+    let active = true;
+    fetchPenaltyStenotypistCandidates()
+      .then((rows) => {
+        if (active) setStenotypists(rows);
+      })
+      .catch(() => {
+        if (active) setError(t('penaltyConfigurationLoadError'));
+      });
+    return () => {
+      active = false;
+    };
+  }, [t]);
 
   useEffect(() => {
     if (mode !== 'edit' || !configurationId) return;
@@ -64,9 +78,9 @@ export default function PenaltyConfigurationForm({
       .then((record) => {
         if (!active) return;
         setForm({
-          gracePeriodHours: String(record.gracePeriodHours),
-          basePenalty: String(record.basePenalty),
-          extraPenaltyPerHour: String(record.extraPenaltyPerHour),
+          stenotypistUserId: record.stenotypistUserId,
+          targetHoursBeforeDeadline: String(record.targetHoursBeforeDeadline),
+          penaltyPerHourLate: String(record.penaltyPerHourLate),
           validFrom: record.validFrom,
         });
       })
@@ -82,24 +96,20 @@ export default function PenaltyConfigurationForm({
   }, [configurationId, mode, t]);
 
   const validateClient = (): string => {
-    const gracePeriodHours = Number(form.gracePeriodHours);
-    if (!Number.isFinite(gracePeriodHours) || gracePeriodHours <= 0 || !Number.isInteger(gracePeriodHours)) {
-      return t('penaltyConfigurationGracePeriodInvalid');
+    if (!form.stenotypistUserId.trim()) return t('penaltyConfigurationStenotypistRequired');
+    const targetHours = Number(form.targetHoursBeforeDeadline);
+    if (!Number.isFinite(targetHours) || targetHours <= 0 || !Number.isInteger(targetHours)) {
+      return t('penaltyConfigurationTargetHoursInvalid');
     }
-    const basePenalty = Number(form.basePenalty);
-    if (!Number.isFinite(basePenalty) || basePenalty <= 0) {
-      return t('penaltyConfigurationBasePenaltyInvalid');
-    }
-    const extraPenaltyPerHour = Number(form.extraPenaltyPerHour);
-    if (!Number.isFinite(extraPenaltyPerHour) || extraPenaltyPerHour <= 0) {
-      return t('penaltyConfigurationExtraPenaltyPerHourInvalid');
+    const penaltyPerHourLate = Number(form.penaltyPerHourLate);
+    if (!Number.isFinite(penaltyPerHourLate) || penaltyPerHourLate <= 0) {
+      return t('penaltyConfigurationPenaltyPerHourLateInvalid');
     }
     if (!form.validFrom.trim()) return t('penaltyConfigurationValidFromRequired');
     return '';
   };
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const saveConfiguration = async (keepOpen: boolean) => {
     const clientError = validateClient();
     if (clientError) {
       setError(clientError);
@@ -109,9 +119,9 @@ export default function PenaltyConfigurationForm({
     setSaving(true);
     setError('');
     const payload: StenotypistPenaltyConfigurationPayload = {
-      gracePeriodHours: form.gracePeriodHours.trim(),
-      basePenalty: form.basePenalty.trim(),
-      extraPenaltyPerHour: form.extraPenaltyPerHour.trim(),
+      stenotypistUserId: form.stenotypistUserId.trim(),
+      targetHoursBeforeDeadline: form.targetHoursBeforeDeadline.trim(),
+      penaltyPerHourLate: form.penaltyPerHourLate.trim(),
       validFrom: form.validFrom.trim(),
     };
 
@@ -121,7 +131,12 @@ export default function PenaltyConfigurationForm({
         onSaved(t('penaltyConfigurationUpdatedSuccess'));
       } else {
         await createPenaltyConfiguration(payload);
-        onSaved(t('penaltyConfigurationCreatedSuccess'));
+        if (keepOpen) {
+          setForm(EMPTY_FORM);
+          onSaved(t('penaltyConfigurationCreatedSuccess'), { keepOpen: true });
+        } else {
+          onSaved(t('penaltyConfigurationCreatedSuccess'));
+        }
       }
     } catch (err) {
       setError(parseApiErrors((err as Error).message, t));
@@ -130,95 +145,144 @@ export default function PenaltyConfigurationForm({
     }
   };
 
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void saveConfiguration(false);
+  };
+
   return (
-    <div className="financials-page">
-      <div className="page-header financials-header">
-        <div>
-          <h1 className="page-title">
+    <div
+      className="dialog-overlay"
+      role="presentation"
+      onClick={() => {
+        if (!saving) onCancel();
+      }}
+    >
+      <div
+        className="dialog-card dialog-card-wide penalty-configuration-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="penalty-configuration-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="dialog-card-header">
+          <h2 id="penalty-configuration-dialog-title">
             {mode === 'edit'
               ? t('penaltyConfigurationEditTitle')
-              : t('penaltyConfigurationCreateTitle')}
-          </h1>
-          <p className="page-subtitle">{t('penaltyConfigurationSubtitle')}</p>
+              : t('addNewPenaltyConfiguration')}
+          </h2>
+          <button
+            type="button"
+            className="dialog-close-btn"
+            onClick={onCancel}
+            disabled={saving}
+            aria-label={t('cancel')}
+          >
+            ×
+          </button>
         </div>
-      </div>
 
-      <div className="financials-panel">
-        {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
         {loading ? (
-          <p>{t('loading')}</p>
+          <div className="profile-message">{t('loading')}</div>
         ) : (
-          <form className="profile-form" onSubmit={(event) => void handleSubmit(event)}>
-            <div className="profile-grid">
-              <label className="profile-label" htmlFor="penalty-grace-period">
-                {t('penaltyGracePeriodHours')} *
+          <form
+            className="penalty-configuration-dialog-form"
+            onSubmit={(event) => void handleSubmit(event)}
+          >
+            {error ? <div className="profile-alert profile-alert-error">{error}</div> : null}
+
+            <div className="penalty-configuration-form-grid">
+              <label className="profile-label" htmlFor="penalty-stenotypist">
+                {t('stenotypist')}
+              </label>
+              <select
+                id="penalty-stenotypist"
+                className="profile-input"
+                value={form.stenotypistUserId}
+                disabled={mode === 'edit'}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, stenotypistUserId: event.target.value }))
+                }
+              >
+                <option value="">{t('selectStenotypist')}</option>
+                {stenotypists.map((stenotypist) => (
+                  <option key={stenotypist.id} value={stenotypist.id}>
+                    {formatPenaltyConfigurationStenotypistLabel(
+                      stenotypist.fullName,
+                      stenotypist.username,
+                    )}
+                  </option>
+                ))}
+              </select>
+
+              <label className="profile-label" htmlFor="penalty-target-hours">
+                {t('targetHoursBeforeDeadline')}
               </label>
               <input
-                id="penalty-grace-period"
+                id="penalty-target-hours"
                 type="number"
                 min="1"
                 step="1"
                 className="profile-input"
-                value={form.gracePeriodHours}
-                onChange={(event) => {
-                  setError('');
-                  setForm((current) => ({ ...current, gracePeriodHours: event.target.value }));
-                }}
+                value={form.targetHoursBeforeDeadline}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    targetHoursBeforeDeadline: event.target.value,
+                  }))
+                }
               />
 
-              <label className="profile-label" htmlFor="penalty-base-amount">
-                {t('penaltyBaseAmountEur')} *
+              <label className="profile-label" htmlFor="penalty-per-hour-late">
+                {t('penaltyPerHourLate')}
               </label>
               <input
-                id="penalty-base-amount"
+                id="penalty-per-hour-late"
                 type="number"
                 min="0.01"
                 step="0.01"
                 className="profile-input"
-                value={form.basePenalty}
-                onChange={(event) => {
-                  setError('');
-                  setForm((current) => ({ ...current, basePenalty: event.target.value }));
-                }}
-              />
-
-              <label className="profile-label" htmlFor="penalty-extra-per-hour">
-                {t('penaltyExtraPerHourEur')} *
-              </label>
-              <input
-                id="penalty-extra-per-hour"
-                type="number"
-                min="0.01"
-                step="0.01"
-                className="profile-input"
-                value={form.extraPenaltyPerHour}
-                onChange={(event) => {
-                  setError('');
-                  setForm((current) => ({ ...current, extraPenaltyPerHour: event.target.value }));
-                }}
+                value={form.penaltyPerHourLate}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, penaltyPerHourLate: event.target.value }))
+                }
               />
 
               <label className="profile-label" htmlFor="penalty-valid-from">
-                {t('validFrom')} *
+                {t('validityFrom')}
               </label>
               <DateInput
                 id="penalty-valid-from"
                 className="profile-input"
                 value={form.validFrom}
-                onChange={(event) => {
-                  setError('');
-                  setForm((current) => ({ ...current, validFrom: event.target.value }));
-                }}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, validFrom: event.target.value }))
+                }
               />
             </div>
 
-            <div className="profile-actions">
-              <button type="button" className="btn-secondary" onClick={onCancel} disabled={saving}>
+            <div className="dialog-actions">
+              <button
+                type="button"
+                className="profile-cancel-btn"
+                onClick={onCancel}
+                disabled={saving}
+              >
                 {t('cancel')}
               </button>
-              <button type="submit" className="btn-primary" disabled={saving}>
+              <button type="submit" className="profile-submit" disabled={saving}>
                 {saving ? t('saving') : t('save')}
               </button>
+              {mode === 'create' ? (
+                <button
+                  type="button"
+                  className="profile-submit"
+                  disabled={saving}
+                  onClick={() => void saveConfiguration(true)}
+                >
+                  {saving ? t('saving') : t('saveAndAddNew')}
+                </button>
+              ) : null}
             </div>
           </form>
         )}

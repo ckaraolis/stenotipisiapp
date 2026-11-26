@@ -588,9 +588,15 @@ export function getStenotypistBonusAuditFieldMap(configuration) {
 export function getStenotypistPenaltyAuditFieldMap(configuration) {
   if (!configuration) return {};
   return {
-    'Grace Period (hours)': configuration.gracePeriodHours ?? '',
-    'Base Penalty': configuration.basePenalty ?? '',
-    'Extra Penalty Per Hour': configuration.extraPenaltyPerHour ?? '',
+    Stenotypist:
+      configuration.stenotypistFullName ||
+      configuration.stenotypistUsername ||
+      configuration.stenotypistUserId ||
+      '',
+    'Target Hours Before Deadline':
+      configuration.targetHoursBeforeDeadline ?? configuration.gracePeriodHours ?? '',
+    'Penalty Per Hour Late':
+      configuration.penaltyPerHourLate ?? configuration.extraPenaltyPerHour ?? '',
     'Valid From': configuration.validFrom ?? '',
   };
 }

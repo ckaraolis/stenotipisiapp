@@ -216,7 +216,9 @@ import {
   createPenaltyConfigurationRecord,
   deletePenaltyConfigurationRecord,
   findPenaltyConfigurationRecordById,
+  importPenaltyConfigurations,
   listPenaltyConfigurationRecords,
+  listPenaltyStenotypistCandidates,
   updatePenaltyConfigurationRecord,
 } from './stenotypistPenalty.js';
 import {
@@ -2688,12 +2690,22 @@ app.get('/api/financials/stenotypist-bonuses', (req, res) => {
   res.json(result);
 });
 
+app.get('/api/financials/stenotypist-penalty/candidates', (req, res) => {
+  const actor = requireFinancialsStenotypistPenalty(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  res.json({ candidates: listPenaltyStenotypistCandidates(actor) });
+});
+
 app.get('/api/financials/stenotypist-penalty', (req, res) => {
   const actor = requireFinancialsStenotypistPenalty(req, res);
   if (!actor) return;
   if (rejectIfPasswordChangeRequired(actor, res)) return;
 
   const result = listPenaltyConfigurationRecords(actor, {
+    stenotypistUserId:
+      typeof req.query.stenotypistUserId === 'string' ? req.query.stenotypistUserId : '',
     dateFrom: typeof req.query.dateFrom === 'string' ? req.query.dateFrom : '',
     dateTo: typeof req.query.dateTo === 'string' ? req.query.dateTo : '',
   });
@@ -2704,6 +2716,47 @@ app.get('/api/financials/stenotypist-penalty', (req, res) => {
   }
 
   res.json(result);
+});
+
+app.post('/api/financials/stenotypist-penalty/import', (req, res) => {
+  const actor = requireFinancialsStenotypistPenalty(req, res);
+  if (!actor) return;
+  if (rejectIfPasswordChangeRequired(actor, res)) return;
+
+  const rows = Array.isArray(req.body?.rows)
+    ? req.body.rows
+    : Array.isArray(req.body?.configurations)
+      ? req.body.configurations
+      : null;
+
+  if (!rows) {
+    res.status(400).json({ errors: ['penaltyConfigurationImportRowsRequired'] });
+    return;
+  }
+
+  const summary = importPenaltyConfigurations(rows, actor);
+  if (summary?.errors && summary.created === undefined) {
+    const status = summary.errors.includes('forbidden') ? 403 : 400;
+    res.status(status).json({ errors: summary.errors });
+    return;
+  }
+
+  recordAuditEntry({
+    actor,
+    module: 'financials',
+    entityName: 'stenotypist_penalty',
+    entityNumber: 'import',
+    entryType: 'updated',
+    entryDetails: {
+      fields: [
+        { field: 'created', before: '', after: String(summary.created ?? 0) },
+        { field: 'updated', before: '', after: String(summary.updated ?? 0) },
+        { field: 'skipped', before: '', after: String(summary.skipped ?? 0) },
+      ],
+    },
+  });
+
+  res.json(summary);
 });
 
 app.get('/api/financials/stenotypist-penalty/:id', (req, res) => {
@@ -2741,7 +2794,9 @@ app.post('/api/financials/stenotypist-penalty', (req, res) => {
     actor,
     module: 'financials',
     entityName: 'stenotypist_penalty',
-    entityNumber: result.configuration.validFrom || result.configuration.id,
+    entityNumber:
+      `${result.configuration.stenotypistUsername || result.configuration.stenotypistFullName} @ ${result.configuration.validFrom}`.trim() ||
+      result.configuration.id,
     entryType: 'created',
     entryDetails: buildCreatedDetailsFromMap(
       getStenotypistPenaltyAuditFieldMap(result.configuration),
@@ -2778,7 +2833,9 @@ app.put('/api/financials/stenotypist-penalty/:id', (req, res) => {
       actor,
       module: 'financials',
       entityName: 'stenotypist_penalty',
-      entityNumber: result.configuration.validFrom || result.configuration.id,
+      entityNumber:
+        `${result.configuration.stenotypistUsername || result.configuration.stenotypistFullName} @ ${result.configuration.validFrom}`.trim() ||
+        result.configuration.id,
       entryType: 'updated',
       entryDetails: fieldChanges,
     });
@@ -2807,7 +2864,9 @@ app.delete('/api/financials/stenotypist-penalty/:id', (req, res) => {
     actor,
     module: 'financials',
     entityName: 'stenotypist_penalty',
-    entityNumber: result.configuration.validFrom || result.configuration.id,
+    entityNumber:
+      `${result.configuration.stenotypistUsername || result.configuration.stenotypistFullName} @ ${result.configuration.validFrom}`.trim() ||
+      result.configuration.id,
     entryType: 'deleted',
     entryDetails: buildEmptyEntryDetails(),
   });

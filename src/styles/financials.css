@@ -245,7 +245,8 @@
 }
 
 .steno-rate-dialog,
-.bonus-configuration-dialog {
+.bonus-configuration-dialog,
+.penalty-configuration-dialog {
   width: min(100%, 640px);
   max-height: calc(100vh - 40px);
   overflow: auto;
@@ -253,19 +254,22 @@
 }
 
 .steno-rate-dialog .dialog-card-header,
-.bonus-configuration-dialog .dialog-card-header {
+.bonus-configuration-dialog .dialog-card-header,
+.penalty-configuration-dialog .dialog-card-header {
   margin-bottom: 12px;
 }
 
 .steno-rate-dialog-form,
-.bonus-configuration-dialog-form {
+.bonus-configuration-dialog-form,
+.penalty-configuration-dialog-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .steno-rate-form-grid,
-.bonus-configuration-form-grid {
+.bonus-configuration-form-grid,
+.penalty-configuration-form-grid {
   display: grid;
   grid-template-columns: minmax(180px, 260px) minmax(180px, 1fr);
   gap: 10px 16px;
@@ -273,7 +277,8 @@
 }
 
 .steno-rate-form-grid .profile-label,
-.bonus-configuration-form-grid .profile-label {
+.bonus-configuration-form-grid .profile-label,
+.penalty-configuration-form-grid .profile-label {
   margin: 0;
   text-align: right;
   font-size: 13px;
@@ -282,7 +287,8 @@
 }
 
 .steno-rate-form-grid .profile-input,
-.bonus-configuration-form-grid .profile-input {
+.bonus-configuration-form-grid .profile-input,
+.penalty-configuration-form-grid .profile-input {
   min-width: 0;
 }
 
@@ -302,13 +308,15 @@
 
 @media (max-width: 720px) {
   .steno-rate-form-grid,
-  .bonus-configuration-form-grid {
+  .bonus-configuration-form-grid,
+  .penalty-configuration-form-grid {
     grid-template-columns: 1fr;
     gap: 6px;
   }
 
   .steno-rate-form-grid .profile-label,
-  .bonus-configuration-form-grid .profile-label {
+  .bonus-configuration-form-grid .profile-label,
+  .penalty-configuration-form-grid .profile-label {
     text-align: left;
   }
 }
