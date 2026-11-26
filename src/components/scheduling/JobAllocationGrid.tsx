@@ -446,7 +446,12 @@ export default function JobAllocationGrid() {
                       ) : (
                         stenotypists.map((row) => (
                           <tr key={row.id}>
-                            <td className="col-st staff-code">{row.alias}</td>
+                            <td
+                              className="col-st staff-code"
+                              title={row.fullName || row.alias}
+                            >
+                              {row.alias}
+                            </td>
                             <td className="col-role" title={t('roleSteno')}>
                               <span className="role-icon" aria-label={t('roleSteno')}>
                                 <KeyboardIcon />
